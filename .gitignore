@@ -167,3 +167,4 @@ testing/
 #For mac users
 .DS_store
 Miniconda3-latest-MacOSX-x86_64.sh
+test.py
