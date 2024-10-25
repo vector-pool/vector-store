@@ -32,12 +32,54 @@ class CreateSyneapse(bt.Synapse):
     """
     Create protocal is represent to require to create db to miners.
     """
+    version: Optional[Version] = None
+    
     sender: Optional[str] = None
     
+    index_type : Optional[str] = None # organization, namespace or index
+    
+    index_name : Optional[str] = None
+    
+    data = Optional[Dict] = None
+
+class ReadSynapse(bt.Synapse):
+    """
+    Read protocal is represent to require to read db to miners.
+    """
     version: Optional[Version] = None
+    
+    sender: Optional[str] = None
+    
+    index_type : Optional[str] = None # organization, namespace or index
+    
+    index_name : Optional[str] = None
+    
+    query = Optional[Dict] = None
+
+
+class DeleteSynapse(bt.Synapse):
+    """
+    Delete protocal is represent to require to delete db to miners.
+    """
+    version: Optional[Version] = None
+    
+    sender: Optional[str] = None
     
     index_type : Optional[str] = None # organization, namespace or index
     
     index_name : Optional[str] = None
     
     
+class UpdateSynapse(bt.Synapse):
+    """
+    Update protocal is represent to require to update db to miners.
+    """
+    version: Optional[Version] = None
+    
+    sender: Optional[str] = None
+    
+    index_type : Optional[str] = None # organization, namespace or index
+    
+    index_name : Optional[str] = None
+    
+    update_data : Optional[Dict] = None
