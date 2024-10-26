@@ -22,10 +22,10 @@ import typing
 import bittensor as bt
 
 # Bittensor Miner Template:
-import template
+import vectornet
 
 # import base miner class which takes care of most of the boilerplate
-from template.base.miner import BaseMinerNeuron
+from vectornet.base.miner import BaseMinerNeuron
 
 
 class Miner(BaseMinerNeuron):
