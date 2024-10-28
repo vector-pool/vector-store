@@ -4,9 +4,6 @@ from psycopg2 import sql
 class DBManager:
     def __init__(self, validator_hotkey):
         self.db_name = f"{validator_hotkey}"
-        self.ensure_database_exists()
-        self.conn = self.connect_to_db()
-        self.create_tables()
 
     def ensure_database_exists(self):
         # Connect to the default 'postgres' database to check for or create the target database
@@ -19,15 +16,20 @@ class DBManager:
         exists = cur.fetchone()
 
         # Create the database if it does not exist
-        if not exists:
+        if exists:
+            result = 1
+        else:
             cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(self.db_name)))
+            result = 0
 
         cur.close()
         conn.close()
+        return result
+
 
     def connect_to_db(self):
         # Connect to the newly created or existing database
-        return psycopg2.connect(dbname=self.db_name, user='your_username', password='your_password', host='localhost', port=5432)
+        return psycopg2.connect(dbname=self.db_name, user='nesta', password='lucky', host='localhost', port=5432)
 
     def create_tables(self):
         commands = (
@@ -89,6 +91,7 @@ class DBManager:
     def add_user(self, name):
         user_id = self.get_user_id(name)
         if user_id is None:
+            print('user id none')
             cur = self.conn.cursor()
             cur.execute("INSERT INTO users (name) VALUES (%s) RETURNING user_id", (name,))
             user_id = cur.fetchone()[0]
@@ -124,10 +127,12 @@ class DBManager:
         self.conn.commit()
         cur.close()
 
-    def handle_request(self, request_type, validator_hotkey, user_name, organization_name, namespace_name, texts, embeddings):
+    def create_operation(self, request_type, validator_hotkey, user_name, organization_name, namespace_name, texts, embeddings):
         if request_type.lower() == 'create':
-            # Ensure the database exists for the validator
+
             self.ensure_database_exists()
+            self.conn = self.connect_to_db()
+            self.create_tables()
 
             # Add user if not exists
             user_id = self.add_user(user_name)
@@ -144,22 +149,63 @@ class DBManager:
                 for idx, (text, embedding) in enumerate(zip(texts, embeddings))
             ]
             self.add_vectors(user_id, organization_id, namespace_id, vectors)
+            
+    def read_operation(self, request_type, validator_hotkey, user_name, organization_name, namespace_name):
+        if request_type.lower() != 'read':
+            raise ValueError("Invalid request type. Expected 'read'.")
+
+        check_validator_exist = self.ensure_database_exists()
+        if check_validator_exist == 0:
+            raise Exception(f"Validator '{self.db_name}' never saved data")
+        self.conn = self.connect_to_db()
+        
+        
+        # Check if the user exists
+        user_id = self.get_user_id(user_name)
+        if user_id is None:
+            raise Exception(f"User '{user_name}' does not exist.")
+
+        # Check if the organization exists
+        organization_id = self.get_organization_id(user_id, organization_name)
+        if organization_id is None:
+            raise Exception(f"Organization '{organization_name}' does not exist for user '{user_name}'.")
+
+        # Check if the namespace exists
+        cur = self.conn.cursor()
+        cur.execute("SELECT namespace_id FROM namespaces WHERE name = %s AND user_id = %s AND organization_id = %s",
+                    (namespace_name, user_id, organization_id))
+        namespace_result = cur.fetchone()
+        if namespace_result is None:
+            raise Exception(f"Namespace '{namespace_name}' does not exist for user '{user_name}' and organization '{organization_name}'.")
+        namespace_id = namespace_result[0]
+
+        # Retrieve all vectors for the specified namespace
+        cur.execute("""
+            SELECT vector_id, original_text_id, original_text, embedding, user_id, organization_id, namespace_id
+            FROM vectors
+            WHERE namespace_id = %s
+        """, (namespace_id,))
+        vectors = cur.fetchall()
+        cur.close()
+
+        return vectors
 
     def close_connection(self):
         self.conn.close()
 
 # Example Usage
 if __name__ == '__main__':
-    validator_hotkey = '5F4tQyWrhfGVcNhoqeiNsR6KjD4wMZ2kfhLj4oHYuyHbZAc3'
+    validator_hotkey = '5F4tQyWrhfGVcNhoqeiNsR6KjD4wMZ2kfhLj4oHYuyHbZAc4'
+
     db_manager = DBManager(validator_hotkey)
 
     # Create request
-    db_manager.handle_request(
+    db_manager.create_operation(
         request_type='create',
         validator_hotkey=validator_hotkey,
-        user_name='abc1',
-        organization_name='animal',
-        namespace_name='dog',
+        user_name='abc2',
+        organization_name='const',
+        namespace_name='gang sign',
         texts=[
             "hi, i like your",
             "beautiful eyes",
@@ -173,6 +219,15 @@ if __name__ == '__main__':
             [1, 0.8, 0.1]
         ]
     )
+    
+    vectors = db_manager.read_operation(
+        request_type = 'read',
+        validator_hotkey=validator_hotkey,
+        user_name='abc2',
+        organization_name='const',
+        namespace_name='gang sign',
+    )
+    print(vectors)
 
     # Close the database connection
     db_manager.close_connection()
