@@ -22,13 +22,14 @@ import bittensor as bt
 import pydantic
 from typing import Dict, List, Optional
 
+
 class Version(pydantic.BaseModel):
     major: int
     minor: int
     patch: int
 
 
-class CreateSyneapse(bt.Synapse):
+class CreateSynapse(bt.Synapse):
     """
     Create protocal is represent to require to create db to miners.
     """
@@ -36,11 +37,9 @@ class CreateSyneapse(bt.Synapse):
     
     sender: Optional[str] = None
     
-    index_type : Optional[str] = None # organization, namespace or index
+    # index_type : Optional[str] = None # organization, namespace or index
     
-    index_name : Optional[str] = None
-    
-    data = Optional[Dict] = None
+    index_data = Optional[Dict] = None
 
 class ReadSynapse(bt.Synapse):
     """

@@ -26,6 +26,14 @@ import vectornet
 
 # import base miner class which takes care of most of the boilerplate
 from vectornet.base.miner import BaseMinerNeuron
+import vectornet
+from vectornet.protocol import(
+    CreateSynapse,
+    ReadSynapse,
+    UpdateSynapse,
+    DeleteSynapse,
+)
+from vectornet.utils.version import compare_version, get_version
 
 
 class Miner(BaseMinerNeuron):
@@ -41,6 +49,13 @@ class Miner(BaseMinerNeuron):
         super(Miner, self).__init__(config=config)
 
         # TODO(developer): Anything specific to your use case you can do here
+
+    async def forward_create(self, query: CreateSynapse) -> CreateSynapse:
+        """
+        processes the incoming Create Synapse by creating new embeddings and saving them in database
+        """
+        self.check_version(query)
+
 
     async def forward(
         self, synapse: vectornet.protocol.Dummy
@@ -163,7 +178,17 @@ class Miner(BaseMinerNeuron):
             f"Prioritizing {synapse.dendrite.hotkey} with value: {priority}"
         )
         return priority
-
+    
+    def check_version(self, query):
+        """
+        Check the version of request is up to date with subnet
+        """
+        if (query.version is not None 
+            and compare_version(query.version, get_version()) > 0
+        ):
+            bt.logging.warning(
+                f"Received request with version {query.version}, is newer than miner running version {get_version()}"
+            )
 
 # This is the main function, which runs the miner.
 if __name__ == "__main__":
