@@ -87,7 +87,14 @@ class DBManager:
         result = cur.fetchone()
         cur.close()
         return result[0] if result else None
-
+    
+    def get_namespace_id(self, user_id, organization_id, name):
+        cur = self.conn.cursor()
+        cur.execute("SELECT namespace_id FROM namespaces WHERE name = %s AND user_id = %s AND organization_id = %s", (name, user_id, organization_id))
+        result = cur.fetchone()
+        cur.close()
+        return result[0] if result else None
+        
     def add_user(self, name):
         user_id = self.get_user_id(name)
         if user_id is None:
@@ -159,7 +166,42 @@ class DBManager:
             raise Exception(f"Validator '{self.db_name}' never saved data")
         self.conn = self.connect_to_db()
         
+        # Check if the user exists
+        user_id = self.get_user_id(user_name)
+        if user_id is None:
+            raise Exception(f"User '{user_name}' does not exist.")
+
+        # Check if the organization exists
+        organization_id = self.get_organization_id(user_id, organization_name)
+        if organization_id is None:
+            raise Exception(f"Organization '{organization_name}' does not exist for user '{user_name}'.")
+
+        namespace_id = self.get_namespace_id(user_id, organization_id, namespace_name)
+        if namespace_id is None:
+            raise Exception(f"Namespace '{namespace_name}' does not exist for user '{user_name}' and organization '{organization_name}'.")
+        # Retrieve all vectors for the specified namespace
+        cur = self.conn.cursor()
+        cur.execute("""
+            SELECT vector_id, original_text_id, original_text, embedding, user_id, organization_id, namespace_id
+            FROM vectors
+            WHERE namespace_id = %s
+        """, (namespace_id,))
+        vectors = cur.fetchall()
+        cur.close()
+
+        return vectors
+    
+    def update_operation(self, request_type: str, perform: str, validator_hotkey: str, user_name: str, 
+                        organization_name: str, namespace_name: str, texts: list, embeddings: list):
+        if request_type.lower() != 'update':
+            raise ValueError("Invalid request type. Must be 'update'.")
+
+        check_validator_exist = self.ensure_database_exists()
+        if check_validator_exist == 0:
+            raise Exception(f"Validator '{self.db_name}' never saved data")
         
+        self.conn = self.connect_to_db()
+
         # Check if the user exists
         user_id = self.get_user_id(user_name)
         if user_id is None:
@@ -171,24 +213,42 @@ class DBManager:
             raise Exception(f"Organization '{organization_name}' does not exist for user '{user_name}'.")
 
         # Check if the namespace exists
-        cur = self.conn.cursor()
-        cur.execute("SELECT namespace_id FROM namespaces WHERE name = %s AND user_id = %s AND organization_id = %s",
-                    (namespace_name, user_id, organization_id))
-        namespace_result = cur.fetchone()
-        if namespace_result is None:
+        namespace_id = self.get_namespace_id(user_id, organization_id, namespace_name)
+        if namespace_id is None:
             raise Exception(f"Namespace '{namespace_name}' does not exist for user '{user_name}' and organization '{organization_name}'.")
-        namespace_id = namespace_result[0]
 
-        # Retrieve all vectors for the specified namespace
-        cur.execute("""
-            SELECT vector_id, original_text_id, original_text, embedding, user_id, organization_id, namespace_id
-            FROM vectors
-            WHERE namespace_id = %s
-        """, (namespace_id,))
-        vectors = cur.fetchall()
-        cur.close()
+        if perform == 'replace':
+            # Delete all existing vectors for this namespace
+            cur = self.conn.cursor()
+            cur.execute("DELETE FROM vectors WHERE namespace_id = %s", (namespace_id,))
+            self.conn.commit()
+            print(f"Deleted existing vectors for namespace ID {namespace_id}.")
 
-        return vectors
+            # Insert new vectors
+            for idx, (text, embedding) in enumerate(zip(texts, embeddings)):
+                cur.execute(
+                    "INSERT INTO vectors (original_text_id, original_text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (idx + 1, text, embedding, user_id, organization_id, namespace_id)
+                )
+            self.conn.commit()
+            cur.close()
+            print(f"Replaced vectors for namespace ID {namespace_id} with new data.")
+
+        elif perform == 'add':
+            # Append new vectors to existing data
+            cur = self.conn.cursor()
+            for idx, (text, embedding) in enumerate(zip(texts, embeddings)):
+                cur.execute(
+                    "INSERT INTO vectors (original_text_id, original_text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (idx + 1, text, embedding, user_id, organization_id, namespace_id)
+                )
+            self.conn.commit()
+            cur.close()
+            print(f"Added new vectors to namespace ID {namespace_id}.")
+
+        else:
+            raise ValueError("Invalid perform action. Must be 'replace' or 'add'.")
+
 
     def close_connection(self):
         self.conn.close()
@@ -200,16 +260,50 @@ if __name__ == '__main__':
     db_manager = DBManager(validator_hotkey)
 
     # Create request
-    db_manager.create_operation(
-        request_type='create',
+    # db_manager.create_operation(
+    #     request_type='create',
+    #     validator_hotkey=validator_hotkey,
+    #     user_name='abc3',
+    #     organization_name='pleb',
+    #     namespace_name='name3',
+    #     texts=[
+    #         "hi, i like your",
+    #         "beautiful eyes",
+    #         "great, awesome, what is your experience",
+    #         "hey, how are you"
+    #     ],
+    #     embeddings=[
+    #         [1, 0.3, 0.7],
+    #         [1, 0.9, 0.8],
+    #         [1, 1, 0],
+    #         [1, 0.8, 0.1]
+    #     ]
+    # )
+    
+    # vectors = db_manager.read_operation(
+    #     request_type = 'read',
+    #     validator_hotkey=validator_hotkey,
+    #     user_name='abc2',
+    #     organization_name='const',
+    #     namespace_name='gang sign',
+    # )
+    # print(vectors)
+
+    db_manager.update_operation(
+        request_type='update',
+        perform = 'add', # this can be 'add'
         validator_hotkey=validator_hotkey,
         user_name='abc2',
         organization_name='const',
         namespace_name='gang sign',
         texts=[
-            "hi, i like your",
+            "hi, i like my",
             "beautiful eyes",
-            "great, awesome, what is your experience",
+            "great, perfect, what is your experience in this side, especially training LLM models",
+            "hey, how are you"
+            "hi, i like my",
+            "beautiful eyes",
+            "great, perfect, what is your experience in this side, especially training LLM models",
             "hey, how are you"
         ],
         embeddings=[
@@ -219,15 +313,6 @@ if __name__ == '__main__':
             [1, 0.8, 0.1]
         ]
     )
-    
-    vectors = db_manager.read_operation(
-        request_type = 'read',
-        validator_hotkey=validator_hotkey,
-        user_name='abc2',
-        organization_name='const',
-        namespace_name='gang sign',
-    )
-    print(vectors)
 
     # Close the database connection
     db_manager.close_connection()
