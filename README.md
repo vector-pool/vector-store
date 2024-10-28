@@ -211,3 +211,15 @@ This repository is licensed under the MIT License.
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 ```
+
+
+
+## Restarting PostgreSQL Database
+
+```
+rm -rf /opt/homebrew/var/postgres
+brew uninstall postgresql@14
+brew install postgresql@14
+initdb /opt/homebrew/var/postgres
+brew services start postgresql@14
+```

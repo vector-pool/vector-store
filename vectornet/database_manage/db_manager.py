@@ -1,37 +1,39 @@
 import psycopg2
 from psycopg2 import sql
+from typing import List, Tuple, Optional
 
 class DBManager:
-    def __init__(self, validator_hotkey):
-        self.db_name = f"{validator_hotkey}"
+    def __init__(self, validator_hotkey: str):
+        """Initialize DBManager with a validator hotkey."""
+        self.db_name = validator_hotkey
+        self.conn = None
 
-    def ensure_database_exists(self):
-        # Connect to the default 'postgres' database to check for or create the target database
+    def ensure_database_exists(self) -> bool:
+        """Ensure the database exists, create if not."""
+        # Create the connection
         conn = psycopg2.connect(dbname='postgres', user='nesta', password='lucky', host='localhost', port=5432)
+        # Set autocommit before creating the cursor
         conn.autocommit = True
-        cur = conn.cursor()
-
-        # Check if the database exists
-        cur.execute(sql.SQL("SELECT 1 FROM pg_database WHERE datname = %s"), [self.db_name])
-        exists = cur.fetchone()
-
-        # Create the database if it does not exist
-        if exists:
-            result = 1
-        else:
-            cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(self.db_name)))
-            result = 0
-
-        cur.close()
-        conn.close()
-        return result
-
+        try:
+            with conn.cursor() as cur:
+                # Check if the database exists
+                cur.execute(sql.SQL("SELECT 1 FROM pg_database WHERE datname = %s"), [self.db_name])
+                exists = cur.fetchone()
+                
+                # If it doesn't exist, create it
+                if not exists:
+                    cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(self.db_name)))
+                    return False
+                return True
+        finally:
+            conn.close()  # Ensure the connection is closed properly
 
     def connect_to_db(self):
-        # Connect to the newly created or existing database
-        return psycopg2.connect(dbname=self.db_name, user='nesta', password='lucky', host='localhost', port=5432)
+        """Connect to the specified database."""
+        self.conn = psycopg2.connect(dbname=self.db_name, user='nesta', password='lucky', host='localhost', port=5432)
 
     def create_tables(self):
+        """Create tables if they do not exist."""
         commands = (
             """
             CREATE TABLE IF NOT EXISTS users (
@@ -59,8 +61,8 @@ class DBManager:
             """
             CREATE TABLE IF NOT EXISTS vectors (
                 vector_id SERIAL PRIMARY KEY,
-                original_text_id INTEGER NOT NULL,
                 original_text TEXT NOT NULL,
+                text TEXT NOT NULL,
                 embedding FLOAT[] NOT NULL,
                 user_id INTEGER REFERENCES users(user_id),
                 organization_id INTEGER REFERENCES organizations(organization_id),
@@ -68,110 +70,104 @@ class DBManager:
             )
             """
         )
-        cur = self.conn.cursor()
-        for command in commands:
-            cur.execute(command)
-        self.conn.commit()
-        cur.close()
+        with self.conn.cursor() as cur:
+            for command in commands:
+                cur.execute(command)
+            self.conn.commit()
 
-    def get_user_id(self, name):
-        cur = self.conn.cursor()
-        cur.execute("SELECT user_id FROM users WHERE name = %s", (name,))
-        result = cur.fetchone()
-        cur.close()
-        return result[0] if result else None
+    def get_user_id(self, name: str) -> Optional[int]:
+        """Retrieve user ID by name."""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT user_id FROM users WHERE name = %s", (name,))
+            result = cur.fetchone()
+            return result[0] if result else None
 
-    def get_organization_id(self, user_id, name):
-        cur = self.conn.cursor()
-        cur.execute("SELECT organization_id FROM organizations WHERE name = %s AND user_id = %s", (name, user_id))
-        result = cur.fetchone()
-        cur.close()
-        return result[0] if result else None
-    
-    def get_namespace_id(self, user_id, organization_id, name):
-        cur = self.conn.cursor()
-        cur.execute("SELECT namespace_id FROM namespaces WHERE name = %s AND user_id = %s AND organization_id = %s", (name, user_id, organization_id))
-        result = cur.fetchone()
-        cur.close()
-        return result[0] if result else None
-        
-    def add_user(self, name):
+    def get_organization_id(self, user_id: int, name: str) -> Optional[int]:
+        """Retrieve organization ID by user ID and name."""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT organization_id FROM organizations WHERE name = %s AND user_id = %s", (name, user_id))
+            result = cur.fetchone()
+            return result[0] if result else None
+
+    def get_namespace_id(self, user_id: int, organization_id: int, name: str) -> Optional[int]:
+        """Retrieve namespace ID by user ID, organization ID, and name."""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT namespace_id FROM namespaces WHERE name = %s AND user_id = %s AND organization_id = %s", (name, user_id, organization_id))
+            result = cur.fetchone()
+            return result[0] if result else None
+
+    def add_user(self, name: str) -> int:
+        """Add a new user if not exists, return user ID."""
         user_id = self.get_user_id(name)
         if user_id is None:
-            print('user id none')
-            cur = self.conn.cursor()
-            cur.execute("INSERT INTO users (name) VALUES (%s) RETURNING user_id", (name,))
-            user_id = cur.fetchone()[0]
-            self.conn.commit()
-            cur.close()
+            with self.conn.cursor() as cur:
+                cur.execute("INSERT INTO users (name) VALUES (%s) RETURNING user_id", (name,))
+                user_id = cur.fetchone()[0]
+                self.conn.commit()
         return user_id
 
-    def add_organization(self, user_id, name):
+    def add_organization(self, user_id: int, name: str) -> int:
+        """Add a new organization if not exists, return organization ID."""
         organization_id = self.get_organization_id(user_id, name)
         if organization_id is None:
-            cur = self.conn.cursor()
-            cur.execute("INSERT INTO organizations (name, user_id) VALUES (%s, %s) RETURNING organization_id", (name, user_id))
-            organization_id = cur.fetchone()[0]
-            self.conn.commit()
-            cur.close()
+            with self.conn.cursor() as cur:
+                cur.execute("INSERT INTO organizations (name, user_id) VALUES (%s, %s) RETURNING organization_id", (name, user_id))
+                organization_id = cur.fetchone()[0]
+                self.conn.commit()
         return organization_id
 
-    def add_namespace(self, user_id, organization_id, name):
-        cur = self.conn.cursor()
-        cur.execute("INSERT INTO namespaces (name, user_id, organization_id) VALUES (%s, %s, %s) RETURNING namespace_id", (name, user_id, organization_id))
-        namespace_id = cur.fetchone()[0]
-        self.conn.commit()
-        cur.close()
+    def add_namespace(self, user_id: int, organization_id: int, name: str) -> int:
+        """Add a new namespace, return namespace ID."""
+        with self.conn.cursor() as cur:
+            cur.execute("INSERT INTO namespaces (name, user_id, organization_id) VALUES (%s, %s, %s) RETURNING namespace_id", (name, user_id, organization_id))
+            namespace_id = cur.fetchone()[0]
+            self.conn.commit()
         return namespace_id
 
-    def add_vectors(self, user_id, organization_id, namespace_id, vectors):
-        cur = self.conn.cursor()
-        for vector in vectors:
-            cur.execute(
-                "INSERT INTO vectors (original_text_id, original_text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
-                (vector['original_text_id'], vector['original_text'], vector['embedding'], user_id, organization_id, namespace_id)
-            )
-        self.conn.commit()
-        cur.close()
+    def add_vectors(self, user_id: int, organization_id: int, namespace_id: int, vectors: List[dict]):
+        """Add vectors to the database."""
+        with self.conn.cursor() as cur:
+            for vector in vectors:
+                print(vector['original_text'], vector['text'], vector['embedding'], user_id, organization_id, namespace_id)
+                cur.execute(
+                    "INSERT INTO vectors (original_text, text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (vector['original_text'], vector['text'], vector['embedding'], user_id, organization_id, namespace_id)
+                )
+            self.conn.commit()
 
-    def create_operation(self, request_type, validator_hotkey, user_name, organization_name, namespace_name, texts, embeddings):
-        if request_type.lower() == 'create':
+    def create_operation(self, request_type: str, validator_hotkey: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts: List[str]):
+        """Handle create operations."""
+        if request_type.lower() != 'create':
+            raise ValueError("Invalid request type. Expected 'create'.")
 
-            self.ensure_database_exists()
-            self.conn = self.connect_to_db()
-            self.create_tables()
+        self.ensure_database_exists()
+        self.connect_to_db()
+        self.create_tables()
 
-            # Add user if not exists
-            user_id = self.add_user(user_name)
+        user_id = self.add_user(user_name)
+        organization_id = self.add_organization(user_id, organization_name)
+        namespace_id = self.add_namespace(user_id, organization_id, namespace_name)
 
-            # Add organization if not exists
-            organization_id = self.add_organization(user_id, organization_name)
+        vectors = [
+            {'original_text': original_text, 'text': text, 'embedding': embedding}
+            for original_text, text, embedding in zip(original_texts, texts, embeddings)
+        ]
+        self.add_vectors(user_id, organization_id, namespace_id, vectors)
 
-            # Add namespace
-            namespace_id = self.add_namespace(user_id, organization_id, namespace_name)
-
-            # Add vectors
-            vectors = [
-                {'original_text_id': idx + 1, 'original_text': text, 'embedding': embedding}
-                for idx, (text, embedding) in enumerate(zip(texts, embeddings))
-            ]
-            self.add_vectors(user_id, organization_id, namespace_id, vectors)
-            
-    def read_operation(self, request_type, validator_hotkey, user_name, organization_name, namespace_name):
+    def read_operation(self, request_type: str, validator_hotkey: str, user_name: str, organization_name: str, namespace_name: str) -> List[Tuple]:
+        """Handle read operations."""
         if request_type.lower() != 'read':
             raise ValueError("Invalid request type. Expected 'read'.")
 
-        check_validator_exist = self.ensure_database_exists()
-        if check_validator_exist == 0:
-            raise Exception(f"Validator '{self.db_name}' never saved data")
-        self.conn = self.connect_to_db()
-        
-        # Check if the user exists
+        if not self.ensure_database_exists():
+            raise Exception(f"Validator '{self.db_name}' has no saved data.")
+
+        self.connect_to_db()
+
         user_id = self.get_user_id(user_name)
         if user_id is None:
             raise Exception(f"User '{user_name}' does not exist.")
 
-        # Check if the organization exists
         organization_id = self.get_organization_id(user_id, organization_name)
         if organization_id is None:
             raise Exception(f"Organization '{organization_name}' does not exist for user '{user_name}'.")
@@ -179,128 +175,159 @@ class DBManager:
         namespace_id = self.get_namespace_id(user_id, organization_id, namespace_name)
         if namespace_id is None:
             raise Exception(f"Namespace '{namespace_name}' does not exist for user '{user_name}' and organization '{organization_name}'.")
-        # Retrieve all vectors for the specified namespace
-        cur = self.conn.cursor()
-        cur.execute("""
-            SELECT vector_id, original_text_id, original_text, embedding, user_id, organization_id, namespace_id
-            FROM vectors
-            WHERE namespace_id = %s
-        """, (namespace_id,))
-        vectors = cur.fetchall()
-        cur.close()
+
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                SELECT vector_id, original_text, text, embedding, user_id, organization_id, namespace_id
+                FROM vectors
+                WHERE namespace_id = %s
+            """, (namespace_id,))
+            vectors = cur.fetchall()
 
         return vectors
-    
-    def update_operation(self, request_type: str, perform: str, validator_hotkey: str, user_name: str, 
-                        organization_name: str, namespace_name: str, texts: list, embeddings: list):
+
+    def update_operation(self, request_type: str, perform: str, validator_hotkey: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts):
+        """Handle update operations."""
         if request_type.lower() != 'update':
             raise ValueError("Invalid request type. Must be 'update'.")
 
-        check_validator_exist = self.ensure_database_exists()
-        if check_validator_exist == 0:
-            raise Exception(f"Validator '{self.db_name}' never saved data")
-        
-        self.conn = self.connect_to_db()
+        if not self.ensure_database_exists():
+            raise Exception(f"Validator '{self.db_name}' has no saved data.")
 
-        # Check if the user exists
+        self.connect_to_db()
+
         user_id = self.get_user_id(user_name)
         if user_id is None:
             raise Exception(f"User '{user_name}' does not exist.")
 
-        # Check if the organization exists
         organization_id = self.get_organization_id(user_id, organization_name)
         if organization_id is None:
             raise Exception(f"Organization '{organization_name}' does not exist for user '{user_name}'.")
 
-        # Check if the namespace exists
         namespace_id = self.get_namespace_id(user_id, organization_id, namespace_name)
         if namespace_id is None:
             raise Exception(f"Namespace '{namespace_name}' does not exist for user '{user_name}' and organization '{organization_name}'.")
 
-        if perform == 'replace':
-            # Delete all existing vectors for this namespace
-            cur = self.conn.cursor()
-            cur.execute("DELETE FROM vectors WHERE namespace_id = %s", (namespace_id,))
-            self.conn.commit()
-            print(f"Deleted existing vectors for namespace ID {namespace_id}.")
+        with self.conn.cursor() as cur:
+            if perform == 'replace':
+                cur.execute("DELETE FROM vectors WHERE namespace_id = %s", (namespace_id,))
+                self.conn.commit()
 
-            # Insert new vectors
-            for idx, (text, embedding) in enumerate(zip(texts, embeddings)):
+            for text, embedding, original_text in enumerate(texts, embeddings, original_texts):
                 cur.execute(
-                    "INSERT INTO vectors (original_text_id, original_text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (idx + 1, text, embedding, user_id, organization_id, namespace_id)
+                    "INSERT INTO vectors (original_text, text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (original_text, text, embedding, user_id, organization_id, namespace_id)
                 )
             self.conn.commit()
-            cur.close()
-            print(f"Replaced vectors for namespace ID {namespace_id} with new data.")
 
-        elif perform == 'add':
-            # Append new vectors to existing data
-            cur = self.conn.cursor()
-            for idx, (text, embedding) in enumerate(zip(texts, embeddings)):
-                cur.execute(
-                    "INSERT INTO vectors (original_text_id, original_text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (idx + 1, text, embedding, user_id, organization_id, namespace_id)
-                )
+    def delete_operation(self, request_type: str, perform: str, validator_hotkey: str, user_name: Optional[str] = None, organization_name: Optional[str] = None, namespace_name: Optional[str] = None):
+        """Handle delete operations."""
+        if request_type.lower() != 'delete':
+            raise ValueError("Invalid request type. Must be 'delete'.")
+
+        if perform not in {'user', 'organization', 'namespace'}:
+            raise ValueError("Invalid perform action. Must be 'user', 'organization', or 'namespace'.")
+
+        if not self.ensure_database_exists():
+            raise Exception(f"Validator '{self.db_name}' has no saved data.")
+
+        self.connect_to_db()
+
+        with self.conn.cursor() as cur:
+            if perform == 'user':
+                if not user_name:
+                    raise ValueError("User name is required for user deletion.")
+                user_id = self.get_user_id(user_name)
+                if user_id is None:
+                    raise Exception(f"User '{user_name}' does not exist.")
+                cur.execute("DELETE FROM vectors WHERE user_id = %s", (user_id,))
+                cur.execute("DELETE FROM namespaces WHERE user_id = %s", (user_id,))
+                cur.execute("DELETE FROM organizations WHERE user_id = %s", (user_id,))
+                cur.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
+
+            elif perform == 'organization':
+                if not user_name or not organization_name:
+                    raise ValueError("User and organization names are required for organization deletion.")
+                user_id = self.get_user_id(user_name)
+                organization_id = self.get_organization_id(user_id, organization_name)
+                if organization_id is None:
+                    raise Exception(f"Organization '{organization_name}' does not exist for user '{user_name}'.")
+                cur.execute("DELETE FROM vectors WHERE organization_id = %s", (organization_id,))
+                cur.execute("DELETE FROM namespaces WHERE organization_id = %s", (organization_id,))
+                cur.execute("DELETE FROM organizations WHERE organization_id = %s", (organization_id,))
+
+            elif perform == 'namespace':
+                if not user_name or not organization_name or not namespace_name:
+                    raise ValueError("User, organization, and namespace names are required for namespace deletion.")
+                user_id = self.get_user_id(user_name)
+                organization_id = self.get_organization_id(user_id, organization_name)
+                namespace_id = self.get_namespace_id(user_id, organization_id, namespace_name)
+                if namespace_id is None:
+                    raise Exception(f"Namespace '{namespace_name}' does not exist for user '{user_name}' and organization '{organization_name}'.")
+                cur.execute("DELETE FROM vectors WHERE namespace_id = %s", (namespace_id,))
+                cur.execute("DELETE FROM namespaces WHERE namespace_id = %s", (namespace_id,))
+
             self.conn.commit()
-            cur.close()
-            print(f"Added new vectors to namespace ID {namespace_id}.")
-
-        else:
-            raise ValueError("Invalid perform action. Must be 'replace' or 'add'.")
-
 
     def close_connection(self):
-        self.conn.close()
+        """Close the database connection."""
+        if self.conn:
+            self.conn.close()
 
 # Example Usage
 if __name__ == '__main__':
-    validator_hotkey = '5F4tQyWrhfGVcNhoqeiNsR6KjD4wMZ2kfhLj4oHYuyHbZAc4'
+    validator_hotkey = '5F4tQyWrhfGVcNhoqeiNsR6KjD4wMZ2kfhLj4oHYuyHbZAc8'
 
     db_manager = DBManager(validator_hotkey)
 
     # Create request
-    # db_manager.create_operation(
-    #     request_type='create',
-    #     validator_hotkey=validator_hotkey,
-    #     user_name='abc3',
-    #     organization_name='pleb',
-    #     namespace_name='name3',
-    #     texts=[
-    #         "hi, i like your",
-    #         "beautiful eyes",
-    #         "great, awesome, what is your experience",
-    #         "hey, how are you"
-    #     ],
-    #     embeddings=[
-    #         [1, 0.3, 0.7],
-    #         [1, 0.9, 0.8],
-    #         [1, 1, 0],
-    #         [1, 0.8, 0.1]
-    #     ]
-    # )
-    
-    # vectors = db_manager.read_operation(
-    #     request_type = 'read',
-    #     validator_hotkey=validator_hotkey,
-    #     user_name='abc2',
-    #     organization_name='const',
-    #     namespace_name='gang sign',
-    # )
-    # print(vectors)
+    db_manager.create_operation(
+        request_type='create',
+        validator_hotkey=validator_hotkey,
+        user_name='abc3',
+        organization_name='pleb',
+        namespace_name='name17',
+        texts=[
+            "hi, i like your",
+            "beautiful eyes",
+            "great, awesome, what is your experience",
+            "hey, how are you"
+        ],
+        embeddings=[
+            [1, 0.3, 0.7],
+            [1, 0.9, 0.8],
+            [1, 1, 0],
+            [1, 0.8, 0.1],
+        ],
+        original_texts=[
+            "hi, i like my",
+            "beautiful eyes",
+            "great, perfect, what is your experience in this side, especially training LLM models",
+            "hey, how are you",            
+        ],
+    )
+
+    vectors = db_manager.read_operation(
+        request_type='read',
+        validator_hotkey=validator_hotkey,
+        user_name='abc3',
+        organization_name='pleb',
+        namespace_name='name17',
+    )
+    print(vectors)
 
     db_manager.update_operation(
         request_type='update',
-        perform = 'add', # this can be 'add'
+        perform='add',  # this can be 'add'
         validator_hotkey=validator_hotkey,
-        user_name='abc2',
-        organization_name='const',
-        namespace_name='gang sign',
+        user_name='abc3',
+        organization_name='pleb',
+        namespace_name='name17',
         texts=[
             "hi, i like my",
             "beautiful eyes",
             "great, perfect, what is your experience in this side, especially training LLM models",
-            "hey, how are you"
+            "hey, how are you",
             "hi, i like my",
             "beautiful eyes",
             "great, perfect, what is your experience in this side, especially training LLM models",
@@ -310,9 +337,40 @@ if __name__ == '__main__':
             [1, 0.3, 0.7],
             [1, 0.9, 0.8],
             [1, 1, 0],
-            [1, 0.8, 0.1]
-        ]
+            [1, 0.8, 0.1],
+            [1, 0.3, 0.7],
+            [1, 0.9, 0.8],
+            [1, 1, 0],
+            [1, 0.8, 0.1],
+        ],
+        original_texts=[
+            "hi, i like my beautiful eyes",
+            "hi, i like my beautiful eyes",
+            "great, perfect, what is your experience in this side, especially training LLM models",
+            "hey, how are you",
+            "hi, i like my beautiful eyes",
+            "hi, i like my beautiful eyes",
+            "great, perfect, what is your experience in this side, especially training LLM models",
+            "hey, how are you"
+        ],
     )
+
+    vectors = db_manager.read_operation(
+        request_type='read',
+        validator_hotkey=validator_hotkey,
+        user_name='abc3',
+        organization_name='pleb',
+        namespace_name='name17',
+    )
+    print(vectors)
+    
+    # db_manager.delete_operation(
+    #     request_type='delete',
+    #     perform='user',  # this can be 'organization' or 'namespace'
+    #     validator_hotkey=validator_hotkey,
+    #     user_name='abc3',
+    # )
+    
 
     # Close the database connection
     db_manager.close_connection()
