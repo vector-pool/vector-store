@@ -68,7 +68,7 @@ class DBManager:
                 organization_id INTEGER REFERENCES organizations(organization_id),
                 namespace_id INTEGER REFERENCES namespaces(namespace_id)
             )
-            """
+            """,
         )
         with self.conn.cursor() as cur:
             for command in commands:
@@ -130,10 +130,11 @@ class DBManager:
             for vector in vectors:
                 print(vector['original_text'], vector['text'], vector['embedding'], user_id, organization_id, namespace_id)
                 cur.execute(
-                    "INSERT INTO vectors (original_text, text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (vector['original_text'], vector['text'], vector['embedding'], user_id, organization_id, namespace_id)
+                    "INSERT INTO vectors (text, embedding, user_id, organization_id, namespace_id, original_text) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (vector['text'], vector['embedding'], user_id, organization_id, namespace_id, vector['original_text'])
                 )
             self.conn.commit()
+        print("success creating")
 
     def create_operation(self, request_type: str, validator_hotkey: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts: List[str]):
         """Handle create operations."""
@@ -152,6 +153,7 @@ class DBManager:
             {'original_text': original_text, 'text': text, 'embedding': embedding}
             for original_text, text, embedding in zip(original_texts, texts, embeddings)
         ]
+        print(vectors)
         self.add_vectors(user_id, organization_id, namespace_id, vectors)
 
     def read_operation(self, request_type: str, validator_hotkey: str, user_name: str, organization_name: str, namespace_name: str) -> List[Tuple]:
@@ -213,7 +215,7 @@ class DBManager:
                 cur.execute("DELETE FROM vectors WHERE namespace_id = %s", (namespace_id,))
                 self.conn.commit()
 
-            for text, embedding, original_text in enumerate(texts, embeddings, original_texts):
+            for text, embedding, original_text in zip(texts, embeddings, original_texts):
                 cur.execute(
                     "INSERT INTO vectors (original_text, text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
                     (original_text, text, embedding, user_id, organization_id, namespace_id)
@@ -280,13 +282,12 @@ if __name__ == '__main__':
 
     db_manager = DBManager(validator_hotkey)
 
-    # Create request
     db_manager.create_operation(
         request_type='create',
         validator_hotkey=validator_hotkey,
         user_name='abc3',
         organization_name='pleb',
-        namespace_name='name17',
+        namespace_name='name24',
         texts=[
             "hi, i like your",
             "beautiful eyes",
@@ -312,7 +313,7 @@ if __name__ == '__main__':
         validator_hotkey=validator_hotkey,
         user_name='abc3',
         organization_name='pleb',
-        namespace_name='name17',
+        namespace_name='name24',
     )
     print(vectors)
 
@@ -322,7 +323,7 @@ if __name__ == '__main__':
         validator_hotkey=validator_hotkey,
         user_name='abc3',
         organization_name='pleb',
-        namespace_name='name17',
+        namespace_name='name24',
         texts=[
             "hi, i like my",
             "beautiful eyes",
@@ -360,17 +361,17 @@ if __name__ == '__main__':
         validator_hotkey=validator_hotkey,
         user_name='abc3',
         organization_name='pleb',
-        namespace_name='name17',
+        namespace_name='name24',
     )
     print(vectors)
     
-    # db_manager.delete_operation(
-    #     request_type='delete',
-    #     perform='user',  # this can be 'organization' or 'namespace'
-    #     validator_hotkey=validator_hotkey,
-    #     user_name='abc3',
-    # )
-    
+    db_manager.delete_operation(
+        request_type='delete',
+        perform='user',  # this can be 'organization' or 'namespace'
+        validator_hotkey=validator_hotkey,
+        user_name='abc3',
+        organization_name='pleb',
+        namespace_name='name22',
+    )
 
-    # Close the database connection
     db_manager.close_connection()
