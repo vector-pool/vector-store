@@ -34,7 +34,8 @@ from vectornet.protocol import(
     DeleteSynapse,
 )
 from vectornet.utils.version import compare_version, get_version
-
+from vectornet.embedding.embed import TextToEmbedding
+from vectornet.database_manage.db_manager import DBManager
 
 class Miner(BaseMinerNeuron):
     """
@@ -47,6 +48,7 @@ class Miner(BaseMinerNeuron):
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
+        self.DBManager = DBManager()
 
         # TODO(developer): Anything specific to your use case you can do here
 
@@ -55,6 +57,12 @@ class Miner(BaseMinerNeuron):
         processes the incoming Create Synapse by creating new embeddings and saving them in database
         """
         self.check_version(query)
+        embedding_manager = TextToEmbedding()
+        vectors = embedding_manager.embed(query.index_data['articles'])
+        validator_hotkey = query.dendrite.hotkey
+        
+        
+        
 
 
     async def forward(

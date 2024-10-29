@@ -220,6 +220,6 @@ This repository is licensed under the MIT License.
 rm -rf /opt/homebrew/var/postgres
 brew uninstall postgresql@14
 brew install postgresql@14
-initdb /opt/homebrew/var/postgres
+sudo initdb /opt/homebrew/var/postgres
 brew services start postgresql@14
 ```

@@ -40,6 +40,8 @@ class CreateSynapse(bt.Synapse):
     # index_type : Optional[str] = None # organization, namespace or index
     
     index_data = Optional[Dict] = None
+    
+    answer = Optional[Dict] = None
 
 class ReadSynapse(bt.Synapse):
     """
