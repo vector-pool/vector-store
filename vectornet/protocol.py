@@ -35,6 +35,8 @@ class CreateSynapse(bt.Synapse):
     """
     version: Optional[Version] = None
     
+    type: str = pydantic.Field("CREATE")
+    
     user_name: Optional[str] = None
     
     organization_name: Optional[str] = None
@@ -43,7 +45,10 @@ class CreateSynapse(bt.Synapse):
     
     index_data: Optional[List[str]] = None
     
-    results = Optional[Dict] = None
+    results = Optional[List[int]] = None
+
+    def deserialize(self) -> List[Dict]:
+        return self.results
 
 class ReadSynapse(bt.Synapse):
     """
@@ -51,12 +56,22 @@ class ReadSynapse(bt.Synapse):
     """
     version: Optional[Version] = None
     
-    index_type : Optional[str] = None # organization, namespace or index
+    type: str = pydantic.Field("READ")
     
-    index_name : Optional[str] = None
+    user_name: Optional[str] = None
     
-    query = Optional[Dict] = None
+    organization_name: Optional[str] = None
+    
+    namespace_name: Optional[str] = None
+    
+    query_data: Optional[str] = None
+    
+    size: int = pydantic.Field(3, ge=1, le=50)
+    
+    results = Optional[List[tuple(List[str], List[float])]] = None
 
+    def deserialize(self) -> List[Dict]:
+        return self.results
 
 class DeleteSynapse(bt.Synapse):
     """
@@ -68,6 +83,8 @@ class DeleteSynapse(bt.Synapse):
     
     index_name : Optional[str] = None
     
+    def deserialize(self) -> List[Dict]:
+        return self.results
     
 class UpdateSynapse(bt.Synapse):
     """
@@ -75,8 +92,19 @@ class UpdateSynapse(bt.Synapse):
     """
     version: Optional[Version] = None
     
-    index_type : Optional[str] = None # organization, namespace or index
+    type: str = pydantic.Field("UPDATE")
     
-    index_name : Optional[str] = None
+    perform: Optional[str] = None
     
-    update_data : Optional[Dict] = None
+    user_name: Optional[str] = None
+    
+    organization_name: Optional[str] = None
+    
+    namespace_name: Optional[str] = None
+    
+    index_data: Optional[List[str]] = None
+    
+    results = Optional[List[int]] = None
+
+    def deserialize(self) -> List[Dict]:
+        return self.results

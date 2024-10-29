@@ -54,10 +54,11 @@ class Miner(BaseMinerNeuron):
 
     async def forward_create(self, query: CreateSynapse) -> CreateSynapse:
         """
-        processes the incoming Create Synapse by creating new embeddings and saving them in database
+        processes the incoming CreateSynapse by creating new embeddings and saving them in database
         """
-        self.check_version(query)
+        self.check_version(query.version)
         
+        request_type = query.type
         user_name = query.user_name
         organization_name = query.organization_name
         namespace_name = query.namespace_name
@@ -69,11 +70,72 @@ class Miner(BaseMinerNeuron):
         embedding_manager = TextToEmbedding()
         
         embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
-        validator_db_manager.create_operation(user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
+        results = []
+        user_id, organization_id, namespace_id = validator_db_manager.create_operation(request_type, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
+        results.append(user_id)
+        results.append(organization_id)
+        results.append(namespace_id)
+        
+        query.results = results
+        
+    async def forward_read(self, query: ReadSynapse) -> ReadSynapse:
+        """
+        processes the incoming ReadSynapse by searching the most similar texts with query by comparing embeddings
+        between query and saved data using advanced searching algorithms
+        """
+        self.check_version(query.version)
+        
+        request_type = query.type
+        user_name = query.user_name
+        organization_name = query.organization_name
+        namespace_name = query.namespace_name
+        query_data = query.query_data
+        size = query.size
+        valdiator_hotkey = query.dendrite.hotkey
+        
+        validator_db_manager = DBManager(valdiator_hotkey)
+        
+        embedding_manager = TextToEmbedding()
+        
+        vectors = validator_db_manager.read_operation(request_type, user_name, organization_name, namespace_name)
+        
+        query_embedding = embedding_manager.embed(query_data)
         
         
         
+        
+        
+    async def forward_update(self, query: UpdateSynapse) -> UpdateSynapse:
+        """
+        processes the incoming UpdateSynapse by updating existing embeddings that saved in database
+        """
+        self.check_version(query.version)
+        
+        perform = query.perform.lower()
+        if perform != 'replace' and perform != 'add':
+            raise Exception(f"Undifined perform type: {perform}")
 
+        request_type = query.type
+        user_name = query.user_name
+        organization_name = query.organization_name
+        namespace_name = query.namespace_name
+        index_data = query.index_data
+        validator_hotkey = query.dendrite.hotkey
+        
+        validator_db_manager = DBManager(validator_hotkey)
+        
+        embedding_manager = TextToEmbedding()
+        
+        embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
+        
+        results = []
+        user_id, organization_id, namespace_id = validator_db_manager.update_operation(request_type, perform, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
+        results.append(user_id)
+        results.append(organization_id)
+        results.append(namespace_id)
+        
+        query.results = results
+            
 
     async def forward(
         self, synapse: vectornet.protocol.Dummy
@@ -197,15 +259,15 @@ class Miner(BaseMinerNeuron):
         )
         return priority
     
-    def check_version(self, query):
+    def check_version(self, version):
         """
         Check the version of request is up to date with subnet
         """
-        if (query.version is not None 
-            and compare_version(query.version, get_version()) > 0
+        if (version is not None 
+            and compare_version(version, get_version()) > 0
         ):
             bt.logging.warning(
-                f"Received request with version {query.version}, is newer than miner running version {get_version()}"
+                f"Received request with version {version}, is newer than miner running version {get_version()}"
             )
 
 # This is the main function, which runs the miner.

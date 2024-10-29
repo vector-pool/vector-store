@@ -155,6 +155,7 @@ class DBManager:
         ]
         print(vectors)
         self.add_vectors(user_id, organization_id, namespace_id, vectors)
+        return user_id, organization_id, namespace_id
 
     def read_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str) -> List[Tuple]:
         """Handle read operations."""
@@ -180,13 +181,19 @@ class DBManager:
 
         with self.conn.cursor() as cur:
             cur.execute("""
-                SELECT vector_id, original_text, text, embedding, user_id, organization_id, namespace_id
+                SELECT original_text, text, embedding
                 FROM vectors
                 WHERE namespace_id = %s
             """, (namespace_id,))
-            vectors = cur.fetchall()
-
+            
+            rows = cur.fetchall()
+            
+            vectors = [
+                {'original_text': row[0], 'text': row[1], 'embedding': row[2]}
+                for row in rows
+            ]
         return vectors
+
 
     def update_operation(self, request_type: str, perform: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts):
         """Handle update operations."""
