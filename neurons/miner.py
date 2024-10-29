@@ -36,6 +36,7 @@ from vectornet.protocol import(
 from vectornet.utils.version import compare_version, get_version
 from vectornet.embedding.embed import TextToEmbedding
 from vectornet.database_manage.db_manager import DBManager
+from vectornet.search_engine.search import SearchEngine
 
 class Miner(BaseMinerNeuron):
     """
@@ -52,7 +53,7 @@ class Miner(BaseMinerNeuron):
 
         # TODO(developer): Anything specific to your use case you can do here
 
-    async def forward_create(self, query: CreateSynapse) -> CreateSynapse:
+    async def forward_create_request(self, query: CreateSynapse) -> CreateSynapse:
         """
         processes the incoming CreateSynapse by creating new embeddings and saving them in database
         """
@@ -78,7 +79,7 @@ class Miner(BaseMinerNeuron):
         
         query.results = results
         
-    async def forward_read(self, query: ReadSynapse) -> ReadSynapse:
+    async def forward_read_request(self, query: ReadSynapse) -> ReadSynapse:
         """
         processes the incoming ReadSynapse by searching the most similar texts with query by comparing embeddings
         between query and saved data using advanced searching algorithms
@@ -101,11 +102,17 @@ class Miner(BaseMinerNeuron):
         
         query_embedding = embedding_manager.embed(query_data)
         
+        search_engine = SearchEngine()
         
+        top_vectors = search_engine.cosine_similarity_search(query_embedding, vectors, size)
         
+        results = []
+        for top_vector in top_vectors:
+            results.append({'text': top_vector['original_text'], 'embedding': top_vector['embedding']})
+
+        query.results = results
         
-        
-    async def forward_update(self, query: UpdateSynapse) -> UpdateSynapse:
+    async def forward_update_request(self, query: UpdateSynapse) -> UpdateSynapse:
         """
         processes the incoming UpdateSynapse by updating existing embeddings that saved in database
         """
@@ -113,7 +120,7 @@ class Miner(BaseMinerNeuron):
         
         perform = query.perform.lower()
         if perform != 'replace' and perform != 'add':
-            raise Exception(f"Undifined perform type: {perform}")
+            raise Exception(f"Undifined perform type: {perform} in UpdateSynapse")
 
         request_type = query.type
         user_name = query.user_name
@@ -135,7 +142,29 @@ class Miner(BaseMinerNeuron):
         results.append(namespace_id)
         
         query.results = results
-            
+        
+    async def forward_delete_request(self, query: DeleteSynapse) -> DeleteSynapse:
+        self.check_version(query.version)
+        
+        perform = query.perform.lower()
+        if perform != 'user' and perform != 'organization' and perform != 'namespace':
+            raise Exception(f"Undifined perfom type: {perform} in DeleteSynapse")
+        
+        request_type = query.type
+        user_name = query.user_name
+        organization_name = query.organization_name
+        namespace_name = query.namespace_name
+        validator_hotkey = query.dendrite.hotkey
+        
+        validator_db_manager = DBManager(validator_hotkey)
+        
+        results = []
+        user_id, organization_id, namespace_id = validator_db_manager.delete_operation(request_type, perform, user_name, organization_name, namespace_name)        
+        results.append(user_id)
+        results.append(organization_id)
+        results.append(namespace_id)
+        
+        query.results = results
 
     async def forward(
         self, synapse: vectornet.protocol.Dummy

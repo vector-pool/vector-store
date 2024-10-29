@@ -73,19 +73,6 @@ class ReadSynapse(bt.Synapse):
     def deserialize(self) -> List[Dict]:
         return self.results
 
-class DeleteSynapse(bt.Synapse):
-    """
-    Delete protocal is represent to require to delete db to miners.
-    """
-    version: Optional[Version] = None
-    
-    index_type : Optional[str] = None # organization, namespace or index
-    
-    index_name : Optional[str] = None
-    
-    def deserialize(self) -> List[Dict]:
-        return self.results
-    
 class UpdateSynapse(bt.Synapse):
     """
     Update protocal is represent to require to update db to miners.
@@ -108,3 +95,25 @@ class UpdateSynapse(bt.Synapse):
 
     def deserialize(self) -> List[Dict]:
         return self.results
+    
+class DeleteSynapse(bt.Synapse):
+    """
+    Delete protocal is represent to require to delete db to miners.
+    """    
+    version: Optional[Version] = None
+    
+    type: str = pydantic.Field("Delete")
+    
+    perform: Optional[str] = None
+    
+    user_name: Optional[str] = None
+    
+    organization_name: Optional[str] = None
+    
+    namespace_name: Optional[str] = None
+    
+    results = Optional[List[int]] = None
+
+    def deserialize(self) -> List[Dict]:
+        return self.results
+    

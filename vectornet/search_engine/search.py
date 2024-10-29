@@ -5,16 +5,17 @@ class SearchEngine:
     def __init__():
         pass
     
-    def cosine_similarity_search(self, query_embedding, vectors):
+    def cosine_similarity_search(self, query_embedding, vectors, size):
         """
         Finds the most similar embeddings in the vectors based on the query_embedding.
         
         Args:
             query_embedding (list): The embedding list representing the query text.
             vectors (list): A list of dictionaries, each containing 'original_text', 'text', and 'embedding'.
+            size(int): A number of return values
             
         Returns:
-            list: A sorted list of dictionaries with the most similar texts and their similarity scores.
+            list: A number of top vectors in sorted list of dictionaries with the most similar texts and their similarity scores.
         """
         similarities = []
 
@@ -32,10 +33,11 @@ class SearchEngine:
             similarities.append({
                 'original_text': vector['original_text'],
                 'text': vector['text'],
-                'similarity': similarity_score
+                'embedding': vector['embedding'],
+                'similarity': similarity_score,
             })
 
         # Sort by similarity score in descending order and return the results
-        top_results = sorted(similarities, key=lambda x: x['similarity'], reverse=True)
+        results = sorted(similarities, key=lambda x: x['similarity'], reverse=True)
 
-        return top_results
+        return results[:size]
