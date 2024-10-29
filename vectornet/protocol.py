@@ -35,21 +35,21 @@ class CreateSynapse(bt.Synapse):
     """
     version: Optional[Version] = None
     
-    sender: Optional[str] = None
+    user_name: Optional[str] = None
     
-    # index_type : Optional[str] = None # organization, namespace or index
+    organization_name: Optional[str] = None
     
-    index_data = Optional[Dict] = None
+    namespace_name: Optional[str] = None
     
-    answer = Optional[Dict] = None
+    index_data: Optional[List[str]] = None
+    
+    results = Optional[Dict] = None
 
 class ReadSynapse(bt.Synapse):
     """
     Read protocal is represent to require to read db to miners.
     """
     version: Optional[Version] = None
-    
-    sender: Optional[str] = None
     
     index_type : Optional[str] = None # organization, namespace or index
     
@@ -64,8 +64,6 @@ class DeleteSynapse(bt.Synapse):
     """
     version: Optional[Version] = None
     
-    sender: Optional[str] = None
-    
     index_type : Optional[str] = None # organization, namespace or index
     
     index_name : Optional[str] = None
@@ -76,8 +74,6 @@ class UpdateSynapse(bt.Synapse):
     Update protocal is represent to require to update db to miners.
     """
     version: Optional[Version] = None
-    
-    sender: Optional[str] = None
     
     index_type : Optional[str] = None # organization, namespace or index
     

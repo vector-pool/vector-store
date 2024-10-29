@@ -136,7 +136,7 @@ class DBManager:
             self.conn.commit()
         print("success creating")
 
-    def create_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts: List[str]):
+    def create_operation(self, request_type: str, validator_hotkey: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts: List[str]):
         """Handle create operations."""
         if request_type.lower() != 'create':
             raise ValueError("Invalid request type. Expected 'create'.")
@@ -156,7 +156,7 @@ class DBManager:
         print(vectors)
         self.add_vectors(user_id, organization_id, namespace_id, vectors)
 
-    def read_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str) -> List[Tuple]:
+    def read_operation(self, request_type: str, validator_hotkey: str, user_name: str, organization_name: str, namespace_name: str) -> List[Tuple]:
         """Handle read operations."""
         if request_type.lower() != 'read':
             raise ValueError("Invalid request type. Expected 'read'.")
@@ -188,7 +188,7 @@ class DBManager:
 
         return vectors
 
-    def update_operation(self, request_type: str, perform: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts):
+    def update_operation(self, request_type: str, perform: str, validator_hotkey: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts):
         """Handle update operations."""
         if request_type.lower() != 'update':
             raise ValueError("Invalid request type. Must be 'update'.")
@@ -222,7 +222,7 @@ class DBManager:
                 )
             self.conn.commit()
 
-    def delete_operation(self, request_type: str, perform: str, user_name: Optional[str] = None, organization_name: Optional[str] = None, namespace_name: Optional[str] = None):
+    def delete_operation(self, request_type: str, perform: str, validator_hotkey: str, user_name: Optional[str] = None, organization_name: Optional[str] = None, namespace_name: Optional[str] = None):
         """Handle delete operations."""
         if request_type.lower() != 'delete':
             raise ValueError("Invalid request type. Must be 'delete'.")
@@ -284,6 +284,7 @@ if __name__ == '__main__':
 
     db_manager.create_operation(
         request_type='create',
+        validator_hotkey=validator_hotkey,
         user_name='abc3',
         organization_name='pleb',
         namespace_name='name24',
@@ -309,6 +310,7 @@ if __name__ == '__main__':
 
     vectors = db_manager.read_operation(
         request_type='read',
+        validator_hotkey=validator_hotkey,
         user_name='abc3',
         organization_name='pleb',
         namespace_name='name24',
@@ -318,6 +320,7 @@ if __name__ == '__main__':
     db_manager.update_operation(
         request_type='update',
         perform='add',  # this can be 'add'
+        validator_hotkey=validator_hotkey,
         user_name='abc3',
         organization_name='pleb',
         namespace_name='name24',
@@ -355,6 +358,7 @@ if __name__ == '__main__':
 
     vectors = db_manager.read_operation(
         request_type='read',
+        validator_hotkey=validator_hotkey,
         user_name='abc3',
         organization_name='pleb',
         namespace_name='name24',
@@ -364,9 +368,25 @@ if __name__ == '__main__':
     db_manager.delete_operation(
         request_type='delete',
         perform='user',  # this can be 'organization' or 'namespace'
+        validator_hotkey=validator_hotkey,
         user_name='abc3',
         organization_name='pleb',
         namespace_name='name22',
     )
 
     db_manager.close_connection()
+
+
+
+
+
+
+
+
+
+
+
+
+# .DS_store
+# Miniconda3-latest-MacOSX-x86_64.sh
+# test.py

@@ -48,7 +48,7 @@ class Miner(BaseMinerNeuron):
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
-        self.DBManager = DBManager()
+
 
         # TODO(developer): Anything specific to your use case you can do here
 
@@ -57,9 +57,19 @@ class Miner(BaseMinerNeuron):
         processes the incoming Create Synapse by creating new embeddings and saving them in database
         """
         self.check_version(query)
-        embedding_manager = TextToEmbedding()
-        vectors = embedding_manager.embed(query.index_data['articles'])
+        
+        user_name = query.user_name
+        organization_name = query.organization_name
+        namespace_name = query.namespace_name
+        index_data = query.index_data
         validator_hotkey = query.dendrite.hotkey
+        
+        validator_db_manager = DBManager(validator_hotkey)
+        
+        embedding_manager = TextToEmbedding()
+        
+        embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
+        validator_db_manager.create_operation(user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
         
         
         

@@ -1,8 +1,3 @@
-
-
-
-
-
 from sentence_transformers import SentenceTransformer
 
 embedding_model = 'all-MiniLM-L6-v2'
@@ -13,8 +8,9 @@ class TextToEmbedding:
         self.max_token_size = 768  # Maximum token size for the model
 
     def embed(self, original_texts):
-        results = []
-
+        embeded_data = []
+        embeddings = []
+        original_data = []
         for text in original_texts:
             # Split the text into sentences or chunks based on the max token size
             chunks = self.chunk_text(text)
@@ -24,15 +20,11 @@ class TextToEmbedding:
                 embedding = self.model.encode(chunk).tolist()  # Convert to list of floats
                 
                 # Create the result dictionary
-                result = {
-                    'text': chunk,
-                    'embedding': embedding,
-                    'original_text': text if len(chunk.split()) < self.max_token_size else text
-                }
-                
-                results.append(result)
+                embeded_data.append(chunk)
+                embeddings.append(embedding)
+                original_data.append(text)
 
-        return results
+        return embeded_data, embeddings, original_data
 
     def chunk_text(self, text):
         # Simple chunking logic based on max token size
