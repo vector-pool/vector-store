@@ -165,3 +165,6 @@ testing/
 .vscode/settings.json
 
 #For mac users
+
+#For mac users
+.DS_store
