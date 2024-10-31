@@ -80,7 +80,7 @@ async def get_articles_in_category(category):
                     })
             return articles
 
-async def main():
+async def wikipedia_scraper():
     
     start_time = datetime.now()
     print(start_time)
@@ -112,4 +112,4 @@ async def main():
     print(elasped_time.total_seconds())
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(wikipedia_scraper())
