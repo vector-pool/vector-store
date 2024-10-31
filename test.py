@@ -1,29 +1,34 @@
 import aiohttp
 import asyncio
+from datetime import datetime, timezone
 
-async def get_category_info(category):
+
+wiki_categories = [
+    ''
+    
+]
+
+async def get_article_extracts(pageid):
+    extracts = {}
     async with aiohttp.ClientSession() as session:
+        print("pageids == ", pageid)
         async with session.get(
             "https://en.wikipedia.org/w/api.php",
             params={
                 "action": "query",
-                "titles": category,
-                "prop": "categories",
-                "format": "json",
-                "cllimit": "max"  # Get all categories
+                "prop": "extracts",
+                "pageids": pageid,
+                "explaintext": "1",
+                "format": "json"
             },
         ) as response:
             data = await response.json()
-            pages = data['query']['pages']
-            parent_categories = []
-            for page_id, page in pages.items():
-                if 'categories' in page:
-                    for cat in page['categories']:
-                        parent_categories.append(cat['title'])
-            return parent_categories
-
-async def get_top_category(parent_categories):
-    return parent_categories[0] if parent_categories else None
+            pages = data.get("query", {}).get("pages", {})
+            for page in pages.values():
+                extract = page.get("extract", "No extract available")
+                extracts[page['pageid']] = extract if extract else "No extract available"
+    
+    return extracts
 
 async def get_articles_in_category(category):
     async with aiohttp.ClientSession() as session:
@@ -33,7 +38,7 @@ async def get_articles_in_category(category):
                 "action": "query",
                 "list": "categorymembers",
                 "cmtitle": category,
-                "cmlimit": "100",  # Limit to 100 articles
+                "cmlimit": "5",
                 "format": "json"
             },
         ) as response:
@@ -41,45 +46,45 @@ async def get_articles_in_category(category):
             articles = []
             if 'query' in data and 'categorymembers' in data['query']:
                 for article in data['query']['categorymembers']:
+                    pageid = article['pageid']
+                    content = await get_article_extracts(pageid)  # Await the async function
+                    print(content)
                     articles.append({
                         'title': article['title'],
-                        'pageid': article['pageid']
+                        'pageid': article['pageid'],
+                        'content': content,
                     })
             return articles
 
-async def get_article_content(pageid):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(
-            "https://en.wikipedia.org/w/api.php",
-            params={
-                "action": "query",
-                "prop": "extracts",
-                "pageids": pageid,
-                "format": "json",
-                "explaintext": "true"  # Change to string "true"
-            },
-        ) as response:
-            data = await response.json()
-            page = next(iter(data['query']['pages'].values()))
-            return page.get('extract', '')
-
 async def main():
-    initial_category = "Category:0s BC"
     
-    parent_categories = await get_category_info(initial_category)
-    top_category = await get_top_category(parent_categories)
-    
-    articles = await get_articles_in_category(top_category)
-    
-    for article in articles:
-        content = await get_article_content(article['pageid'])
-        article['content'] = content  # Add content to article dict
+    start_time = datetime.now()
+    print(start_time)
+    # Choose a specific category
+    random_category = "Category:Theatre"  # Ensure the correct format
+    print(f"Selected Category: {random_category}")
 
+    # Fetch articles from the selected category
+    articles = await get_articles_in_category(random_category)
+    print(f"Fetched {len(articles)} articles.")
+
+    # Write the articles to result.txt in dict format
+    results = []
     for article in articles:
-        print({
+        results.append({
             'title': article['title'],
-            'content': article['content']
+            'pageid': article['pageid'],
+            'extract': article['content']
         })
+
+    with open('result.txt', 'w', encoding='utf-8') as f:
+        for result in results:
+            f.write(f"{result}\n")  # Write each result as a dictionary
+
+    print("Results have been written to result.txt.")
+    elasped_time = datetime.now() - start_time
+    print(datetime.now())
+    print(elasped_time.total_seconds())
 
 if __name__ == '__main__':
     asyncio.run(main())
