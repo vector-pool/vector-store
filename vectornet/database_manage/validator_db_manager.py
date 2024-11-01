@@ -176,7 +176,7 @@ class ValidatorDBManager:
 
         with self.conn.cursor() as cur:
             cur.execute("""
-                SELECT original_text, text, embedding
+                SELECT pageid
                 FROM vectors
                 WHERE namespace_id = %s
             """, (namespace_id,))
@@ -184,7 +184,7 @@ class ValidatorDBManager:
             rows = cur.fetchall()
             
             vectors = [
-                {'original_text': row[0], 'text': row[1], 'embedding': row[2]}
+                {'pageid': row[0]}
                 for row in rows
             ]
         return vectors
