@@ -61,9 +61,7 @@ class ValidatorDBManager:
             """
             CREATE TABLE IF NOT EXISTS vectors (
                 vector_id SERIAL PRIMARY KEY,
-                original_text TEXT NOT NULL,
-                text TEXT NOT NULL,
-                embedding FLOAT[] NOT NULL,
+                pageid INTEGER NOT NULL,
                 user_id INTEGER REFERENCES users(user_id),
                 organization_id INTEGER REFERENCES organizations(organization_id),
                 namespace_id INTEGER REFERENCES namespaces(namespace_id)
