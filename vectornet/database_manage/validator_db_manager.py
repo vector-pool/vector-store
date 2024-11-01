@@ -192,7 +192,7 @@ class ValidatorDBManager:
         return vectors
 
 
-    def update_operation(self, request_type: str, perform: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts):
+    def update_operation(self, request_type: str, perform: str, user_name: str, organization_name: str, namespace_name: str, pageids: List[int]):
         """Handle update operations."""
         if request_type.lower() != 'update':
             raise ValueError("Invalid request type. Must be 'update'.")
@@ -219,10 +219,10 @@ class ValidatorDBManager:
                 cur.execute("DELETE FROM vectors WHERE namespace_id = %s", (namespace_id,))
                 self.conn.commit()
 
-            for text, embedding, original_text in zip(texts, embeddings, original_texts):
+            for pageid in pageids:
                 cur.execute(
-                    "INSERT INTO vectors (original_text, text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (original_text, text, embedding, user_id, organization_id, namespace_id)
+                    "INSERT INTO vectors (user_id, organization_id, namespace_id, pageid) VALUES (%s, %s, %s, %s)",
+                    (user_id, organization_id, namespace_id, pageid)
                 )
             self.conn.commit()
 
@@ -307,16 +307,6 @@ if __name__ == '__main__':
         user_name='abc3',
         organization_name='pleb',
         namespace_name='name24',
-        texts=[
-            "hi, i like my",
-            "beautiful eyes",
-            "great, perfect, what is your experience in this side, especially training LLM models",
-            "hey, how are you",
-            "hi, i like my",
-            "beautiful eyes",
-            "great, perfect, what is your experience in this side, especially training LLM models",
-            "hey, how are you"
-        ],
         pageids=[11, 12, 13, 14, 15, 16, 17, 18, 19]
     )
 
