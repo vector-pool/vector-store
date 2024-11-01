@@ -20,7 +20,12 @@
 import time
 import bittensor as bt
 
-from vectornet.protocol import Dummy
+from vectornet.protocol import (
+    CreateSynapse,
+    ReadSynapse,
+    UpdateSynapse,
+    DeleteSynapse,    
+)
 from vectornet.validator.reward import get_rewards
 from vectornet.utils.uids import get_random_uids
 
@@ -39,16 +44,11 @@ async def forward(self):
     # get_random_uids is an example method, but you can replace it with your own.
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
-    # The dendrite client queries the network.
-    responses = await self.dendrite(
-        # Send the query to selected miner axons in the network.
-        axons=[self.metagraph.axons[uid] for uid in miner_uids],
-        # Construct a dummy query. This simply contains a single integer.
-        synapse=Dummy(dummy_input=self.step),
-        # All responses have the deserialize function called on them before returning.
-        # You are encouraged to define your own deserialization function.
-        deserialize=True,
-    )
+    miner_status = load_miner_statue()
+
+    new_miner_uids = check_new_miners()
+    
+    
 
     # Log the results for monitoring purposes.
     bt.logging.info(f"Received responses: {responses}")

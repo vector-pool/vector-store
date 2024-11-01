@@ -1,115 +1,82 @@
-import aiohttp
-import asyncio
-from datetime import datetime, timezone
-import random
+import bittensor as bt
+from substrateinterface.base import SubstrateInterface
 
-wiki_categories = [
-    'Almanacs', 'Atlases', 'Biographical dictionaries', 'Dictionaries', 'Encyclopedias', 
-    'Glossaries', 'Handbooks and manuals', 'Lists', 'Medical manuals', 'Reference book stubs', 
-    'Reference works in the public domain', 'Style guides', 'Trivia books', 'Web sites', 
-    'Classics', 'Critical theory', 'Cultural anthropology', 'Clothing', 'Folklore', 
-    'Food and drink culture', 'Food and drink', 'Language', 'Literature', 'Museology', 
-    'Mythology', 'Philosophy', 'Popular culture', 'Science and culture', 'Traditions', 
-    'Handicrafts', 'Celebrity', 'Censorship in the arts', 'Festivals', 'Humor', 
-    'Literature', 'Museums', 'Parties', 'Poetry', 'Circuses', 'Dance', 'Film', 'Music', 
-    'Opera', 'Storytelling', 'Theatre', 'Board games', 'Card games', 'Dolls', 'Puppetry', 
-    'Puzzles', 'Role-playing games', 'Video games', 'Earth', 'World', 'Bodies of water', 
-    'Cities', 'Communities', 'Continents', 'Countries', 'Deserts', 'Lakes', 'Landforms', 
-    'Mountains', 'Navigation', 'Oceans', 'Populated places', 'Protected areas', 'Regions', 
-    'Rivers', 'Subterranea', 'Territories', 'Towns', 'Villages', 'Health by country', 
-    'Health care', 'Health law', 'Health promotion', 'Health standards', 'Hospitals', 
-    'Occupational safety and health', 'Pharmaceutical industry', 'Pharmaceuticals policy', 
-    'Safety', 'Africa', 'Asia', 'Europe', 'America', 'Activism', 'Agriculture', 'Arts', 
-    'Aviation', 'Commemoration', 'Communication', 'Crime', 'Design', 'Education', 
-    'Entertainment', 'Fictional activities', 'Fishing', 'Food and drink preparation', 
-    'Government', 'Hunting', 'Industry', 'Leisure activities', 'Navigation', 'Observation', 
-    'Performing arts', 'Physical exercise', 'Planning', 'Politics', 'Recreation', 
-    'Religion', 'Human spaceflight', 'Sports', 'Trade', 'Transport', 'Travel', 
-    'Underwater human activities', 'Underwater diving', 'War', 'Work', 'Clothing', 
-    'Employment', 'Entertainment', 'Food and drink', 'Games', 'Health', 'Hobbies', 
-    'Home', 'Income', 'Interpersonal relationships', 'Leisure', 'Love', 'Motivation', 
-    'Personal development', 'Pets'
-]
-
-
-async def get_article_extracts(pageid):
-    extracts = {}
-    async with aiohttp.ClientSession() as session:
-        print("pageids == ", pageid)
-        async with session.get(
-            "https://en.wikipedia.org/w/api.php",
-            params={
-                "action": "query",
-                "prop": "extracts",
-                "pageids": pageid,
-                "explaintext": "1",
-                "format": "json"
-            },
-        ) as response:
-            data = await response.json()
-            pages = data.get("query", {}).get("pages", {})
-            for page in pages.values():
-                extract = page.get("extract", "No extract available")
-                extracts[page['pageid']] = extract if extract else "No extract available"
+def check_miner_status():
+    current_block_number = bt.subtensor().get_current_block()
+    substrate = SubstrateInterface(
+        url="wss://archive.chain.opentensor.ai:443/",
+        ss58_format=42,
+        use_remote_preset=True,
+    )
+    netuid = 46
+    result = substrate.query_map('SubtensorModule', 'BlockAtRegistration', [netuid, ])
+    miner_cur_status = []
+    for record in result:
+        uid = record[0].value  # Accessing U16 value
+        block_number = record[1].value  # Accessing U64 value
+        miner_cur_status.append({'uid': uid, 'registered_block_number': block_number})
+    print(miner_cur_status)
     
-    return extracts
-
-async def get_articles_in_category(category):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(
-            "https://en.wikipedia.org/w/api.php",
-            params={
-                "action": "query",
-                "list": "categorymembers",
-                "cmtitle": category,
-                "cmlimit": "5",
-                "format": "json"
-            },
-        ) as response:
-            data = await response.json()
-            articles = []
-            if 'query' in data and 'categorymembers' in data['query']:
-                for article in data['query']['categorymembers']:
-                    pageid = article['pageid']
-                    content = await get_article_extracts(pageid)  # Await the async function
-                    print(content)
-                    articles.append({
-                        'title': article['title'],
-                        'pageid': article['pageid'],
-                        'content': content,
-                    })
-            return articles
-
-async def main():
     
-    start_time = datetime.now()
-    print(start_time)
-    # Choose a specific category
-    # random_category = "Category:Theatre"  # Ensure the correct format
-    random_category = "Category:" + random.choice(wiki_categories)
-    print(f"Selected Category: {random_category}")
+    miner_pre_status = []
+        # Initialize a list to store new miners' UIDs
+    new_miner_uids = []
 
-    # Fetch articles from the selected category
-    articles = await get_articles_in_category(random_category)
-    print(f"Fetched {len(articles)} articles.")
+    # Check for new miners based on block_number
+    for miner_pre, miner_cur in zip(miner_pre_status, miner_cur_status):
+        if miner_pre['registered_block_number'] != miner_cur['registered_block_number']:
+            new_miner_uids.append(miner_cur['uid'])
 
-    # Write the articles to result.txt in dict format
-    results = []
-    for article in articles:
-        results.append({
-            'title': article['title'],
-            'pageid': article['pageid'],
-            'extract': article['content']
-        })
+    # Check for miners that exist in the current list but not in the previous list
+    previous_uids = {miner['uid'] for miner in miner_pre_status}
+    for miner in miner_cur_status:
+        if miner['uid'] not in previous_uids:
+            new_miner_uids.append(miner['uid'])
 
-    with open('result.txt', 'w', encoding='utf-8') as f:
-        for result in results:
-            f.write(f"{result}\n")  # Write each result as a dictionary
+    # Update previous status with current status for next comparison
+    miner_pre_status = miner_cur_status.copy()
 
-    print("Results have been written to result.txt.")
-    elasped_time = datetime.now() - start_time
-    print(datetime.now())
-    print(elasped_time.total_seconds())
+    # Output the list of new miners' UIDs
+    print(new_miner_uids)
+    
+    miner_ages = []
+    
+    age_categories = {
+        "very_young":36000, # assume immune period is 5 days : 7200 * 5
+        "young":72000, # 10 days
+        "mature": 144000, # 20 days
+        "old": 216000, # 30 days
+        "very_old": 324000 # 45 days
+    }
 
+    miner_ages = []
+    for miner in miner_cur_status:
+        age = current_block_number - miner['registered_block_number']
+        
+        # Determine the category based on age
+        category = None
+        for cat, threshold in age_categories.items():
+            if age < threshold:
+                category = cat
+                break
+        if category is None:  # If age exceeds the highest threshold
+            category = "very_old"
+
+        miner_ages.append({'uid': miner['uid'], 'age': age, 'category': category})
+    print("*****************************************************************")
+    print(miner_ages)
+
+    
+    return new_miner_uids, miner_ages
+
+
+
+# metagraph = bt.subtensor().metagraph(5)
+# neuron_uids = metagraph.uids.tolist()
+# stakes = metagraph.S.tolist()
+# hotkeys = metagraph.hotkeys    
+    
+    
 if __name__ == '__main__':
-    asyncio.run(main())
+    check_miner_status()
+    
