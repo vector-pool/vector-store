@@ -46,7 +46,7 @@ class CreateSynapse(bt.Synapse):
     index_data: Optional[List[str]] = None
     
     results = Optional[List[int]] = None
-
+    
     def deserialize(self) -> List[Dict]:
         return self.results
 
@@ -69,7 +69,7 @@ class ReadSynapse(bt.Synapse):
     size: int = pydantic.Field(3, ge=1, le=50)
     
     results = Optional[List[tuple(List[str], List[float])]] = None
-
+    
     def deserialize(self) -> List[Dict]:
         return self.results
 

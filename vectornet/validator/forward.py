@@ -60,9 +60,17 @@ async def forward(self):
     
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
     query = generate_create_request(
-        article_size = 30
+        article_size = 30,
     )
     
+    responses = await self.dendrite(
+        axons = [self.metagraph.axons[uid] for uid in miner_uids],
+        synapse = query,
+        deserialize = True,
+        timeout = 90,
+    )
+    
+    create_scores = evaluate_create_score(responses)
 
 
 
