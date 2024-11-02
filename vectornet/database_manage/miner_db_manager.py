@@ -2,16 +2,16 @@ import psycopg2
 from psycopg2 import sql
 from typing import List, Tuple, Optional
 
-class DBManager:
+class MinerDBManager:
     def __init__(self, validator_hotkey: str):
-        """Initialize DBManager with a validator hotkey."""
+        """Initialize MinerDBManager with a validator hotkey."""
         self.db_name = validator_hotkey
         self.conn = None
 
     def ensure_database_exists(self) -> bool:
         """Ensure the database exists, create if not."""
         # Create the connection
-        conn = psycopg2.connect(dbname='postgres', user='nesta', password='lucky', host='localhost', port=5432)
+        conn = psycopg2.connect(dbname='postgres', user='eros', password='lucky', host='localhost', port=5432)
         # Set autocommit before creating the cursor
         conn.autocommit = True
         try:
@@ -30,7 +30,8 @@ class DBManager:
 
     def connect_to_db(self):
         """Connect to the specified database."""
-        self.conn = psycopg2.connect(dbname=self.db_name, user='nesta', password='lucky', host='localhost', port=5432)
+        self.conn = psycopg2.connect(dbname=self.db_name, user='eros', password='lucky', host='localhost', port=5432)
+        self.conn.autocommit = True  # Ensure autocommit is enabled
 
     def create_tables(self):
         """Create tables if they do not exist."""
@@ -96,14 +97,26 @@ class DBManager:
             result = cur.fetchone()
             return result[0] if result else None
 
+    # def add_user(self, name: str) -> int:
+    #     """Add a new user if not exists, return user ID."""
+    #     user_id = self.get_user_id(name)
+    #     if user_id is None:
+    #         with self.conn.cursor() as cur:
+    #             cur.execute("INSERT INTO users (name) VALUES (%s) RETURNING user_id", (name,))
+    #             user_id = cur.fetchone()[0]
+    #             self.conn.commit()
+    #     return user_id
     def add_user(self, name: str) -> int:
         """Add a new user if not exists, return user ID."""
         user_id = self.get_user_id(name)
         if user_id is None:
-            with self.conn.cursor() as cur:
-                cur.execute("INSERT INTO users (name) VALUES (%s) RETURNING user_id", (name,))
-                user_id = cur.fetchone()[0]
-                self.conn.commit()
+            try:
+                with self.conn.cursor() as cur:
+                    cur.execute("INSERT INTO users (name) VALUES (%s) RETURNING user_id", (name,))
+                    user_id = cur.fetchone()[0]
+                    self.conn.commit()
+            except Exception as e:
+                print(f"Error adding user: {e}")
         return user_id
 
     def add_organization(self, user_id: int, name: str) -> int:
@@ -285,9 +298,9 @@ class DBManager:
 
 # Example Usage
 if __name__ == '__main__':
-    validator_hotkey = '5F4tQyWrhfGVcNhoqeiNsR6KjD4wMZ2kfhLj4oHYuyHbZAc8'
+    validator_hotkey = '5F4tQyWrhfGVcNhoqeiNsR6KjD4wMZ2kfhLj4oHYuyHbZAc68'
 
-    db_manager = DBManager(validator_hotkey)
+    db_manager = MinerDBManager(validator_hotkey)
 
     db_manager.create_operation(
         request_type='create',

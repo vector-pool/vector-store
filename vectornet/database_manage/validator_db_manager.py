@@ -11,12 +11,14 @@ class ValidatorDBManager:
     def ensure_database_exists(self) -> bool:
         """Ensure the database exists, create if not."""
         # Create the connection
-        conn = psycopg2.connect(dbname='postgres', user='validatgor', password='lucky', host='localhost', port=5432)
+        conn = psycopg2.connect(dbname='postgres', user='postgres', password='lucky', host='localhost', port=5432)
         # Set autocommit before creating the cursor
         conn.autocommit = True
         try:
             with conn.cursor() as cur:
                 # Check if the database exists
+                if isinstance(self.db_name, int):
+                    self.db_name = str(self.db_name)
                 cur.execute(sql.SQL("SELECT 1 FROM pg_database WHERE datname = %s"), [self.db_name])
                 exists = cur.fetchone()
                 
@@ -30,7 +32,8 @@ class ValidatorDBManager:
 
     def connect_to_db(self):
         """Connect to the specified database."""
-        self.conn = psycopg2.connect(dbname=self.db_name, user='validator', password='lucky', host='localhost', port=5432)
+        self.conn = psycopg2.connect(dbname=self.db_name, user='vali', password='lucky', host='localhost', port=5432)
+        print("correctly connected")
 
     def create_tables(self):
         """Create tables if they do not exist."""
@@ -280,14 +283,14 @@ class ValidatorDBManager:
 
 # Example Usage
 if __name__ == '__main__':
-    miner_uid = 12
+    miner_uid = 15
     db_manager = ValidatorDBManager(miner_uid)
 
     db_manager.create_operation(
         request_type='create',
         user_name='abc3',
         organization_name='pleb',
-        namespace_name='name24',
+        namespace_name='name25',
         pageids=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     )
 
@@ -295,7 +298,7 @@ if __name__ == '__main__':
         request_type='read',
         user_name='abc3',
         organization_name='pleb',
-        namespace_name='name24',
+        namespace_name='name25',
     )
     print(pageids)
 
@@ -304,7 +307,7 @@ if __name__ == '__main__':
         perform='add',  # this can be 'add'
         user_name='abc3',
         organization_name='pleb',
-        namespace_name='name24',
+        namespace_name='name25',
         pageids=[11, 12, 13, 14, 15, 16, 17, 18, 19]
     )
 
@@ -312,7 +315,7 @@ if __name__ == '__main__':
         request_type='read',
         user_name='abc3',
         organization_name='pleb',
-        namespace_name='name24',
+        namespace_name='name25',
     )
     print(pageids)
     

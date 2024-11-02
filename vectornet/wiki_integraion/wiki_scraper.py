@@ -54,7 +54,7 @@ async def get_article_extracts(pageid):
     
     return extracts
 
-async def get_articles_in_category(category):
+async def get_articles_in_category(category, k):
     async with aiohttp.ClientSession() as session:
         async with session.get(
             "https://en.wikipedia.org/w/api.php",
@@ -62,7 +62,7 @@ async def get_articles_in_category(category):
                 "action": "query",
                 "list": "categorymembers",
                 "cmtitle": category,
-                "cmlimit": "5",
+                "cmlimit": k,
                 "format": "json"
             },
         ) as response:
@@ -80,7 +80,7 @@ async def get_articles_in_category(category):
                     })
             return articles
 
-async def wikipedia_scraper():
+async def wikipedia_scraper(k : int):
     
     start_time = datetime.now()
     print(start_time)
@@ -90,7 +90,7 @@ async def wikipedia_scraper():
     print(f"Selected Category: {random_category}")
 
     # Fetch articles from the selected category
-    articles = await get_articles_in_category(random_category)
+    articles = await get_articles_in_category(random_category, k)
     print(f"Fetched {len(articles)} articles.")
 
     # Write the articles to result.txt in dict format
@@ -111,5 +111,7 @@ async def wikipedia_scraper():
     print(datetime.now())
     print(elasped_time.total_seconds())
 
+    return articles
+ 
 if __name__ == '__main__':
     asyncio.run(wikipedia_scraper())
