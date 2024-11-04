@@ -40,6 +40,12 @@ from vectornet.tasks.generate_task import (
     generate_update_request, 
     generate_delete_request,
 )
+from vectornet.evaludation.evaluate import (
+    evaluate_create_request,
+)
+from vectornet.database_manage.validator_db_manager import ValidatorDBManager
+
+
 
 async def forward(self):
     """
@@ -59,20 +65,40 @@ async def forward(self):
     # init_new_miner_uids()
     
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-    query = generate_create_request(
+    
+    validator_db_managers = {} #this may occurs the error
+    
+    for miner_uid in miner_uids:
+        validator_db_managers[miner_uid] = ValidatorDBManager(miner_uid)
+    
+    category, articles, query = generate_create_request(
         article_size = 30,
     )
+    pageids = [article['pageid'] for article in articles]
+    for miner_uid, manager in validator_db_managers.items():
+        # Call the create_operation method on each manager
+        manager.create_operation("CREATE", query.user_name, query.organization_name, query.namespace_name, category, pageids)
     
-    responses = await self.dendrite(
+    responses_create = await self.dendrite(
         axons = [self.metagraph.axons[uid] for uid in miner_uids],
         synapse = query,
         deserialize = True,
         timeout = 90,
     )
     
-    create_scores = evaluate_create_score(responses)
+    create_scores = evaluate_create_request(responses_create)
+    
+    query = generate_update_request(
+        article_zize = 30,
+        miner_uids = miner_uids,
+    )
 
+    for miner_uid, manager in validator_db_managers.items():
+        manager.update_operation("UPDATE", query.user_name, query.organization_name, query.namespace_name, pageids)
 
+    responses_update = evaluate_update_request(responses_update)
+    
+    query = generate_delete_request()
 
     # The dendrite client queries the network.
     responses = await self.dendrite(

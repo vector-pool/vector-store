@@ -17,10 +17,9 @@ wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
 
+len_limit = 31e4
+
 def generate_create_request(article_size = 30) -> CreateSynapse:
-    
-    len_limit = 31e4
-    
     
     category = random.choice(wiki_categories)
     organization_name = random.choice(organization_names)
@@ -31,8 +30,8 @@ def generate_create_request(article_size = 30) -> CreateSynapse:
     contents = []
     for article in articles:
         contents.append(article['content'][len_limit])
-    version = get_version
-    return CreateSynapse(
+    version = get_version()
+    return category, articles, CreateSynapse(
         version = version,
         type = 'CREATE',
         user_name = user_name,
@@ -45,8 +44,31 @@ def generate_create_request(article_size = 30) -> CreateSynapse:
 def generate_read_request():
     pass
 
-def generate_update_request():
-    pass
-
+def generate_update_request(article_size, miner_uids):
+    
+    namespace_data = get_namespace_data(miner_uids)
+        
+    user_id, organization_id, namespaace_id = random.choice(namespace_data)
+    
+    articles = wikipedia_scraper(article_size, category)
+    contents = []
+    for article in articles:
+        contents.append(article['content'][len_limit])
+    
+    version = get_version() 
+    
+    return UpdateSynapse(
+        version = version,
+        type = "UPDATE",
+        perform = "ADD",
+        user_name = user_id,
+        organization_name = organization_id,
+        namespace_name = namespaace_id,
+        index_data = contents,
+    )
+    
 def generate_delete_request():
-    pass
+    
+    namespace_data = get_namespace_data(miner_uids)
+    
+    

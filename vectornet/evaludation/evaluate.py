@@ -7,4 +7,9 @@ def evaluate_create_request(responses):
     
     for i, response in enumerate(responses):
         if response is None:
-            scores
+            print(f"{i}th response doesn't have a value")
+            scores[i] = 0
+        if len(response) != 3:
+            print(f"{i}th response's length is not 3, it contains less or more ingegers.")
+        
+        # some logics need here,
