@@ -34,7 +34,7 @@ from vectornet.protocol import(
 )
 from vectornet.utils.version import compare_version, get_version
 from vectornet.embedding.embed import TextToEmbedding
-from vectornet.database_manage.db_manager import DBManager
+from vectornet.database_manage.miner_db_manager import MinerDBManager
 from vectornet.search_engine.search import SearchEngine
 
 class Miner(BaseMinerNeuron):
@@ -65,7 +65,7 @@ class Miner(BaseMinerNeuron):
         index_data = query.index_data
         validator_hotkey = query.dendrite.hotkey
         
-        validator_db_manager = DBManager(validator_hotkey)
+        validator_db_manager = MinerDBManager(validator_hotkey)
         
         embedding_manager = TextToEmbedding()
         
@@ -93,7 +93,7 @@ class Miner(BaseMinerNeuron):
         size = query.size
         valdiator_hotkey = query.dendrite.hotkey
         
-        validator_db_manager = DBManager(valdiator_hotkey)
+        validator_db_manager = MinerDBManager(valdiator_hotkey)
         
         embedding_manager = TextToEmbedding()
         
@@ -128,7 +128,7 @@ class Miner(BaseMinerNeuron):
         index_data = query.index_data
         validator_hotkey = query.dendrite.hotkey
         
-        validator_db_manager = DBManager(validator_hotkey)
+        validator_db_manager = MinerDBManager(validator_hotkey)
         
         embedding_manager = TextToEmbedding()
         
@@ -155,7 +155,7 @@ class Miner(BaseMinerNeuron):
         namespace_name = query.namespace_name
         validator_hotkey = query.dendrite.hotkey
         
-        validator_db_manager = DBManager(validator_hotkey)
+        validator_db_manager = MinerDBManager(validator_hotkey)
         
         results = []
         user_id, organization_id, namespace_id = validator_db_manager.delete_operation(request_type, perform, user_name, organization_name, namespace_name)        

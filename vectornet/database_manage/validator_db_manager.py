@@ -11,7 +11,7 @@ class ValidatorDBManager:
     def ensure_database_exists(self) -> bool:
         """Ensure the database exists, create if not."""
         # Create the connection
-        conn = psycopg2.connect(dbname='postgres', user='postgres', password='lucky', host='localhost', port=5432)
+        conn = psycopg2.connect(dbname='postgres', user='vali', password='lucky', host='localhost', port=5432)
         # Set autocommit before creating the cursor
         conn.autocommit = True
         try:

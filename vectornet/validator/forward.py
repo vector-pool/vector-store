@@ -99,6 +99,8 @@ async def forward(self):
     responses_update = evaluate_update_request(responses_update)
     
     query = generate_delete_request()
+    
+    
 
     # The dendrite client queries the network.
     responses = await self.dendrite(
