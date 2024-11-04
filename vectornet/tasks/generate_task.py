@@ -59,8 +59,8 @@ def generate_update_request(article_size, miner_uids):
     
     return UpdateSynapse(
         version = version,
-        type = "UPDATE",
-        perform = "ADD",
+        type = 'UPDATE',
+        perform = 'ADD',
         user_name = user_id,
         organization_name = organization_id,
         namespace_name = namespaace_id,
@@ -70,5 +70,19 @@ def generate_update_request(article_size, miner_uids):
 def generate_delete_request():
     
     namespace_data = get_namespace_data(miner_uids)
+    
+    user_id, organization_id, namespace_id = random.choice(namespace_data)
+    #some logics need in here.
+    
+    version = get_version()
+    
+    return DeleteSynapse(
+        version = version,
+        type = 'DELETE',
+        perform = 'namespace',
+        user_id = user_id,
+        organization_id = organization_id,
+        namespace_id = namespace_id,
+    )
     
     

@@ -102,7 +102,7 @@ class DeleteSynapse(bt.Synapse):
     """    
     version: Optional[Version] = None
     
-    type: str = pydantic.Field("Delete")
+    type: str = pydantic.Field("DELETE")
     
     perform: Optional[str] = None
     
