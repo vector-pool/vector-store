@@ -99,7 +99,7 @@ After you submit a pull request, it will be reviewed by the maintainers. They ma
 > Note: Be sure to merge the latest from "upstream" before making a pull request:
 
 ```bash
-git remote add upstream https://github.com/opentensor/bittensor.git # TODO(developer): replace with your repo URL
+git remote add upstream https://github.com/GoNeuralAI/vectornet # TODO(developer): replace with your repo URL
 git fetch upstream
 git merge upstream/<your-branch-name>
 git push origin <your-branch-name>

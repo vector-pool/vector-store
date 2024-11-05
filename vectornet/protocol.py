@@ -19,58 +19,101 @@
 
 import typing
 import bittensor as bt
-
-# TODO(developer): Rewrite with your protocol definition.
-
-# This is the protocol for the dummy miner and validator.
-# It is a simple request-response protocol where the validator sends a request
-# to the miner, and the miner responds with a dummy response.
-
-# ---- miner ----
-# Example usage:
-#   def dummy( synapse: Dummy ) -> Dummy:
-#       synapse.dummy_output = synapse.dummy_input + 1
-#       return synapse
-#   axon = bt.axon().attach( dummy ).serve(netuid=...).start()
-
-# ---- validator ---
-# Example usage:
-#   dendrite = bt.dendrite()
-#   dummy_output = dendrite.query( Dummy( dummy_input = 1 ) )
-#   assert dummy_output == 2
+import pydantic
+from typing import Dict, List, Optional
 
 
-class Dummy(bt.Synapse):
+class Version(pydantic.BaseModel):
+    major: int
+    minor: int
+    patch: int
+
+
+class CreateSynapse(bt.Synapse):
     """
-    A simple dummy protocol representation which uses bt.Synapse as its base.
-    This protocol helps in handling dummy request and response communication between
-    the miner and the validator.
-
-    Attributes:
-    - dummy_input: An integer value representing the input request sent by the validator.
-    - dummy_output: An optional integer value which, when filled, represents the response from the miner.
+    Create protocal is represent to require to create db to miners.
     """
+    version: Optional[Version] = None
+    
+    type: str = pydantic.Field("CREATE")
+    
+    user_name: Optional[str] = None
+    
+    organization_name: Optional[str] = None
+    
+    namespace_name: Optional[str] = None
+    
+    index_data: Optional[List[str]] = None
+    
+    results = Optional[List[int]] = None
+    
+    def deserialize(self) -> List[Dict]:
+        return self.results
 
-    # Required request input, filled by sending dendrite caller.
-    dummy_input: int
+class ReadSynapse(bt.Synapse):
+    """
+    Read protocal is represent to require to read db to miners.
+    """
+    version: Optional[Version] = None
+    
+    type: str = pydantic.Field("READ")
+    
+    user_name: Optional[str] = None
+    
+    organization_name: Optional[str] = None
+    
+    namespace_name: Optional[str] = None
+    
+    query_data: Optional[str] = None
+    
+    size: int = pydantic.Field(3, ge=1, le=50)
+    
+    results = Optional[List[tuple(List[str], List[float])]] = None
+    
+    def deserialize(self) -> List[Dict]:
+        return self.results
 
-    # Optional request output, filled by receiving axon.
-    dummy_output: typing.Optional[int] = None
+class UpdateSynapse(bt.Synapse):
+    """
+    Update protocal is represent to require to update db to miners.
+    """
+    version: Optional[Version] = None
+    
+    type: str = pydantic.Field("UPDATE")
+    
+    perform: Optional[str] = None
+    
+    user_id: Optional[str] = None
+    
+    organization_id: Optional[str] = None
+    
+    namespace_id: Optional[str] = None
+    
+    index_data: Optional[List[str]] = None
+    
+    results = Optional[List[int]] = None
 
-    def deserialize(self) -> int:
-        """
-        Deserialize the dummy output. This method retrieves the response from
-        the miner in the form of dummy_output, deserializes it and returns it
-        as the output of the dendrite.query() call.
+    def deserialize(self) -> List[Dict]:
+        return self.results
+    
+class DeleteSynapse(bt.Synapse):
+    """
+    Delete protocal is represent to require to delete db to miners.
+    """    
+    version: Optional[Version] = None
+    
+    type: str = pydantic.Field("DELETE")
+    
+    perform: Optional[str] = None
+    
+    user_name: Optional[str] = None
+    
+    organization_name: Optional[str] = None
+    
+    namespace_name: Optional[str] = None
+    
+    results = Optional[List[int]] = None
 
-        Returns:
-        - int: The deserialized response, which in this case is the value of dummy_output.
-
-        Example:
-        Assuming a Dummy instance has a dummy_output value of 5:
-        >>> dummy_instance = Dummy(dummy_input=4)
-        >>> dummy_instance.dummy_output = 5
-        >>> dummy_instance.deserialize()
-        5
-        """
-        return self.dummy_output
+    def deserialize(self) -> List[Dict]:
+        return self.results
+    

@@ -1,0 +1,764 @@
+organization_names:
+  - Apple
+  - Microsoft
+  - Amazon
+  - Google
+  - Facebook
+  - Alibaba
+  - Tencent
+  - Berkshire Hathaway
+  - Visa
+  - Johnson & Johnson
+  - Samsung
+  - Walmart
+  - Nestle
+  - Procter & Gamble
+  - Roche
+  - NVIDIA
+  - TSMC
+  - LVMH
+  - Mastercard
+  - Intel
+  - Verizon
+  - Coca-Cola
+  - Pfizer
+  - Toyota
+  - AT&T
+  - Netflix
+  - PepsiCo
+  - Cisco
+  - Nike
+  - Oracle
+  - IBM
+  - Unilever
+  - Adobe
+  - Salesforce
+  - PayPal
+  - AbbVie
+  - ExxonMobil
+  - Chevron
+  - Novartis
+  - Walt Disney
+  - Merck
+  - McDonald's
+  - L'Oréal
+  - Costco
+  - Boeing
+  - Siemens
+  - Honeywell
+  - Qualcomm
+  - SAP
+  - AMD
+  - Square
+  - Shopify
+  - Slack
+  - Zoom
+  - Lyft
+  - Uber
+  - Airbnb
+  - SpaceX
+  - Tesla
+  - Twitter
+  - LinkedIn
+  - Dropbox
+  - Pinterest
+  - Snapchat
+  - Stripe
+  - Reddit
+  - TikTok
+  - ServiceNow
+  - Atlassian
+  - HubSpot
+  - Twilio
+  - Splunk
+  - Datadog
+  - Palantir
+  - CrowdStrike
+  - DocuSign
+  - Zscaler
+  - Okta
+  - RingCentral
+  - Wix
+  - Squarespace
+  - WeWork
+  - Activision Blizzard
+  - Electronic Arts
+  - Take-Two Interactive
+  - Roku
+  - Sony
+  - Panasonic
+  - LG
+  - Philips
+  - Sharp
+  - Canon
+  - Nikon
+  - Fujifilm
+  - Xerox
+  - 3M
+  - General Electric
+  - Northrop Grumman
+  - Lockheed Martin
+  - Raytheon
+  - BAE Systems
+  - Thales Group
+  - Rolls-Royce
+  - Caterpillar
+  - Deere & Company
+  - General Motors
+  - Ford
+  - Honda
+  - Volkswagen
+  - Hyundai
+  - Kia
+  - BMW
+  - Mercedes-Benz
+  - Audi
+  - Ferrari
+  - Lamborghini
+  - Porsche
+  - Subaru
+  - Dell
+  - HP
+  - Lenovo
+  - Asus
+  - Acer
+  - MSI
+  - Razer
+  - Alienware
+  - Logitech
+  - Corsair
+  - Kingston
+  - Seagate
+  - Western Digital
+  - NetApp
+  - VMware
+  - Red Hat
+  - Citrix
+  - Palo Alto Networks
+  - Fortinet
+  - CrowdStrike
+  - Splunk
+  - F5 Networks
+  - A10 Networks
+  - Zscaler
+  - Cloudflare
+  - DigitalOcean
+  - Heroku
+  - MongoDB
+  - Elastic
+  - HashiCorp
+  - Snowflake
+  - Databricks
+  - Alteryx
+  - Tableau
+  - Qlik
+  - Domo
+  - Sisense
+  - Looker
+  - Airtable
+  - Smartsheet
+  - Monday.com
+  - Trello
+  - Asana
+  - ClickUp
+  - Salesforce
+  - ServiceTitan
+  - Freshworks
+  - monday.com
+  - Notion
+  - Evernote
+  - Box
+  - Dropbox
+  - Google Drive
+  - OneDrive
+  - iCloud
+  - Bitbucket
+  - GitHub
+  - GitLab
+  - Jenkins
+  - Travis CI
+  - CircleCI
+  - PagerDuty
+  - New Relic
+  - AppDynamics
+  - Datadog
+  - Sumo Logic
+  - Splunk
+  - Freshdesk
+  - Zendesk
+  - Intercom
+  - HubSpot
+  - Mailchimp
+  - Constant Contact
+  - ActiveCampaign
+  - SendGrid
+  - Klaviyo
+  - Shopify Plus
+  - BigCommerce
+  - WooCommerce
+  - Magento
+  - PrestaShop
+  - OpenCart
+  - Wix
+  - Squarespace
+  - Weebly
+  - WordPress
+  - Joomla
+  - Drupal
+  - Sitecore
+  - Adobe Experience Manager
+  - HubSpot CMS
+  - Shopify
+  - Big Cartel
+  - Etsy
+  - Redbubble
+  - Zazzle
+  - Teespring
+  - Printful
+  - Printify
+  - Cafe Press
+  - Society6
+  - Threadless
+  - Spreadshirt
+  - Custom Ink
+  - Vistaprint
+  - Moo
+  - Shutterfly
+  - Snapfish
+  - Mixbook
+  - Blurb
+  - Artifact Uprising
+  - Chatbooks
+  - Lulu
+  - BookBaby
+  - Kindle Direct Publishing
+  - IngramSpark
+  - Smashwords
+  - Draft2Digital
+  - CreateSpace
+  - KDP Print
+  - Lulu xPress
+  - BookBaby Print
+  - Blurb BookWright
+  - Reedsy
+  - Scribophile
+  - Wattpad
+  - Medium
+  - Substack
+  - Ghost
+  - Tumblr
+  - Blogger
+  - WordPress.com
+  - LiveJournal
+  - DeviantArt
+  - ArtStation
+  - Behance
+  - Dribbble
+  - 500px
+  - Flickr
+  - SmugMug
+  - PhotoShelter
+  - Zenfolio
+  - Shutterfly
+
+
+user_name:
+  - Ace
+  - Amos
+  - Ash
+  - Axel
+  - Bandit
+  - Beau
+  - Billy
+  - Blaze
+  - Bo
+  - Boomer
+  - Boone
+  - Brady
+  - Brett
+  - Brock
+  - Brooks
+  - Buck
+  - Buster
+  - Cade
+  - Cale
+  - Cal
+  - Cash
+  - Chance
+  - Charlie
+  - Chase
+  - Cheyenne
+  - Clay
+  - Clint
+  - Clyde
+  - Cody
+  - Colt
+  - Cooper
+  - Dallas
+  - Dalton
+  - Dane
+  - Dax
+  - Dean
+  - Decker
+  - Denver
+  - Dex
+  - Dixon
+  - Duke
+  - Dusty
+  - Earl
+  - Eli
+  - Finn
+  - Flint
+  - Flynn
+  - Ford
+  - Gage
+  - Garrett
+  - Gauge
+  - Gentry
+  - Gideon
+  - Grady
+  - Graham
+  - Grant
+  - Gray
+  - Griff
+  - Grit
+  - Gus
+  - Hank
+  - Harley
+  - Harris
+  - Hayes
+  - Holt
+  - Houston
+  - Huck
+  - Hudson
+  - Hux
+  - Ike
+  - Jace
+  - Jack
+  - Jax
+  - Jed
+  - Jedidiah
+  - Jesse
+  - Jett
+  - Judd
+  - Jude
+  - Kane
+  - Kip
+  - Knox
+  - Kody
+  - Lane
+  - Lawson
+  - Layne
+  - Levi
+  - Lyle
+  - Mack
+  - Maverick
+  - Max
+  - Monty
+  - Nash
+  - Nate
+  - Oakley
+  - Otis
+  - Parker
+  - Pete
+  - Porter
+  - Quinn
+  - Ranger
+  - Reba
+  - Reed
+  - Rex
+  - Rhett
+  - Rip
+  - River
+  - Rocky
+  - Rocco
+  - Roy
+  - Royce
+  - Rudy
+  - Rufus
+  - Rusty
+  - Ryder
+  - Sage
+  - Sawyer
+  - Scout
+  - Shane
+  - Slade
+  - Slim
+  - Sonny
+  - Stetson
+  - Stone
+  - Tate
+  - Tatum
+  - Tex
+  - Thad
+  - Trace
+  - Travis
+  - Trent
+  - Tripp
+  - Tucker
+  - Ty
+  - Vance
+  - Wade
+  - Walker
+  - Waylon
+  - Wes
+  - West
+  - Weston
+  - Wiley
+  - Wyatt
+  - Zane
+  - Zeb
+  - Zeke
+
+wiki_categories:
+  - Almanacs
+  - Atlases
+  - Biographical dictionaries
+  - Dictionaries
+  - Encyclopedias
+  - Glossaries
+  - Handbooks and manuals
+  - Lists
+  - Medical manuals
+  - Reference book stubs
+  - Reference works in the public domain
+  - Style guides
+  - Trivia books
+  - Web sites
+  - Classics
+  - Critical theory
+  - Cultural anthropology
+  - Clothing
+  - Folklore
+  - Food and drink culture
+  - Food and drink
+  - Language
+  - Literature
+  - Museology
+  - Mythology
+  - Philosophy
+  - Popular culture
+  - Science and culture
+  - Traditions
+  - Handicrafts
+  - Celebrity
+  - Censorship in the arts
+  - Festivals
+  - Humor
+  - Literature
+  - Museums
+  - Parties
+  - Poetry
+  - Circuses
+  - Dance
+  - Film
+  - Music
+  - Opera
+  - Storytelling
+  - Theatre
+  - Board games
+  - Card games
+  - Dolls
+  - Puppetry
+  - Puzzles
+  - Role-playing games
+  - Video games
+  - Earth
+  - World
+  - Bodies of water
+  - Cities
+  - Communities
+  - Continents
+  - Countries
+  - Deserts
+  - Lakes
+  - Landforms
+  - Mountains
+  - Navigation
+  - Oceans
+  - Populated places
+  - Protected areas
+  - Regions
+  - Rivers
+  - Subterranea
+  - Territories
+  - Towns
+  - Villages
+  - Health by country
+  - Health care
+  - Health law
+  - Health promotion
+  - Health standards
+  - Hospitals
+  - Occupational safety and health
+  - Pharmaceutical industry
+  - Pharmaceuticals policy
+  - Safety
+  - Africa
+  - Asia
+  - Europe
+  - America
+  - Activism
+  - Agriculture
+  - Arts
+  - Aviation
+  - Commemoration
+  - Communication
+  - Crime
+  - Design
+  - Education
+  - Entertainment
+  - Fictional activities
+  - Fishing
+  - Food and drink preparation
+  - Government
+  - Hunting
+  - Industry
+  - Leisure activities
+  - Navigation
+  - Observation
+  - Performing arts
+  - Physical exercise
+  - Planning
+  - Politics
+  - Recreation
+  - Religion
+  - Human spaceflight
+  - Sports
+  - Trade
+  - Transport
+  - Travel
+  - Underwater human activities
+  - Underwater diving
+  - War
+  - Work
+  - Clothing
+  - Employment
+  - Entertainment
+  - Food and drink
+  - Games
+  - Health
+  - Hobbies
+  - Home
+  - Income
+  - Interpersonal relationships
+  - Leisure
+  - Love
+  - Motivation
+  - Personal development
+  - Pets
+  - Attention
+  - Cognition
+  - Cognitive Biases
+  - Creativity
+  - Decision Theory
+  - Emotion
+  - Error
+  - Imagination
+  - Intelligence Researchers
+  - Learning
+  - Memory Biases
+  - Mnemonics
+  - Nootropics
+  - Organizational Thinking
+  - Perception
+  - Problem Solving
+  - Psychological Adjustment
+  - Psychometrics
+  - Branches
+  - Schools and Traditions
+  - Concepts
+  - Theories
+  - Arguments
+  - Philosophers
+  - Literature
+  - History
+  - By Period
+  - By Region
+  - Aesthetics
+  - Epistemology
+  - Ethics
+  - Logic
+  - Metaphysics
+  - Social Philosophy
+  - Activism
+  - Business
+  - Communication
+  - Crime
+  - Education
+  - Ethnic Groups
+  - Family
+  - Finance
+  - Globalization
+  - Government
+  - Health
+  - Home
+  - Industries
+  - Infrastructure
+  - Law
+  - Mass Media
+  - Military
+  - Money
+  - Organizations
+  - Peace
+  - Politics
+  - Real Estate
+  - Rights
+  - War
+  - Buddhist Mythology
+  - Christian Mythology
+  - Hindu Mythology
+  - Islamic Mythology
+  - Jewish Mythology
+  - Agnosticism
+  - Atheism
+  - Ayyavazhi
+  - Faith
+  - Buddhism
+  - Caodaism
+  - Chinese Folk Religion
+  - Christianity
+  - Confucianism
+  - Druidry
+  - Falun Gong
+  - Hinduism
+  - Islam
+  - Jainism
+  - Judaism
+  - Modern Paganism
+  - Mormonism
+  - Neo-druidism
+  - Rastafari
+  - Satanism
+  - Scientology
+  - Shinto
+  - Sikhism
+  - Spiritism
+  - Taoism
+  - Tenrikyo
+  - Unitarian Universalism
+  - Wicca
+  - Zoroastrianism
+  - Agnosticism
+  - Animism
+  - Atheism
+  - Deism
+  - Determinism
+  - Esotericism
+  - Gnosticism
+  - Humanism
+  - Monism
+  - Monotheism
+  - Mysticism
+  - New Age
+  - Paganism
+  - Pantheism
+  - Polytheism
+  - Shamanism
+  - Skepticism
+  - Spiritualism
+  - Theosophy
+  - Transcendentalism
+  - Unitarianism
+  - Allah
+  - Bible
+  - Buddhas
+  - Deities
+  - Demons
+  - Exorcism
+  - God
+  - Jesus
+  - Mythology
+  - Occult
+  - Prayer
+  - Prophecy
+  - Quran
+  - Religious Ethics
+  - Religious Law
+  - Ritual
+  - Spirituality
+  - Theology
+  - Anthropology
+  - Archaeology
+  - Cultural Studies
+  - Demographics
+  - Economics
+  - Information Science
+  - International Relations
+  - Linguistics
+  - Media Studies
+  - Political Science
+  - Psychology
+  - Public Administration
+  - Sexology
+  - Social Scientists
+  - Sociology
+  - Social Work
+  - Systems Theory
+  - Application Software
+  - Artificial Intelligence
+  - Classes of Computers
+  - Companies
+  - Computer Architecture
+  - Computer Model
+  - Computer Engineering
+  - Computer Science
+  - Computer Security
+  - Computing and Society
+  - Data
+  - Embedded Systems
+  - Free Software
+  - Human–Computer Interaction
+  - Information Systems
+  - Information Technology
+  - Internet
+  - Mobile Web
+  - Languages
+  - Multimedia
+  - Networks
+  - Operating Systems
+  - Platforms
+  - Product Lifecycle Management
+  - Programming
+  - Real-Time Computing
+  - Software
+  - Software Engineering
+  - Unsolved Problems in Computer Science
+  - Avionics
+  - Circuits
+  - Companies
+  - Connectors
+  - Consumer Electronics
+  - Digital Electronics
+  - Digital Media
+  - Electrical Components
+  - Electronic Design
+  - Electronics Manufacturing
+  - Embedded Systems
+  - Integrated Circuits
+  - Microwave Technology
+  - Molecular Electronics
+  - Water Technology
+  - Optoelectronics
+  - Quantum Electronics
+  - Radio-Frequency Identification (RFID)
+  - Radio Electronics
+  - Semiconductors
+  - Signal Cables
+  - Surveillance
+  - Telecommunications
+  - Aerospace Engineering
+  - Biological Engineering
+  - Chemical Engineering
+  - Civil Engineering
+  - Electrical Engineering
+  - Environmental Engineering
+  - Materials Science
+  - Mechanical Engineering
+  - Nuclear Technology
+  - Software Engineering
+  - Structural Engineering
+  - Systems Engineering
+
+
+
