@@ -75,49 +75,73 @@ async def forward(self):
         article_size = 30,
     )
     pageids = [article['pageid'] for article in articles]
-    for miner_uid, manager in validator_db_managers.items():
-        # Call the create_operation method on each manager
-        manager.create_operation("CREATE", query.user_name, query.organization_name, query.namespace_name, category, pageids)
     
-    responses_create = await self.dendrite(
+    response_create_request = await self.dendrite(
         axons = [self.metagraph.axons[uid] for uid in miner_uids],
         synapse = query,
         deserialize = True,
         timeout = 90,
     )
     
-    create_scores = evaluate_create_request(responses_create)
+    bt.logging.info(f"Received responses: {response_create_request}")
     
+    create_zero_scores = evaluate_create_request(response_create_request)
+    
+    for (miner_uid, manager), create_zero_score in zip(validator_db_managers.items(), create_zero_scores):
+        # Call the create_operation method on each manager
+        if create_zero_score:
+            manager.create_operation("CREATE", query.user_name, query.organization_name, query.namespace_name, category, pageids)
+
+
     query = generate_update_request(
         article_zize = 30,
         miner_uids = miner_uids,
     )
 
-    for miner_uid, manager in validator_db_managers.items():
-        manager.update_operation("UPDATE", query.user_name, query.organization_name, query.namespace_name, pageids)
+    for (miner_uid, manager), create_zero_score in zip(validator_db_managers.items(), create_zero_scores):
+        # Call the create_operation method on each manager
+        if create_zero_score:
+            manager.create_operation("UPDATE", query.user_id, query.organization_id, query.namespace_id, category, pageids)
 
-    responses_update = evaluate_update_request(responses_update)
+    responses_update = await self.dendrite(
+        axons = [self.metagraph.axons[uid] for uid in miner_uids],
+        synapse = query,
+        deserialize = True,
+        timeout = 90,
+    )
+    
+    bt.logging.info(f"Received responses: {responses_update}")
+    
+    update_zero_scores = evaluate_update_request(responses_update)
     
     query = generate_delete_request()
     
-    
-
-    # The dendrite client queries the network.
-    responses = await self.dendrite(
-        # Send the query to selected miner axons in the network.
-        axons=[self.metagraph.axons[uid] for uid in miner_uids],
-        # Construct a dummy query. This simply contains a single integer.
-        synapse=Dummy(dummy_input=self.step),
-        # All responses have the deserialize function called on them before returning.
-        # You are encouraged to define your own deserialization function.
-        deserialize=True,
+    responses_delete = await self.dendrite(
+        axons = [self.metagraph.axons[uid] for uid in miner_uids],
+        synapse = query,
+        deserialize = True,
+        timeout = 20,
     )
+    
+    bt.logging.info(f"Received responses: {responses_delete}") 
+    
+    delete_zero_scores = evaluate_delete_request(responses_delete)
+    
+    query = generate_read_request()
+    
+    responses_read = await self.dendrite(
+        axons = [self.metagraph.axons[uid] for uid in miner_uids],
+        synapse = query,
+        deserialize = True,
+        timeout = 30,
+    )
+    
+    bt.logging.info(f"Received responses: {responses_read}")
+    
+    read_scores = evaluate_delete_request(query, responses_read)
+    
+    miner_row_scores = create_zero_scores * update_zero_scores * delete_zero_scores * read_scores
 
-    # Log the results for monitoring purposes.
-    bt.logging.info(f"Received responses: {responses}")
-
-    # TODO(developer): Define how the validator scores responses.
-    # Adjust the scores based on responses from miners.
     rewards = get_rewards(self, query=self.step, responses=responses)
 
     bt.logging.info(f"Scored responses: {rewards}")

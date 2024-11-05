@@ -48,7 +48,7 @@ def generate_update_request(article_size, miner_uids):
     
     namespace_data = get_namespace_data(miner_uids)
         
-    user_id, organization_id, namespaace_id = random.choice(namespace_data)
+    user_id, organization_id, namespaace_id, category = random.choice(namespace_data)
     
     articles = wikipedia_scraper(article_size, category)
     contents = []
@@ -61,9 +61,9 @@ def generate_update_request(article_size, miner_uids):
         version = version,
         type = 'UPDATE',
         perform = 'ADD',
-        user_name = user_id,
-        organization_name = organization_id,
-        namespace_name = namespaace_id,
+        user_id = user_id,
+        organization_id = organization_id,
+        namespace_id = namespaace_id,
         index_data = contents,
     )
     
