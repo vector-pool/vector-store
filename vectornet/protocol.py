@@ -83,11 +83,11 @@ class UpdateSynapse(bt.Synapse):
     
     perform: Optional[str] = None
     
-    user_name: Optional[str] = None
+    user_id: Optional[str] = None
     
-    organization_name: Optional[str] = None
+    organization_id: Optional[str] = None
     
-    namespace_name: Optional[str] = None
+    namespace_id: Optional[str] = None
     
     index_data: Optional[List[str]] = None
     
