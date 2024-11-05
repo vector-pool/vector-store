@@ -81,7 +81,7 @@ class UpdateSynapse(bt.Synapse):
     
     type: str = pydantic.Field("UPDATE")
     
-    perform: Optional[str] = None
+    perform: Optional[str] = None # this should be updated with two options
     
     user_id: Optional[str] = None
     
@@ -106,11 +106,11 @@ class DeleteSynapse(bt.Synapse):
     
     perform: Optional[str] = None
     
-    user_name: Optional[str] = None
+    user_id: Optional[str] = None
     
-    organization_name: Optional[str] = None
+    organization_id: Optional[str] = None
     
-    namespace_name: Optional[str] = None
+    namespace_id: Optional[str] = None
     
     results = Optional[List[int]] = None
 

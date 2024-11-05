@@ -1,11 +1,11 @@
 import torch
 
 
-def evaluate_create_request(responses):
+def evaluate_create_request(response):
     
-    scores = torch.ones(len(responses))
+    scores = torch.ones(len(response))
     
-    for i, response in enumerate(responses):
+    for i, response in enumerate(response):
         if response is None:
             print(f"{i}th response doesn't have a value")
             scores[i] = 0

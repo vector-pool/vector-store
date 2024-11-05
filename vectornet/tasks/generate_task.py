@@ -31,7 +31,7 @@ def generate_create_request(article_size = 30) -> CreateSynapse:
     for article in articles:
         contents.append(article['content'][len_limit])
     version = get_version()
-    return category, articles, CreateSynapse(
+    query = CreateSynapse(
         version = version,
         type = 'CREATE',
         user_name = user_name,
@@ -40,13 +40,15 @@ def generate_create_request(article_size = 30) -> CreateSynapse:
         index_data = contents,
     )
     
+    return category, articles, query
+    
         
 def generate_read_request():
     pass
 
-def generate_update_request(article_size, miner_uids):
+def generate_update_request(article_size, miner_uid):
     
-    namespace_data = get_namespace_data(miner_uids)
+    namespace_data = get_namespace_data(miner_uid)
         
     user_id, organization_id, namespaace_id, category = random.choice(namespace_data)
     
@@ -57,22 +59,26 @@ def generate_update_request(article_size, miner_uids):
     
     version = get_version() 
     
-    return UpdateSynapse(
+    performs = ['ADD', 'REPLACE']
+    perform = random.choice(performs)
+    
+    query = UpdateSynapse(
         version = version,
         type = 'UPDATE',
-        perform = 'ADD',
+        perform = perform,
         user_id = user_id,
         organization_id = organization_id,
         namespace_id = namespaace_id,
         index_data = contents,
     )
     
-def generate_delete_request():
+    return category, articles, query
     
-    namespace_data = get_namespace_data(miner_uids)
+def generate_delete_request(miner_uid):
+    
+    namespace_data = get_namespace_data(miner_uid)
     
     user_id, organization_id, namespace_id = random.choice(namespace_data)
-    #some logics need in here.
     
     version = get_version()
     

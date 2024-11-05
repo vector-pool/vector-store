@@ -64,12 +64,9 @@ async def forward(self):
     
     # init_new_miner_uids()
     
-    miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+    miner_uid = get_random_uids(self, k=self.config.neuron.sample_size)
     
-    validator_db_managers = {} #this may occurs the error
-    
-    for miner_uid in miner_uids:
-        validator_db_managers[miner_uid] = ValidatorDBManager(miner_uid)
+    validator_db_manager = ValidatorDBManager(miner_uid)
     
     category, articles, query = generate_create_request(
         article_size = 30,
@@ -77,7 +74,7 @@ async def forward(self):
     pageids = [article['pageid'] for article in articles]
     
     response_create_request = await self.dendrite(
-        axons = [self.metagraph.axons[uid] for uid in miner_uids],
+        axons = [self.metagraph.axons[miner_uid]],
         synapse = query,
         deserialize = True,
         timeout = 90,
@@ -85,25 +82,18 @@ async def forward(self):
     
     bt.logging.info(f"Received responses: {response_create_request}")
     
-    create_zero_scores = evaluate_create_request(response_create_request)
+    create_request_zero_score = evaluate_create_request(response_create_request)
     
-    for (miner_uid, manager), create_zero_score in zip(validator_db_managers.items(), create_zero_scores):
-        # Call the create_operation method on each manager
-        if create_zero_score:
-            manager.create_operation("CREATE", query.user_name, query.organization_name, query.namespace_name, category, pageids)
+    if create_request_zero_score:
+        validator_db_manager.create_operation("CREATE", query.user_name, query.organization_name, query.namespace_name, category, pageids)
             
-    query = generate_update_request(
+    category, articles, query = generate_update_request(
         article_zize = 30,
-        miner_uids = miner_uids,
+        miner_uid = miner_uid,
     )
 
-    for (miner_uid, manager), create_zero_score in zip(validator_db_managers.items(), create_zero_scores):
-        # Call the create_operation method on each manager
-        if create_zero_score:
-            manager.create_operation("UPDATE", query.user_id, query.organization_id, query.namespace_id, category, pageids)
-
     responses_update = await self.dendrite(
-        axons = [self.metagraph.axons[uid] for uid in miner_uids],
+        axons = [self.metagraph.axons[miner_uid]],
         synapse = query,
         deserialize = True,
         timeout = 90,
@@ -111,12 +101,15 @@ async def forward(self):
     
     bt.logging.info(f"Received responses: {responses_update}")
     
-    update_zero_scores = evaluate_update_request(responses_update)
-    
-    query = generate_delete_request()
+    update_request_zero_scores = evaluate_update_request(responses_update)
+        
+    if update_request_zero_scores:
+        validator_db_manager.update_operation("UPDATE", query.user_id, query.organization_id, query.namespace_id, category, pageids)
+        
+    query = generate_delete_request(miner_uid)
     
     responses_delete = await self.dendrite(
-        axons = [self.metagraph.axons[uid] for uid in miner_uids],
+        axons = [self.metagraph.axons[miner_uid]],
         synapse = query,
         deserialize = True,
         timeout = 20,
@@ -124,7 +117,10 @@ async def forward(self):
     
     bt.logging.info(f"Received responses: {responses_delete}") 
     
-    delete_zero_scores = evaluate_delete_request(responses_delete)
+    delete_request_zero_scores = evaluate_delete_request(query, responses_delete)
+    
+    if delete_request_zero_scores:
+        validator_db_manager.delete_operation("DELETE", query.user_id, query.organization_id, query.namespace_id)
     
     query = generate_read_request()
     
