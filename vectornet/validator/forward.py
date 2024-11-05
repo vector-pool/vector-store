@@ -91,8 +91,7 @@ async def forward(self):
         # Call the create_operation method on each manager
         if create_zero_score:
             manager.create_operation("CREATE", query.user_name, query.organization_name, query.namespace_name, category, pageids)
-
-
+            
     query = generate_update_request(
         article_zize = 30,
         miner_uids = miner_uids,
