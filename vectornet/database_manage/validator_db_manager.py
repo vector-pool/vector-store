@@ -65,6 +65,7 @@ class ValidatorDBManager:
             CREATE TABLE IF NOT EXISTS vectors (
                 vector_id SERIAL PRIMARY KEY,
                 pageid INTEGER NOT NULL,
+                category VARCHAR(255),
                 user_id INTEGER REFERENCES users(user_id),
                 organization_id INTEGER REFERENCES organizations(organization_id),
                 namespace_id INTEGER REFERENCES namespaces(namespace_id)
@@ -125,19 +126,19 @@ class ValidatorDBManager:
             self.conn.commit()
         return namespace_id
 
-    def add_vectors(self, user_id: int, organization_id: int, namespace_id: int, vectors: List[int]):
+    def add_vectors(self, user_id: int, organization_id: int, namespace_id: int, category: str, vectors: List[int]):
         """Add vectors to the database."""
         with self.conn.cursor() as cur:
             for vector in vectors:
                 # print(vector['original_text'], vector['text'], vector['embedding'], user_id, organization_id, namespace_id)
                 cur.execute(
                     "INSERT INTO vectors (user_id, organization_id, namespace_id, pageid) VALUES (%s, %s, %s, %s)",
-                    (user_id, organization_id, namespace_id, vector['pageid'])
+                    (user_id, organization_id, namespace_id, category, vector['pageid'])
                 )
             self.conn.commit()
         print("success creating")
 
-    def create_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str, pageids: List[int]):
+    def create_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str, category: str, pageids: List[int]):
         """Handle create operations."""
         if request_type.lower() != 'create':
             raise ValueError("Invalid request type. Expected 'create'.")
@@ -150,9 +151,8 @@ class ValidatorDBManager:
         organization_id = self.add_organization(user_id, organization_name)
         namespace_id = self.add_namespace(user_id, organization_id, namespace_name)
 
-        vectors = [{'pageid' : pageid} for pageid in pageids        ]
-        print(vectors)
-        self.add_vectors(user_id, organization_id, namespace_id, vectors)
+        vectors = [{'pageid' : pageid} for pageid in pageids]
+        self.add_vectors(user_id, organization_id, namespace_id, category, vectors)
         return user_id, organization_id, namespace_id
 
     def read_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str) -> List[Tuple]:

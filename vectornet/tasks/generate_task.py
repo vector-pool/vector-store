@@ -40,7 +40,7 @@ def generate_create_request(article_size = 30) -> CreateSynapse:
     articles = wikipedia_scraper(article_size, category)
     contents = []
     for article in articles:
-        contents.append(article['content'][len_limit])
+        contents.append(article['content'][:len_limit])
     version = get_version()
     query = CreateSynapse(
         version = version,
