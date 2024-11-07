@@ -136,7 +136,25 @@ async def forward(self):
     
     read_score = evaluate_read_request(read_request, response_read, content)
     
-    rewards = create_request_zero_score * update_request_zero_score * delete_request_zero_score * read_score
+    miner_age = None
+    for miner in miner_ages:
+        if miner_uid == miner['uid']:
+            miner_age = miner['age']
+
+    age_to_weight = {
+        "very_young": 0.6,
+        "young": 0.7,
+        "mature": 0.8,
+        "old": 0.9,
+        "very_old": 1.0
+    }
+    
+    weight = age_to_weight.get(miner_age)
+    
+    if weight is None:
+        raise Exception("error occurs in weight mapping in evaluation")
+    
+    rewards = create_request_zero_score * update_request_zero_score * delete_request_zero_score * read_score * weight
 
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.

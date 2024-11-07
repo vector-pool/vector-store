@@ -1,5 +1,9 @@
 import torch
 import bittensor as bt
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from vectornet.embedding.embed import TextToEmbedding
+
 
 def evaluate_create_request(response):
     
@@ -79,3 +83,18 @@ def evaluate_read_request(query, response, original_content):
         score = 1
     else:
         score = evaluate_similarity(original_content, content)
+    return score * zero_score
+        
+def evaluate_similarity(original_content, content):
+    
+    embedding_manager = TextToEmbedding()
+    original_content_embedding = embedding_manager.embed(original_content)
+    content_embedding = embedding_manager.embed(original_content)
+    
+    original_content_embedding = np.array(original_content_embedding[0]).reshape(1, -1) #assume that we are using 8091 max token embedding model so return value is list and only has one value now.
+    content_embedding = np.array(content_embedding[0]).reshape(1, -1)
+        
+    similarity_score = cosine_similarity(original_content_embedding, content_embedding)[0][0]
+
+    return similarity_score
+    
