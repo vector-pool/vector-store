@@ -1,5 +1,9 @@
 import yaml
 import random
+import bittensor as bt
+from traceback import print_exception
+import openai
+import os
 
 from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
 from vectornet.protocol import(
@@ -13,11 +17,18 @@ from vectornet.utils.version import get_version
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
 
+
 wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
 
 len_limit = 31e4
+
+llm_client = openai.OpenAI(
+    api_key=os.environ["OPENAI_API_KEY"],
+    max_retries=3,
+)
+
 
 def generate_create_request(article_size = 30) -> CreateSynapse:
     
@@ -31,7 +42,7 @@ def generate_create_request(article_size = 30) -> CreateSynapse:
     for article in articles:
         contents.append(article['content'][len_limit])
     version = get_version()
-    return category, articles, CreateSynapse(
+    query = CreateSynapse(
         version = version,
         type = 'CREATE',
         user_name = user_name,
@@ -40,13 +51,37 @@ def generate_create_request(article_size = 30) -> CreateSynapse:
         index_data = contents,
     )
     
-        
-def generate_read_request():
-    pass
-
-def generate_update_request(article_size, miner_uids):
+    return category, articles, query
     
-    namespace_data = get_namespace_data(miner_uids)
+        
+def generate_read_request(miner_uid):
+    
+    namespace_data = get_namespace_data(miner_uid)
+
+    user_id, organization_id, namespace_id, category, pageids = random.choice(namespace_data) # this line and above should be one method and this returns the list of pageids, not namespace id
+
+    pageid = random.choice(pageids)
+    
+    content = get_wiki_article_content_with_pageid(pageid)
+    
+    query_content = generate_query_content()
+    
+    version = get_version()
+    
+    query = ReadSynapse(
+        version = version,
+        type = 'READ',
+        user_id = user_id,
+        organization_id = organization_id,
+        namespace_id = namespace_id,
+        query_data = query_content,
+    )
+    
+    return query, content
+
+def generate_update_request(article_size, miner_uid):
+    
+    namespace_data = get_namespace_data(miner_uid)
         
     user_id, organization_id, namespaace_id, category = random.choice(namespace_data)
     
@@ -57,22 +92,25 @@ def generate_update_request(article_size, miner_uids):
     
     version = get_version() 
     
-    return UpdateSynapse(
+    performs = ['ADD', 'REPLACE']
+    
+    query = UpdateSynapse(
         version = version,
         type = 'UPDATE',
-        perform = 'ADD',
+        perform = "ADD",
         user_id = user_id,
         organization_id = organization_id,
         namespace_id = namespaace_id,
         index_data = contents,
     )
     
-def generate_delete_request():
+    return category, articles, query
     
-    namespace_data = get_namespace_data(miner_uids)
+def generate_delete_request(miner_uid):
+    
+    namespace_data = get_namespace_data(miner_uid)
     
     user_id, organization_id, namespace_id = random.choice(namespace_data)
-    #some logics need in here.
     
     version = get_version()
     
@@ -85,4 +123,42 @@ def generate_delete_request():
         namespace_id = namespace_id,
     )
     
-    
+
+def generate_query_content(llm_client, content):
+    prompt = (
+        "You are an embedding evaluator. Your task is to generate a query from the original content to assess how well the embeddings perform.",
+        "You will be provided with the original content as your source of information. Your job is to create a summarized version of this content.",
+        "This summary will be used to evaluate the performance quality of different embedding engines by comparing the embeddings of the query content with the results from each engine."
+    )
+    prompt += content
+    prompt += (
+        "Generate a summary of the original content using approximately 300-500 characters.",
+        "Provide only the generated summary, without any additional context or explanation."
+    )
+
+    bt.logging.debug(f"Prompt: {prompt}")
+
+    try:
+        output = llm_client.chat.completions.create(
+            model="gpt-4-turbo",
+            # response_format={"type": "json_object"},
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            temperature=1.5,
+            timeout=30,
+        )
+
+        bt.logging.debug(
+            f"generation questions LLM response: {output.choices[0].message.content}"
+        )
+        bt.logging.debug(
+            f"LLM usage: {output.usage}, finish reason: {output.choices[0].finish_reason}"
+        )
+        return output.choices[0].message.content
+    except Exception as e:
+        bt.logging.error(f"Error during LLM completion: {e}")
+        bt.logging.debug(print_exception(type(e), e, e.__traceback__))

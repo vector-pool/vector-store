@@ -69,14 +69,6 @@ def check_miner_status():
     
     return new_miner_uids, miner_ages
 
-
-
-# metagraph = bt.subtensor().metagraph(5)
-# neuron_uids = metagraph.uids.tolist()
-# stakes = metagraph.S.tolist()
-# hotkeys = metagraph.hotkeys    
-    
-    
 if __name__ == '__main__':
     check_miner_status()
     

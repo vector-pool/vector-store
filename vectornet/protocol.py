@@ -68,7 +68,7 @@ class ReadSynapse(bt.Synapse):
     
     size: int = pydantic.Field(3, ge=1, le=50)
     
-    results = Optional[List[tuple(List[str], List[float])]] = None
+    results = Optional[tuple(List[int], str)] = None
     
     def deserialize(self) -> List[Dict]:
         return self.results
@@ -81,7 +81,7 @@ class UpdateSynapse(bt.Synapse):
     
     type: str = pydantic.Field("UPDATE")
     
-    perform: Optional[str] = None
+    perform: Optional[str] = None # this should be updated with two options
     
     user_id: Optional[str] = None
     
@@ -106,11 +106,11 @@ class DeleteSynapse(bt.Synapse):
     
     perform: Optional[str] = None
     
-    user_name: Optional[str] = None
+    user_id: Optional[str] = None
     
-    organization_name: Optional[str] = None
+    organization_id: Optional[str] = None
     
-    namespace_name: Optional[str] = None
+    namespace_id: Optional[str] = None
     
     results = Optional[List[int]] = None
 

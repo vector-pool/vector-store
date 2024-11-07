@@ -5,7 +5,7 @@ embedding_model = 'all-MiniLM-L6-v2'
 class TextToEmbedding:
     def __init__(self):
         self.model = SentenceTransformer(embedding_model)
-        self.max_token_size = 768  # Maximum token size for the model
+        self.max_token_size = 8191  # Maximum token size for the model
 
     def embed(self, original_texts):
         embeded_data = []

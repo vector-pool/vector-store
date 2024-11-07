@@ -42,6 +42,9 @@ from vectornet.tasks.generate_task import (
 )
 from vectornet.evaludation.evaluate import (
     evaluate_create_request,
+    evaluate_update_request,
+    evaluate_delete_request,
+    evaluate_read_request,
 )
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager
 
@@ -57,94 +60,103 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
-    # TODO(developer): Define how the validator selects a miner to query, how often, etc.
-    # get_random_uids is an example method, but you can replace it with your own.
     new_miner_uids, miner_ages = check_miner_status()
     very_young_miers, young_miners, mature_miners, old_miners, very_old_miners = make_miner_group(miner_ages)
     
     # init_new_miner_uids()
     
-    miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+    miner_uid = get_random_uids(self, k=self.config.neuron.sample_size)
     
-    validator_db_managers = {} #this may occurs the error
+    validator_db_manager = ValidatorDBManager(miner_uid)
     
-    for miner_uid in miner_uids:
-        validator_db_managers[miner_uid] = ValidatorDBManager(miner_uid)
-    
-    category, articles, query = generate_create_request(
+    category, articles, create_request = generate_create_request(
         article_size = 30,
     )
     pageids = [article['pageid'] for article in articles]
     
     response_create_request = await self.dendrite(
-        axons = [self.metagraph.axons[uid] for uid in miner_uids],
-        synapse = query,
+        axons = [self.metagraph.axons[miner_uid]],
+        synapse = create_request,
         deserialize = True,
         timeout = 90,
     )
     
     bt.logging.info(f"Received responses: {response_create_request}")
     
-    create_zero_scores = evaluate_create_request(response_create_request)
+    create_request_zero_score = evaluate_create_request(response_create_request)
     
-    for (miner_uid, manager), create_zero_score in zip(validator_db_managers.items(), create_zero_scores):
-        # Call the create_operation method on each manager
-        if create_zero_score:
-            manager.create_operation("CREATE", query.user_name, query.organization_name, query.namespace_name, category, pageids)
-
-
-    query = generate_update_request(
+    if create_request_zero_score:
+        validator_db_manager.create_operation("CREATE", create_request.user_name, create_request.organization_name, create_request.namespace_name, category, pageids)
+            
+    category, articles, update_request = generate_update_request(
         article_zize = 30,
-        miner_uids = miner_uids,
+        miner_uid = miner_uid,
     )
 
-    for (miner_uid, manager), create_zero_score in zip(validator_db_managers.items(), create_zero_scores):
-        # Call the create_operation method on each manager
-        if create_zero_score:
-            manager.create_operation("UPDATE", query.user_id, query.organization_id, query.namespace_id, category, pageids)
-
-    responses_update = await self.dendrite(
-        axons = [self.metagraph.axons[uid] for uid in miner_uids],
-        synapse = query,
+    response_update_request = await self.dendrite(
+        axons = [self.metagraph.axons[miner_uid]],
+        synapse = update_request,
         deserialize = True,
         timeout = 90,
     )
     
-    bt.logging.info(f"Received responses: {responses_update}")
+    bt.logging.info(f"Received responses: {response_update_request}")
     
-    update_zero_scores = evaluate_update_request(responses_update)
+    update_request_zero_score = evaluate_update_request(update_request, response_update_request)
+        
+    if update_request_zero_score:
+        validator_db_manager.update_operation("UPDATE", update_request.user_id, update_request.organization_id, update_request.namespace_id, category, pageids)
+        
+    delete_request = generate_delete_request(miner_uid)
     
-    query = generate_delete_request()
-    
-    responses_delete = await self.dendrite(
-        axons = [self.metagraph.axons[uid] for uid in miner_uids],
-        synapse = query,
+    response_delete_request = await self.dendrite(
+        axons = [self.metagraph.axons[miner_uid]],
+        synapse = delete_request,
         deserialize = True,
         timeout = 20,
     )
     
-    bt.logging.info(f"Received responses: {responses_delete}") 
+    bt.logging.info(f"Received responses: {response_delete_request}") 
     
-    delete_zero_scores = evaluate_delete_request(responses_delete)
+    delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request)
     
-    query = generate_read_request()
+    if delete_request_zero_score:
+        validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
     
-    responses_read = await self.dendrite(
-        axons = [self.metagraph.axons[uid] for uid in miner_uids],
-        synapse = query,
+    read_request, content = generate_read_request(miner_uid)
+    
+    response_read = await self.dendrite(
+        axons = [self.metagraph.axons[miner_uid]],
+        synapse = read_request,
         deserialize = True,
         timeout = 30,
     )
     
-    bt.logging.info(f"Received responses: {responses_read}")
+    bt.logging.info(f"Received responses: {response_read}")
     
-    read_scores = evaluate_delete_request(query, responses_read)
+    read_score = evaluate_read_request(read_request, response_read, content)
     
-    miner_row_scores = create_zero_scores * update_zero_scores * delete_zero_scores * read_scores
+    miner_age = None
+    for miner in miner_ages:
+        if miner_uid == miner['uid']:
+            miner_age = miner['age']
 
-    rewards = get_rewards(self, query=self.step, responses=responses)
+    age_to_weight = {
+        "very_young": 0.6,
+        "young": 0.7,
+        "mature": 0.8,
+        "old": 0.9,
+        "very_old": 1.0
+    }
+    
+    weight = age_to_weight.get(miner_age)
+    
+    if weight is None:
+        raise Exception("error occurs in weight mapping in evaluation")
+    
+    rewards = create_request_zero_score * update_request_zero_score * delete_request_zero_score * read_score * weight
 
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
-    self.update_scores(rewards, miner_uids)
+    self.update_scores(rewards, [miner_uid])
     time.sleep(5)
