@@ -149,7 +149,7 @@ def generate_query_content(llm_client, content):
                 }
             ],
             temperature=1.5,
-            timeout=60,
+            timeout=30,
         )
 
         bt.logging.debug(
