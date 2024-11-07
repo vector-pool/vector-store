@@ -93,12 +93,11 @@ def generate_update_request(article_size, miner_uid):
     version = get_version() 
     
     performs = ['ADD', 'REPLACE']
-    perform = random.choice(performs)
     
     query = UpdateSynapse(
         version = version,
         type = 'UPDATE',
-        perform = perform,
+        perform = "ADD",
         user_id = user_id,
         organization_id = organization_id,
         namespace_id = namespaace_id,

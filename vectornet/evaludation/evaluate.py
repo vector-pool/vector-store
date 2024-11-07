@@ -78,7 +78,7 @@ def evaluate_read_request(query, response, original_content):
         zero_score = 0
     contents = get_wiki_contents(ids)
     if content not in contents:
-        zero_score = 0
+        return 0
     if content == original_content:
         score = 1
     else:
