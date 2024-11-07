@@ -4,7 +4,7 @@ import bittensor as bt
 from traceback import print_exception
 import openai
 import os
-
+from vectornet.utils.config import len_limit
 from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
 from vectornet.protocol import(
     CreateSynapse,
@@ -22,7 +22,7 @@ wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
 
-len_limit = 31e4
+
 
 llm_client = openai.OpenAI(
     api_key=os.environ["OPENAI_API_KEY"],
