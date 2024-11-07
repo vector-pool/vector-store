@@ -126,15 +126,14 @@ def generate_delete_request(miner_uid):
 
 def generate_query_content(llm_client, content):
     prompt = (
-        "you are embedding evaludator, you have to generate the query content from original content for check how embedding performed well," 
-        "you will be given a original content as your source of knowledge. "
-        "Your job is to generate the sumerized content of given content for evaluating every embedding engines performance quality by comparing query content embedding and every engine's embdding results"
-        "below are original content"
+        "You are an embedding evaluator. Your task is to generate a query from the original content to assess how well the embeddings perform.",
+        "You will be provided with the original content as your source of information. Your job is to create a summarized version of this content.",
+        "This summary will be used to evaluate the performance quality of different embedding engines by comparing the embeddings of the query content with the results from each engine."
     )
     prompt += content
     prompt += (
-        "generate the content with about 300-500 letters "
-        "Please give the generated content only, without any additional context or explanation."
+        "Generate a summary of the original content using approximately 300-500 characters.",
+        "Provide only the generated summary, without any additional context or explanation."
     )
 
     bt.logging.debug(f"Prompt: {prompt}")
