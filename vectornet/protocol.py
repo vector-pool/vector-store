@@ -68,7 +68,7 @@ class ReadSynapse(bt.Synapse):
     
     size: int = pydantic.Field(3, ge=1, le=50)
     
-    results = Optional[List[tuple(List[str], List[float])]] = None
+    results = Optional[tuple(List[int], str)] = None
     
     def deserialize(self) -> List[Dict]:
         return self.results

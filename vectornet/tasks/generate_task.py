@@ -65,6 +65,19 @@ def generate_read_request(miner_uid):
     content = get_wiki_article_content_with_pageid(pageid)
     
     query_content = generate_query_content()
+    
+    version = get_version()
+    
+    query = ReadSynapse(
+        version = version,
+        type = 'READ',
+        user_id = user_id,
+        organization_id = organization_id,
+        namespace_id = namespace_id,
+        query_data = query_content,
+    )
+    
+    return query, content
 
 def generate_update_request(article_size, miner_uid):
     
