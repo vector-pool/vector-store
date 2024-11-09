@@ -65,7 +65,8 @@ async def forward(self):
     
     # init_new_miner_uids()
     
-    miner_uid = get_random_uids(self, k=self.config.neuron.sample_size)
+    miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+    miner_uid = miner_uids[0] # the default sample size is one
     
     validator_db_manager = ValidatorDBManager(miner_uid)
     
@@ -83,14 +84,25 @@ async def forward(self):
     
     bt.logging.info(f"Received responses: {response_create_request}")
     
-    create_request_zero_score = evaluate_create_request(response_create_request)
+    create_request_zero_score = evaluate_create_request(response_create_request, validator_db_manager, create_request)
     
     if create_request_zero_score:
-        validator_db_manager.create_operation("CREATE", create_request.user_name, create_request.organization_name, create_request.namespace_name, category, pageids)
-            
+        validator_db_manager.create_operation(
+            "CREATE",
+            create_request.user_name,
+            create_request.organization_name,
+            create_request.namespace_name,
+            response_create_request['user_id'],
+            response_create_request['organization_id'],
+            response_create_request['namespace_id'],
+            category,
+            pageids,
+        )
+    
     category, articles, update_request = generate_update_request(
         article_zize = 30,
-        miner_uid = miner_uid,
+        namespace_metadata = namespace_metadata,
+        validator_db_manager = validator_db_manager,
     )
 
     response_update_request = await self.dendrite(
@@ -123,7 +135,9 @@ async def forward(self):
     if delete_request_zero_score:
         validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
     
-    read_request, content = generate_read_request(miner_uid)
+    namespace_metadata = validator_db_manager.get_namespace_data()
+    
+    read_request, content = generate_read_request(namespace_metadata)
     
     response_read = await self.dendrite(
         axons = [self.metagraph.axons[miner_uid]],

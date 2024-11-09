@@ -22,20 +22,11 @@ wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
 
-
-
-llm_client = openai.OpenAI(
-    api_key=os.environ["OPENAI_API_KEY"],
-    max_retries=3,
-)
-
-
 def generate_create_request(article_size = 30) -> CreateSynapse:
     
     category = random.choice(wiki_categories)
     organization_name = random.choice(organization_names)
     user_name = random.choice(user_names)
-    
     
     articles = wikipedia_scraper(article_size, category)
     contents = []
@@ -54,17 +45,18 @@ def generate_create_request(article_size = 30) -> CreateSynapse:
     return category, articles, query
     
         
-def generate_read_request(miner_uid):
-    
-    namespace_data = get_namespace_data(miner_uid)
+def generate_read_request(namespace_metadata):
 
-    user_id, organization_id, namespace_id, category, pageids = random.choice(namespace_data) # this line and above should be one method and this returns the list of pageids, not namespace id
-
-    pageid = random.choice(pageids)
+    user_id, organization_id, namespace_id, category = random.choice(namespace_metadata) # this line and above should be one method and this returns the list of pageids, not namespace id
     
     content = get_wiki_article_content_with_pageid(pageid)
     
-    query_content = generate_query_content()
+    llm_client = openai.OpenAI(
+        api_key=os.environ["OPENAI_API_KEY"],
+        max_retries=3,
+    )
+    
+    query_content = generate_query_content(llm_client, content)
     
     version = get_version()
     
@@ -79,11 +71,9 @@ def generate_read_request(miner_uid):
     
     return query, content
 
-def generate_update_request(article_size, miner_uid):
+def generate_update_request(article_size, namespace_metadata, validator_db_manager):
     
-    namespace_data = get_namespace_data(miner_uid)
-        
-    user_id, organization_id, namespaace_id, category = random.choice(namespace_data)
+    user_id, organization_id, namespace_id, category, pageids = validator_db_manager.get_random_unit_ids()
     
     articles = wikipedia_scraper(article_size, category)
     contents = []
@@ -92,7 +82,8 @@ def generate_update_request(article_size, miner_uid):
     
     version = get_version() 
     
-    performs = ['ADD', 'REPLACE']
+    # performs = ['ADD', 'REPLACE']
+    # perform = random.choice(performs)
     
     query = UpdateSynapse(
         version = version,
@@ -100,7 +91,7 @@ def generate_update_request(article_size, miner_uid):
         perform = "ADD",
         user_id = user_id,
         organization_id = organization_id,
-        namespace_id = namespaace_id,
+        namespace_id = namespace_id,
         index_data = contents,
     )
     
@@ -108,9 +99,7 @@ def generate_update_request(article_size, miner_uid):
     
 def generate_delete_request(miner_uid):
     
-    namespace_data = get_namespace_data(miner_uid)
-    
-    user_id, organization_id, namespace_id = random.choice(namespace_data)
+    user_id, organization_id, namespace_id, category = random.choice(namespace_metadata)
     
     version = get_version()
     
@@ -122,7 +111,6 @@ def generate_delete_request(miner_uid):
         organization_id = organization_id,
         namespace_id = namespace_id,
     )
-    
 
 def generate_query_content(llm_client, content):
     prompt = (
