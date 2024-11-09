@@ -117,7 +117,15 @@ async def forward(self):
     update_request_zero_score = evaluate_update_request(update_request, response_update_request)
         
     if update_request_zero_score:
-        validator_db_manager.update_operation("UPDATE", update_request.user_id, update_request.organization_id, update_request.namespace_id, category, pageids)
+        validator_db_manager.update_operation(
+            "UPDATE",
+            update_request.perform,
+            update_request.user_id,
+            update_request.organization_id,
+            update_request.namespace_id,
+            category,
+            pageids,
+        )
         
     delete_request = generate_delete_request(miner_uid)
     

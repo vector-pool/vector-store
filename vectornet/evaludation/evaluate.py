@@ -28,22 +28,21 @@ def evaluate_create_request(response, validator_db_manager, query):
         
 def evaluate_update_request(query, response):
     
-    score = 1
-    
     if response is None:
         # bt.logging.info("update request response doesn't have a value")
-        score = 0
+        return 0
     if len(response) != 3:
         # bt.logging.info("response's length is not 3, it contains less or more ingegers.")
-        score = 0
+        return 0
+    user_id, organization_id, namespace_id = get_ids_from_response(response)
     if (
-        query.user_id != response[0] or
-        query.organization_id != response[1] or
-        query.namespace_id != response[2]
+        query.user_id != user_id or
+        query.organization_id != organization_id or
+        query.namespace_id != namespace_id
     ):
-        score = 0
+        return 0
     
-    return score
+    return 1
 
 def evaluate_delete_request(query, response):
     

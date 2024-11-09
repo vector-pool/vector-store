@@ -521,6 +521,18 @@ class ValidatorDBManager:
 
         return user_id, organization_id, namespace_id
 
+    def update_operation(
+            self,
+            request_type: str,
+            perform: str,
+            user_id: int,
+            organization_id: int,
+            namespace_id: int,
+            category: str,
+            pageids: List[int],
+        ):
+        pass
+
     def close_connection(self):
         """Close the database connection."""
         if self.conn:
