@@ -519,8 +519,6 @@ class ValidatorDBManager:
         self.add_organization(organization_id, user_id, organization_name)
         self.add_namespace(namespace_id, user_id, organization_id, namespace_name, category, pageids)
 
-        return user_id, organization_id, namespace_id
-
     def update_operation(
             self,
             request_type: str,
@@ -530,8 +528,53 @@ class ValidatorDBManager:
             namespace_id: int,
             category: str,
             pageids: List[int],
+        ) -> Optional[str]:
+        """Update the pageids list for a specific namespace."""
+        if request_type.lower() != 'update':
+            raise ValueError("Invalid request type. Expected 'update'.")
+        
+        with self.conn.cursor() as cur:
+            # Step 1: Fetch the existing pageids
+            cur.execute("SELECT pageids FROM namespaces WHERE namespace_id = %s;", (namespace_id,))
+            result = cur.fetchone()
+            
+            if result is None:
+                raise Exception(f"Namespace not found in update_operation, {namespace_id}")
+            existing_pageids = result[0]  # Get the current pageids list
+            
+            # Step 2: Combine existing pageids with the new ones
+            updated_pageids = list(set(existing_pageids + pageids))  # Remove duplicates if necessary
+            
+            # Step 3: Update the row in the database
+            cur.execute(
+                "UPDATE namespaces SET pageids = %s WHERE namespace_id = %s;",
+                (updated_pageids, namespace_id)
+            )
+
+            self.conn.commit()  # Commit the changes
+        
+    def delete_operation(
+            self,
+            request_type: str,
+            user_id: int,
+            organization_id: int,
+            namespace_id: int,
         ):
-        pass
+        """Delete a namespace row based on the namespace_id."""
+        
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT * FROM namespaces WHERE namespace_id = %s;", (namespace_id,))
+            result = cur.fetchone()
+            
+            if result is None:
+                raise Exception(f"Namespace not found in delete operation: {namespace_id}")
+            
+            cur.execute(
+                "DELETE FROM namespaces WHERE namespace_id = %s;",
+                (namespace_id,)
+            )
+            
+            self.conn.commit()  
 
     def close_connection(self):
         """Close the database connection."""

@@ -46,20 +46,19 @@ def evaluate_update_request(query, response):
 
 def evaluate_delete_request(query, response):
     
-    score = 1
-    
     if response is None:
-        score = 0
+        return 0
     if len(response) != 3:
-        score = 0
+        return 0
+    user_id, organization_id, namespace_id = get_ids_from_response(response)
     if (
-        query.user_id != response[0] or
-        query.organization_id != response[1] or
-        query.namespace_id != response[2]
+        query.user_id != user_id or
+        query.organization_id != organization_id or
+        query.namespace_id != namespace_id
     ):
-        score = 0
+        return 0
     
-    return score
+    return 1
     
 def evaluate_read_request(query, response, original_content):
     

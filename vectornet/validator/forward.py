@@ -101,7 +101,6 @@ async def forward(self):
     
     category, articles, update_request = generate_update_request(
         article_zize = 30,
-        namespace_metadata = namespace_metadata,
         validator_db_manager = validator_db_manager,
     )
 
@@ -127,7 +126,7 @@ async def forward(self):
             pageids,
         )
         
-    delete_request = generate_delete_request(miner_uid)
+    delete_request = generate_delete_request(validator_db_manager)
     
     response_delete_request = await self.dendrite(
         axons = [self.metagraph.axons[miner_uid]],

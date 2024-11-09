@@ -71,7 +71,7 @@ def generate_read_request(namespace_metadata):
     
     return query, content
 
-def generate_update_request(article_size, namespace_metadata, validator_db_manager):
+def generate_update_request(article_size, validator_db_manager):
     
     user_id, organization_id, namespace_id, category, pageids = validator_db_manager.get_random_unit_ids()
     
@@ -97,7 +97,7 @@ def generate_update_request(article_size, namespace_metadata, validator_db_manag
     
     return category, articles, query
     
-def generate_delete_request(miner_uid, validator_db_manager):
+def generate_delete_request(validator_db_manager):
     
     user_id, organization_id, namespace_id, category, pageids = validator_db_manager.get_random_unit_ids()
     
