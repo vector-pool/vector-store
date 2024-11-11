@@ -223,3 +223,13 @@ brew install postgresql@14
 sudo initdb /opt/homebrew/var/postgres
 brew services start postgresql@14
 ```
+
+
+
+## Postgresql guide:
+
+createuser -s postgres
+psql -U postgres
+pqsl -d postgres
+
+

@@ -4,7 +4,7 @@ import bittensor as bt
 from traceback import print_exception
 import openai
 import os
-
+from vectornet.utils.config import len_limit
 from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
 from vectornet.protocol import(
     CreateSynapse,
@@ -13,6 +13,7 @@ from vectornet.protocol import(
     DeleteSynapse,
 )
 from vectornet.utils.version import get_version
+from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
 
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
@@ -22,25 +23,16 @@ wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
 
-len_limit = 31e4
-
-llm_client = openai.OpenAI(
-    api_key=os.environ["OPENAI_API_KEY"],
-    max_retries=3,
-)
-
-
 def generate_create_request(article_size = 30) -> CreateSynapse:
     
     category = random.choice(wiki_categories)
     organization_name = random.choice(organization_names)
     user_name = random.choice(user_names)
     
-    
     articles = wikipedia_scraper(article_size, category)
     contents = []
     for article in articles:
-        contents.append(article['content'][len_limit])
+        contents.append(article['content'][:len_limit])
     version = get_version()
     query = CreateSynapse(
         version = version,
@@ -54,17 +46,20 @@ def generate_create_request(article_size = 30) -> CreateSynapse:
     return category, articles, query
     
         
-def generate_read_request(miner_uid):
+def generate_read_request(validator_db_manager):
+
+    user_id, organization_id, namespace_id, category, pageids = validator_db_manager.get_random_unit_ids()
     
-    namespace_data = get_namespace_data(miner_uid)
-
-    user_id, organization_id, namespace_id, category, pageids = random.choice(namespace_data) # this line and above should be one method and this returns the list of pageids, not namespace id
-
     pageid = random.choice(pageids)
     
     content = get_wiki_article_content_with_pageid(pageid)
     
-    query_content = generate_query_content()
+    llm_client = openai.OpenAI(
+        api_key=os.environ["OPENAI_API_KEY"],
+        max_retries=3,
+    )
+    
+    query_content = generate_query_content(llm_client, content)
     
     version = get_version()
     
@@ -79,11 +74,9 @@ def generate_read_request(miner_uid):
     
     return query, content
 
-def generate_update_request(article_size, miner_uid):
+def generate_update_request(article_size, validator_db_manager):
     
-    namespace_data = get_namespace_data(miner_uid)
-        
-    user_id, organization_id, namespaace_id, category = random.choice(namespace_data)
+    user_id, organization_id, namespace_id, category, pageids = validator_db_manager.get_random_unit_ids()
     
     articles = wikipedia_scraper(article_size, category)
     contents = []
@@ -92,7 +85,8 @@ def generate_update_request(article_size, miner_uid):
     
     version = get_version() 
     
-    performs = ['ADD', 'REPLACE']
+    # performs = ['ADD', 'REPLACE']
+    # perform = random.choice(performs)
     
     query = UpdateSynapse(
         version = version,
@@ -100,17 +94,15 @@ def generate_update_request(article_size, miner_uid):
         perform = "ADD",
         user_id = user_id,
         organization_id = organization_id,
-        namespace_id = namespaace_id,
+        namespace_id = namespace_id,
         index_data = contents,
     )
     
     return category, articles, query
     
-def generate_delete_request(miner_uid):
+def generate_delete_request(validator_db_manager):
     
-    namespace_data = get_namespace_data(miner_uid)
-    
-    user_id, organization_id, namespace_id = random.choice(namespace_data)
+    user_id, organization_id, namespace_id, category, pageids = validator_db_manager.get_random_unit_ids()
     
     version = get_version()
     
@@ -122,11 +114,10 @@ def generate_delete_request(miner_uid):
         organization_id = organization_id,
         namespace_id = namespace_id,
     )
-    
 
 def generate_query_content(llm_client, content):
     prompt = (
-        "You are an embedding evaluator. Your task is to generate a query from the original content to assess how well the embeddings perform.",
+        "You are an embedding evaluator. Your task is to generate a query from the given original content to assess how well the embedding engines perform.",
         "You will be provided with the original content as your source of information. Your job is to create a summarized version of this content.",
         "This summary will be used to evaluate the performance quality of different embedding engines by comparing the embeddings of the query content with the results from each engine."
     )

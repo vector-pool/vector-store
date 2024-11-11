@@ -5,57 +5,60 @@ from sklearn.metrics.pairwise import cosine_similarity
 from vectornet.embedding.embed import TextToEmbedding
 
 
-def evaluate_create_request(response):
+def evaluate_create_request(response, validator_db_manager, query):
     
-    score = 1
-        
     if response is None:
         # bt.logging.info("aresponse doesn't have a value")
-        score = 0
+        return 0
     if len(response) != 3:
         # bt.logging.info("response's length is not 3, it contains less or more ingegers.")
-        score = 0
-    uniqueness = evaluate_uniqueness(response) #from db read all the tripple pairs. compare if the new pair is duplcated.
-    if uniqueness == 0:
-        score = 0
-        
-    return score
+        return 0
+    user_id, organization_id, namespace_id = get_ids_from_response(response)
+    db_user_id, db_user_name, db_organization_id, db_organization_name, db_namespace_id, db_namespace_name = validator_db_manager.get_db_data(user_id, organization_id, namespace_id)
+    if db_user_id:
+        if db_user_name != query.user_name:
+            return 0
+    if db_organization_id:
+        if db_organization_name != query.organization_name:
+            return 0
+    if db_namespace_id is not None:
+        return 0
+    return 1
+    
         
 def evaluate_update_request(query, response):
     
-    score = 1
-    
     if response is None:
         # bt.logging.info("update request response doesn't have a value")
-        score = 0
+        return 0
     if len(response) != 3:
         # bt.logging.info("response's length is not 3, it contains less or more ingegers.")
-        score = 0
+        return 0
+    user_id, organization_id, namespace_id = get_ids_from_response(response)
     if (
-        query.user_id != response[0] or
-        query.organization_id != response[1] or
-        query.namespace_id != response[2]
+        query.user_id != user_id or
+        query.organization_id != organization_id or
+        query.namespace_id != namespace_id
     ):
-        score = 0
+        return 0
     
-    return score
+    return 1
 
 def evaluate_delete_request(query, response):
     
-    score = 1
-    
     if response is None:
-        score = 0
+        return 0
     if len(response) != 3:
-        score = 0
+        return 0
+    user_id, organization_id, namespace_id = get_ids_from_response(response)
     if (
-        query.user_id != response[0] or
-        query.organization_id != response[1] or
-        query.namespace_id != response[2]
+        query.user_id != user_id or
+        query.organization_id != organization_id or
+        query.namespace_id != namespace_id
     ):
-        score = 0
+        return 0
     
-    return score
+    return 1
     
 def evaluate_read_request(query, response, original_content):
     
@@ -98,3 +101,5 @@ def evaluate_similarity(original_content, content):
 
     return similarity_score
     
+def get_ids_from_response(response):
+    return response[0], response[1], response[2]

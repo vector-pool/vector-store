@@ -1,14 +1,11 @@
 import aiohttp
 import asyncio
-from datetime import datetime, timezone
-import random
-import yaml
-
+from datetime import datetime
+import re
+import logging
 
 async def get_article_extracts(pageid):
-    extracts = {}
     async with aiohttp.ClientSession() as session:
-        print("pageids == ", pageid)
         async with session.get(
             "https://en.wikipedia.org/w/api.php",
             params={
@@ -23,9 +20,11 @@ async def get_article_extracts(pageid):
             pages = data.get("query", {}).get("pages", {})
             for page in pages.values():
                 extract = page.get("extract", "No extract available")
-                extracts[page['pageid']] = extract if extract else "No extract available"
+                # Remove newlines and extra spaces
+                cleaned_extract = re.sub(r'\s+', ' ', extract).strip()
+                return cleaned_extract if cleaned_extract else "No extract available"
     
-    return extracts
+    return extract
 
 async def get_articles_in_category(category, k):
     async with aiohttp.ClientSession() as session:
@@ -56,18 +55,12 @@ async def get_articles_in_category(category, k):
 async def wikipedia_scraper(k : int, category: str):
     
     start_time = datetime.now()
-    print(start_time)
-    # Choose a specific category
-    # random_category = "Category:Theatre"  # Ensure the correct format
-    
     category = "Category:" + category
-    print(f"Selected Category: {category}")
+    logging.info(f"Selected Category: {category}")
 
-    # Fetch articles from the selected category
     articles = await get_articles_in_category(category, k)
-    print(f"Fetched {len(articles)} articles.")
+    logging.info(f"Fetched {len(articles)} articles.")
 
-    # Write the articles to result.txt in dict format
     results = []
     for article in articles:
         results.append({
@@ -80,12 +73,14 @@ async def wikipedia_scraper(k : int, category: str):
         for result in results:
             f.write(f"{result}\n")  # Write each result as a dictionary
 
-    print("Results have been written to result.txt.")
     elasped_time = datetime.now() - start_time
-    print(datetime.now())
-    print(elasped_time.total_seconds())
+    logging.info(elasped_time.total_seconds())
 
     return articles
+
+async def get_wiki_article_content_with_pageid(pageid):
+    content = await get_article_extracts(pageid)
+    return get_article_extracts
  
 if __name__ == '__main__':
-    asyncio.run(wikipedia_scraper())
+    asyncio.run(wikipedia_scraper(3, "Surveillance"))
