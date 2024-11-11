@@ -146,6 +146,32 @@ class ValidatorDBManager:
             result = cur.fetchone()
             return result if result else None
 
+    def check_uniquness(self, user_name: str, organization_name: str, namespace_name: str) -> int:
+        """Check if a namespace with the given names is unique."""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT user_id FROM users WHERE name = %s", (user_name,))
+            user_result = cur.fetchone()
+            if user_result is None:
+                return 1  
+            user_id = user_result[0]
+
+            cur.execute("SELECT organization_id FROM organizations WHERE name = %s AND user_id = %s", (organization_name, user_id))
+            org_result = cur.fetchone()
+            if org_result is None:
+                return 1  
+            organization_id = org_result[0]
+
+            cur.execute(
+                "SELECT 1 FROM namespaces WHERE name = %s AND user_id = %s AND organization_id = %s",
+                (namespace_name, user_id, organization_id)
+            )
+            namespace_result = cur.fetchone()
+
+            if namespace_result is None:
+                return 1  
+            else:
+                return 0  
+
     def create_operation(
             self,
             request_type: str,
@@ -183,26 +209,26 @@ class ValidatorDBManager:
         """Update the pageids list for a specific namespace."""
         if request_type.lower() != 'update':
             raise ValueError("Invalid request type. Expected 'update'.")
-        
-        with self.conn.cursor() as cur:
-            # Step 1: Fetch the existing pageids
-            cur.execute("SELECT pageids FROM namespaces WHERE namespace_id = %s;", (namespace_id,))
-            result = cur.fetchone()
-            
-            if result is None:
-                raise Exception(f"Namespace not found in update_operation, {namespace_id}")
-            existing_pageids = result[0]  # Get the current pageids list
-            
-            # Step 2: Combine existing pageids with the new ones
-            updated_pageids = list(set(existing_pageids + pageids))  # Remove duplicates if necessary
-            
-            # Step 3: Update the row in the database
-            cur.execute(
-                "UPDATE namespaces SET pageids = %s WHERE namespace_id = %s;",
-                (updated_pageids, namespace_id)
-            )
+        if perform == "ADD":
+            with self.conn.cursor() as cur:
+                # Step 1: Fetch the existing pageids
+                cur.execute("SELECT pageids FROM namespaces WHERE namespace_id = %s;", (namespace_id,))
+                result = cur.fetchone()
+                
+                if result is None:
+                    raise Exception(f"Namespace not found in update_operation, {namespace_id}")
+                existing_pageids = result[0]  # Get the current pageids list
+                
+                # Step 2: Combine existing pageids with the new ones
+                updated_pageids = list(set(existing_pageids + pageids))  # Remove duplicates if necessary
+                
+                # Step 3: Update the row in the database
+                cur.execute(
+                    "UPDATE namespaces SET pageids = %s WHERE namespace_id = %s;",
+                    (updated_pageids, namespace_id)
+                )
 
-            self.conn.commit()  # Commit the changes
+                self.conn.commit()  # Commit the changes
         
     def delete_operation(
             self,

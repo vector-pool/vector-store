@@ -19,15 +19,6 @@
 
 import time
 import bittensor as bt
-import random
-
-
-from vectornet.protocol import (
-    CreateSynapse,
-    ReadSynapse,
-    UpdateSynapse,
-    DeleteSynapse,    
-)
 from vectornet.validator.reward import get_rewards
 from vectornet.utils.uids import get_random_uids
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager
@@ -48,8 +39,6 @@ from vectornet.evaludation.evaluate import (
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager
 from vectornet.utils.weight_control import weight_controller
 
-
-
 async def forward(self):
     """
     The forward function is called by the validator every time step.
@@ -62,11 +51,12 @@ async def forward(self):
     """
     
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-    miner_uid = miner_uids[0] # the default sample size is one
+    miner_uid = miner_uids[0] # the default sample_size is one
     
     validator_db_manager = ValidatorDBManager(miner_uid)
     
     category, articles, create_request = generate_create_request(
+        validator_db_manager = validator_db_manager,
         article_size = 30,
     )
     pageids = [article['pageid'] for article in articles]

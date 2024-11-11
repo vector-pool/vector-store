@@ -15,6 +15,7 @@ from vectornet.protocol import(
 from vectornet.utils.version import get_version
 from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
 
+
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
 
@@ -23,11 +24,16 @@ wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
 
-def generate_create_request(article_size = 30) -> CreateSynapse:
+def generate_create_request(validator_db_manager, article_size = 30) -> CreateSynapse:
     
-    category = random.choice(wiki_categories)
-    organization_name = random.choice(organization_names)
-    user_name = random.choice(user_names)
+    user_name, organization_name, category = None, None, None
+    while True:
+        user_name = random.choice(user_names)
+        organization_name = random.choice(organization_names)
+        category = random.choice(wiki_categories)
+        uniquness = validator_db_manager.check_uniquness(user_name, category, uniquness)
+        if uniquness:
+            break
     
     articles = wikipedia_scraper(article_size, category)
     contents = []

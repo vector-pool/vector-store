@@ -5,6 +5,7 @@ import re
 import logging
 
 async def get_article_extracts(pageid):
+    print(pageid)
     async with aiohttp.ClientSession() as session:
         async with session.get(
             "https://en.wikipedia.org/w/api.php",
@@ -19,6 +20,7 @@ async def get_article_extracts(pageid):
             data = await response.json()
             pages = data.get("query", {}).get("pages", {})
             for page in pages.values():
+                print(page)
                 extract = page.get("extract", "No extract available")
                 # Remove newlines and extra spaces
                 cleaned_extract = re.sub(r'\s+', ' ', extract).strip()
@@ -44,7 +46,7 @@ async def get_articles_in_category(category, k):
                 for article in data['query']['categorymembers']:
                     pageid = article['pageid']
                     content = await get_article_extracts(pageid)  # Await the async function
-                    print(content)
+                    # print(content)
                     articles.append({
                         'title': article['title'],
                         'pageid': article['pageid'],
@@ -80,7 +82,7 @@ async def wikipedia_scraper(k : int, category: str):
 
 async def get_wiki_article_content_with_pageid(pageid):
     content = await get_article_extracts(pageid)
-    return get_article_extracts
+    return content
  
 if __name__ == '__main__':
-    asyncio.run(wikipedia_scraper(3, "Love"))
+    asyncio.run(wikipedia_scraper(1, "Home"))
