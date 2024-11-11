@@ -1,14 +1,11 @@
 import aiohttp
 import asyncio
-from datetime import datetime, timezone
-import random
-import yaml
+from datetime import datetime
 import re
-
+import logging
 
 async def get_article_extracts(pageid):
     async with aiohttp.ClientSession() as session:
-        print("pageid == ", pageid)
         async with session.get(
             "https://en.wikipedia.org/w/api.php",
             params={
@@ -26,10 +23,6 @@ async def get_article_extracts(pageid):
                 # Remove newlines and extra spaces
                 cleaned_extract = re.sub(r'\s+', ' ', extract).strip()
                 return cleaned_extract if cleaned_extract else "No extract available"
-
-# Example usage:
-# extract = await get_article_extract(12345)
-
     
     return extract
 
@@ -62,18 +55,12 @@ async def get_articles_in_category(category, k):
 async def wikipedia_scraper(k : int, category: str):
     
     start_time = datetime.now()
-    print(start_time)
-    # Choose a specific category
-    # random_category = "Category:Theatre"  # Ensure the correct format
-    
     category = "Category:" + category
-    print(f"Selected Category: {category}")
+    logging.info(f"Selected Category: {category}")
 
-    # Fetch articles from the selected category
     articles = await get_articles_in_category(category, k)
-    print(f"Fetched {len(articles)} articles.")
+    logging.info(f"Fetched {len(articles)} articles.")
 
-    # Write the articles to result.txt in dict format
     results = []
     for article in articles:
         results.append({
@@ -86,10 +73,8 @@ async def wikipedia_scraper(k : int, category: str):
         for result in results:
             f.write(f"{result}\n")  # Write each result as a dictionary
 
-    print("Results have been written to result.txt.")
     elasped_time = datetime.now() - start_time
-    print(datetime.now())
-    print(elasped_time.total_seconds())
+    logging.info(elasped_time.total_seconds())
 
     return articles
 
