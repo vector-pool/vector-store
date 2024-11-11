@@ -60,10 +60,6 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
-
-    very_young_miers, young_miners, mature_miners, old_miners, very_old_miners = make_miner_group(miner_ages)
-    
-    # init_new_miner_uids()
     
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
     miner_uid = miner_uids[0] # the default sample size is one
