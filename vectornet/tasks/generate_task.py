@@ -13,6 +13,7 @@ from vectornet.protocol import(
     DeleteSynapse,
 )
 from vectornet.utils.version import get_version
+from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
 
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
@@ -45,9 +46,11 @@ def generate_create_request(article_size = 30) -> CreateSynapse:
     return category, articles, query
     
         
-def generate_read_request(namespace_metadata):
+def generate_read_request(validator_db_manager):
 
-    user_id, organization_id, namespace_id, category = random.choice(namespace_metadata) # this line and above should be one method and this returns the list of pageids, not namespace id
+    user_id, organization_id, namespace_id, category, pageids = validator_db_manager.get_random_unit_ids()
+    
+    pageid = random.choice(pageids)
     
     content = get_wiki_article_content_with_pageid(pageid)
     
@@ -114,7 +117,7 @@ def generate_delete_request(validator_db_manager):
 
 def generate_query_content(llm_client, content):
     prompt = (
-        "You are an embedding evaluator. Your task is to generate a query from the original content to assess how well the embeddings perform.",
+        "You are an embedding evaluator. Your task is to generate a query from the given original content to assess how well the embedding engines perform.",
         "You will be provided with the original content as your source of information. Your job is to create a summarized version of this content.",
         "This summary will be used to evaluate the performance quality of different embedding engines by comparing the embeddings of the query content with the results from each engine."
     )

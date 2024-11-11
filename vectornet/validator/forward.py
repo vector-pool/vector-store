@@ -142,9 +142,9 @@ async def forward(self):
     if delete_request_zero_score:
         validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
     
-    namespace_metadata = validator_db_manager.get_namespace_data()
     
-    read_request, content = generate_read_request(namespace_metadata)
+    
+    read_request, content = generate_read_request(validator_db_manager)
     
     response_read = await self.dendrite(
         axons = [self.metagraph.axons[miner_uid]],

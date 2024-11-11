@@ -3,12 +3,12 @@ import asyncio
 from datetime import datetime, timezone
 import random
 import yaml
+import re
 
 
 async def get_article_extracts(pageid):
-    extracts = {}
     async with aiohttp.ClientSession() as session:
-        print("pageids == ", pageid)
+        print("pageid == ", pageid)
         async with session.get(
             "https://en.wikipedia.org/w/api.php",
             params={
@@ -23,9 +23,15 @@ async def get_article_extracts(pageid):
             pages = data.get("query", {}).get("pages", {})
             for page in pages.values():
                 extract = page.get("extract", "No extract available")
-                extracts[page['pageid']] = extract if extract else "No extract available"
+                # Remove newlines and extra spaces
+                cleaned_extract = re.sub(r'\s+', ' ', extract).strip()
+                return cleaned_extract if cleaned_extract else "No extract available"
+
+# Example usage:
+# extract = await get_article_extract(12345)
+
     
-    return extracts
+    return extract
 
 async def get_articles_in_category(category, k):
     async with aiohttp.ClientSession() as session:
@@ -86,6 +92,10 @@ async def wikipedia_scraper(k : int, category: str):
     print(elasped_time.total_seconds())
 
     return articles
+
+async def get_wiki_article_content_with_pageid(pageid):
+    content = await get_article_extracts(pageid)
+    return get_article_extracts
  
 if __name__ == '__main__':
-    asyncio.run(wikipedia_scraper())
+    asyncio.run(wikipedia_scraper(3, "Surveillance"))
