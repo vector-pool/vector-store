@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 
 class ValidatorDBManager:
     def __init__(self, miner_uid: str):
-        """Initialize ValidatorDBManager with a validator hotkey."""
+        """Initialize ValidatorDBManager with a miner uid."""
         self.db_name = miner_uid
         self.conn = None
 
