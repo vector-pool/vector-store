@@ -31,7 +31,6 @@ from vectornet.protocol import (
 from vectornet.validator.reward import get_rewards
 from vectornet.utils.uids import get_random_uids
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager
-from vectornet.miner_group.check_new_miners import check_miner_status
 from vectornet.miner_group.miner_group import make_miner_group
 from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
 from vectornet.tasks.generate_task import (
@@ -47,6 +46,7 @@ from vectornet.evaludation.evaluate import (
     evaluate_read_request,
 )
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager
+from vectornet.utils.weight_control import weight_controller
 
 
 
@@ -60,10 +60,6 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
-    new_miner_uids, miner_ages = check_miner_status()
-    very_young_miers, young_miners, mature_miners, old_miners, very_old_miners = make_miner_group(miner_ages)
-    
-    # init_new_miner_uids()
     
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
     miner_uid = miner_uids[0] # the default sample size is one
@@ -142,8 +138,6 @@ async def forward(self):
     if delete_request_zero_score:
         validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
     
-    
-    
     read_request, content = generate_read_request(validator_db_manager)
     
     response_read = await self.dendrite(
@@ -157,20 +151,7 @@ async def forward(self):
     
     read_score = evaluate_read_request(read_request, response_read, content)
     
-    miner_age = None
-    for miner in miner_ages:
-        if miner_uid == miner['uid']:
-            miner_age = miner['age']
-
-    age_to_weight = {
-        "very_young": 0.6,
-        "young": 0.7,
-        "mature": 0.8,
-        "old": 0.9,
-        "very_old": 1.0
-    }
-    
-    weight = age_to_weight.get(miner_age)
+    weight = weight_controller(miner_uid)
     
     if weight is None:
         raise Exception("error occurs in weight mapping in evaluation")

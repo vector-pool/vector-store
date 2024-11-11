@@ -83,4 +83,4 @@ async def get_wiki_article_content_with_pageid(pageid):
     return get_article_extracts
  
 if __name__ == '__main__':
-    asyncio.run(wikipedia_scraper(3, "Surveillance"))
+    asyncio.run(wikipedia_scraper(3, "Love"))
