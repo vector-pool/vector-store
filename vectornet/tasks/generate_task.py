@@ -128,8 +128,8 @@ def generate_query_content(llm_client, content):
     )
     prompt += content
     prompt += (
-        "Generate a summary of the original content using approximately 300-500 characters.",
-        "Provide only the generated summary, without any additional context or explanation.",
+        "Generate a summary of the original content using approximately 700-900 characters."
+        "Provide only the generated summary in plain text, without any additional context, explanation, or formatting. single and double quotes or new lines."
     )
 
     bt.logging.debug(f"Prompt: {prompt}")

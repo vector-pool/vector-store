@@ -1,33 +1,41 @@
-from sentence_transformers import SentenceTransformer
-
-embedding_model = 'all-MiniLM-L6-v2'
+from transformers import LongformerTokenizer, LongformerModel
+import torch
 
 class TextToEmbedding:
     def __init__(self):
-        self.model = SentenceTransformer(embedding_model)
         self.max_token_size = 8191  # Maximum token size for the model
+        self.tokenizer = LongformerTokenizer.from_pretrained("allenai/longformer-base-4096")
+        self.model = LongformerModel.from_pretrained("allenai/longformer-base-4096")
 
-    def embed(self, original_texts):
+    def embed(self, text):
         embeded_data = []
         embeddings = []
         original_data = []
-        for text in original_texts:
-            # Split the text into sentences or chunks based on the max token size
-            chunks = self.chunk_text(text)
 
-            for chunk in chunks:
-                # Get the embedding for each chunk
-                embedding = self.model.encode(chunk).tolist()  # Convert to list of floats
-                
-                # Create the result dictionary
-                embeded_data.append(chunk)
-                embeddings.append(embedding)
-                original_data.append(text)
+        inputs = self.tokenizer(text, return_tensors="pt", max_length=self.max_token_size, truncation=True)
+        outputs = self.model(**inputs)
+        embedding = outputs.last_hidden_state  # Shape: (batch_size, sequence_length, hidden_size)
+
+        pooled_embedding = self.mean_pooling(embedding, inputs['attention_mask'])
+
+        embeded_data.append(text)
+        embeddings.append(pooled_embedding)
+        original_data.append(text)
 
         return embeded_data, embeddings, original_data
 
+    def mean_pooling(self, embedding, attention_mask):
+        token_embeddings = embedding  # (batch_size, sequence_length, hidden_size)
+        attention_mask = attention_mask.unsqueeze(-1)  # (batch_size, sequence_length, 1)
+
+        summed_embeddings = torch.sum(token_embeddings * attention_mask, 1)  # (batch_size, hidden_size)
+        summed_mask = torch.sum(attention_mask, 1)  # (batch_size, 1)
+
+        pooled_embedding = summed_embeddings / summed_mask
+        return pooled_embedding  # (batch_size, hidden_size)
+
     def chunk_text(self, text):
-        # Simple chunking logic based on max token size
+
         words = text.split()
         chunks = []
         current_chunk = []
@@ -38,21 +46,13 @@ class TextToEmbedding:
                 chunks.append(' '.join(current_chunk))
                 current_chunk = []
 
-        # Add any remaining words as a final chunk
         if current_chunk:
             chunks.append(' '.join(current_chunk))
 
         return chunks
 
-# Example usage
-text_to_embedding = TextToEmbedding()
-texts = [
-    "This is a long text that might exceed the maximum token size. " * 80,
-    "This text is short."
-]
-embeddings = text_to_embedding.embed(texts)
-for emb in embeddings:
-    print(emb)
-
-    
-    
+if __name__ == '__main__':
+    text = 'ladfajkslfal;dsfjal;sdfja;ldskfj'
+    emb = TextToEmbedding()
+    embedding = emb.embed(text)
+    print(embedding)

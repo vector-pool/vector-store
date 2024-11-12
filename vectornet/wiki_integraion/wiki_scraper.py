@@ -22,12 +22,10 @@ async def get_article_extracts(pageid):
             for page in pages.values():
                 print(page)
                 extract = page.get("extract", "No extract available")
-                # Remove newlines and extra spaces
-                cleaned_extract = re.sub(r'\s+', ' ', extract).strip()
+                # Remove newlines, extra spaces, and quotes
+                cleaned_extract = re.sub(r'[\'\"\\\n]', '', re.sub(r'\s+', ' ', extract)).strip()
                 return cleaned_extract if cleaned_extract else "No extract available"
-    
-    return extract
-
+            
 async def get_articles_in_category(category, k):
     async with aiohttp.ClientSession() as session:
         async with session.get(
@@ -85,4 +83,4 @@ async def get_wiki_article_content_with_pageid(pageid):
     return content
  
 if __name__ == '__main__':
-    asyncio.run(wikipedia_scraper(1, "Home"))
+    asyncio.run(wikipedia_scraper(5, "Dance"))
