@@ -19,6 +19,7 @@
 
 import time
 import bittensor as bt
+import random
 from vectornet.validator.reward import get_rewards
 from vectornet.utils.uids import get_random_uids
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager
@@ -84,50 +85,52 @@ async def forward(self):
             category,
             pageids,
         )
-    
-    category, articles, update_request = generate_update_request(
-        article_zize = 30,
-        validator_db_manager = validator_db_manager,
-    )
+    for i in range(0, 3):
+        category, articles, update_request = generate_update_request(
+            article_zize = 30,
+            validator_db_manager = validator_db_manager,
+        )
 
-    response_update_request = await self.dendrite(
-        axons = [self.metagraph.axons[miner_uid]],
-        synapse = update_request,
-        deserialize = True,
-        timeout = 90,
-    )
-    
-    bt.logging.info(f"Received responses: {response_update_request}")
-    
-    update_request_zero_score = evaluate_update_request(update_request, response_update_request)
-        
-    if update_request_zero_score:
-        validator_db_manager.update_operation(
-            "UPDATE",
-            update_request.perform,
-            update_request.user_id,
-            update_request.organization_id,
-            update_request.namespace_id,
-            category,
-            pageids,
+        response_update_request = await self.dendrite(
+            axons = [self.metagraph.axons[miner_uid]],
+            synapse = update_request,
+            deserialize = True,
+            timeout = 90,
         )
         
-    delete_request = generate_delete_request(validator_db_manager)
+        bt.logging.info(f"Received responses: {response_update_request}")
+        
+        update_request_zero_score = evaluate_update_request(update_request, response_update_request)
+            
+        if update_request_zero_score:
+            validator_db_manager.update_operation(
+                "UPDATE",
+                update_request.perform,
+                update_request.user_id,
+                update_request.organization_id,
+                update_request.namespace_id,
+                category,
+                pageids,
+            )
     
-    response_delete_request = await self.dendrite(
-        axons = [self.metagraph.axons[miner_uid]],
-        synapse = delete_request,
-        deserialize = True,
-        timeout = 20,
-    )
-    
-    bt.logging.info(f"Received responses: {response_delete_request}") 
-    
-    delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request)
-    
-    if delete_request_zero_score:
-        validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
-    
+    random_num = random.choice()
+    if random_num < 0.3:
+        delete_request = generate_delete_request(validator_db_manager)
+        
+        response_delete_request = await self.dendrite(
+            axons = [self.metagraph.axons[miner_uid]],
+            synapse = delete_request,
+            deserialize = True,
+            timeout = 20,
+        )
+        
+        bt.logging.info(f"Received responses: {response_delete_request}") 
+        
+        delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request)
+        
+        if delete_request_zero_score:
+            validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
+        
     read_request, content = generate_read_request(validator_db_manager)
     
     response_read = await self.dendrite(

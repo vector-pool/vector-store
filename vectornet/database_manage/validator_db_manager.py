@@ -3,9 +3,9 @@ from psycopg2 import sql
 from typing import List, Optional, Tuple
 
 class ValidatorDBManager:
-    def __init__(self, miner_uid: str):
+    def __init__(self, db_name: str):
         """Initialize ValidatorDBManager with a miner uid."""
-        self.db_name = miner_uid
+        self.db_name = db_name
         self.conn = None
 
     def ensure_database_exists(self) -> bool:
@@ -252,11 +252,46 @@ class ValidatorDBManager:
             )
             
             self.conn.commit()  
+            
+    def init_count_synapse_db(self):
+        self.ensure_database_exists()
+        # Create the count_synapse database and table
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS count_synapse (
+                miner_uid INTEGER PRIMARY KEY,
+                count INTEGER DEFAULT 0
+            )
+        ''')
+        # Fill the table with miner_uid from 0 to 255 and count as 0
+        for uid in range(256):
+            self.cursor.execute('''
+                INSERT OR IGNORE INTO count_synapse (miner_uid, count) VALUES (?, ?)
+            ''', (uid, 0))
+        self.connection.commit()
+
+    def add_count(self, uid):
+        # Increment the count for the specified miner_uid
+        self.cursor.execute('''
+            UPDATE count_synapse SET count = count + 1 WHERE miner_uid = ?
+        ''', (uid,))
+        self.connection.commit()
+
+    def read_count(self, uid):
+        # Read the count for the specified miner_uid
+        self.cursor.execute('''
+            SELECT count FROM count_synapse WHERE miner_uid = ?
+        ''', (uid,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+
+
 
     def close_connection(self):
         """Close the database connection."""
         if self.conn:
             self.conn.close()
+
+
 
 # Example Usage
 if __name__ == '__main__':
@@ -276,3 +311,47 @@ if __name__ == '__main__':
     )
 
     db_manager.close_connection()
+
+import psycopg2
+
+class CountManager:
+    def __init__(self):
+        self.db_name = "count_synapses"
+        self.connection = psycopg2.connect()
+        self.cursor = self.connection.cursor()
+        self.init_count_synapse()
+
+    def init_count_synapse(self):
+        # Create the count_synapse table
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS count_synapse (
+                miner_uid SERIAL PRIMARY KEY,
+                count INTEGER DEFAULT 0
+            )
+        ''')
+        # Fill the table with miner_uid from 0 to 255 and count as 0
+        for uid in range(256):
+            self.cursor.execute('''
+                INSERT INTO count_synapse (miner_uid, count) VALUES (%s, %s)
+                ON CONFLICT (miner_uid) DO NOTHING
+            ''', (uid, 0))
+        self.connection.commit()
+
+    def add_count(self, uid):
+        # Increment the count for the specified miner_uid
+        self.cursor.execute('''
+            UPDATE count_synapse SET count = count + 1 WHERE miner_uid = %s
+        ''', (uid,))
+        self.connection.commit()
+
+    def read_count(self, uid):
+        # Read the count for the specified miner_uid
+        self.cursor.execute('''
+            SELECT count FROM count_synapse WHERE miner_uid = %s
+        ''', (uid,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+
+    def close(self):
+        self.cursor.close()
+        self.connection.close()
