@@ -22,7 +22,7 @@ import argparse
 import bittensor as bt
 from .logging import setup_events_logger
 
-len_limit = 31e4
+len_limit = int(1e4)
 
 
 def is_cuda_available():

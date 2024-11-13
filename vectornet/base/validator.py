@@ -36,6 +36,7 @@ from vectornet.base.utils.weight_utils import (
 from vectornet.mock import MockDendrite
 from vectornet.utils.config import add_validator_args
 from vectornet.database_manage.validator_db_manager import CountManager
+from vectornet.utils.uids import get_random_uids
 
 class BaseValidatorNeuron(BaseNeuron):
     """
@@ -113,9 +114,14 @@ class BaseValidatorNeuron(BaseNeuron):
             pass
 
     async def concurrent_forward(self):
+        random_uids = get_random_uids(self, 3)
+        # coroutines = [
+        #     self.forward()
+        #     for _ in range(self.config.neuron.num_concurrent_forwards)
+        # ]
+        print("random_uids : ", random_uids)
         coroutines = [
-            self.forward()
-            for _ in range(self.config.neuron.num_concurrent_forwards)
+            self.forward(uid) for uid in random_uids
         ]
         await asyncio.gather(*coroutines)
 

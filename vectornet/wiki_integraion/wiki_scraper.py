@@ -20,7 +20,7 @@ async def get_article_extracts(pageid):
             data = await response.json()
             pages = data.get("query", {}).get("pages", {})
             for page in pages.values():
-                # print(page)
+                print(page)
                 extract = page.get("extract", "No extract available")
                 # Remove newlines, extra spaces, and quotes
                 cleaned_extract = re.sub(r'[\'\"\\\n]', '', re.sub(r'\s+', ' ', extract)).strip()

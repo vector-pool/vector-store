@@ -40,7 +40,7 @@ from vectornet.evaludation.evaluate import (
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager, CountManager
 from vectornet.utils.weight_control import weight_controller
 
-async def forward(self):
+async def forward(self, miner_uid):
     """
     The forward function is called by the validator every time step.
 
@@ -51,29 +51,41 @@ async def forward(self):
 
     """
     
-    miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-    miner_uid = miner_uids[0] # the default sample_size is one
+    # miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+    # miner_uid = miner_uids[0] # the default sample_size is one
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    RESET = "\033[0m"
+
+    # Print colored text
+    print(RED + "This text is red!" + RESET)
+    print(GREEN + "This text is green!" + RESET)
     
+    
+    miner_uid = int(miner_uid)
+    print(miner_uid)
+    print(type(miner_uid))
     validator_db_manager = ValidatorDBManager(miner_uid)
     count_manager = CountManager()
     
     count_manager.add_count(miner_uid)
-    cur_count_synapse = count_manager.read_count()
+    cur_count_synapse = count_manager.read_count(miner_uid)
     
     category, articles, create_request = await generate_create_request(
         validator_db_manager = validator_db_manager,
-        article_size = 30,
+        article_size = 3,
     )
+    print(create_request)
     pageids = [article['pageid'] for article in articles]
     
     response_create_request = await self.dendrite(
         axons = [self.metagraph.axons[miner_uid]],
         synapse = create_request,
         deserialize = True,
-        timeout = 90,
+        timeout = 10,
     )
     
-    bt.logging.info(f"Received responses: {response_create_request}")
+    bt.logging.info(f"Received responses : {response_create_request} from {miner_uid}")
     
     create_request_zero_score = evaluate_create_request(response_create_request, validator_db_manager, create_request)
     
@@ -91,62 +103,64 @@ async def forward(self):
         )
     for i in range(0, 3):
         category, articles, update_request = await generate_update_request(
-            article_zize = 30,
+            article_size = 3,
             validator_db_manager = validator_db_manager,
         )
-
-        response_update_request = await self.dendrite(
-            axons = [self.metagraph.axons[miner_uid]],
-            synapse = update_request,
-            deserialize = True,
-            timeout = 90,
-        )
-        
-        bt.logging.info(f"Received responses: {response_update_request}")
-        
-        update_request_zero_score = evaluate_update_request(update_request, response_update_request)
-            
-        if update_request_zero_score:
-            validator_db_manager.update_operation(
-                "UPDATE",
-                update_request.perform,
-                update_request.user_id,
-                update_request.organization_id,
-                update_request.namespace_id,
-                category,
-                pageids,
+        if update_request is not None:
+            response_update_request = await self.dendrite(
+                axons = [self.metagraph.axons[miner_uid]],
+                synapse = update_request,
+                deserialize = True,
+                timeout = 10,
             )
+            
+            bt.logging.info(f"Received responses: {response_update_request}")
+            
+            update_request_zero_score = evaluate_update_request(update_request, response_update_request)
+                
+            if update_request_zero_score:
+                validator_db_manager.update_operation(
+                    "UPDATE",
+                    update_request.perform,
+                    update_request.user_id,
+                    update_request.organization_id,
+                    update_request.namespace_id,
+                    category,
+                    pageids,
+                )
     
-    random_num = random.choice()
+    random_num = random.random()
     if random_num < 0.3:
         delete_request = await generate_delete_request(validator_db_manager)
         
-        response_delete_request = await self.dendrite(
-            axons = [self.metagraph.axons[miner_uid]],
-            synapse = delete_request,
-            deserialize = True,
-            timeout = 20,
-        )
-        
-        bt.logging.info(f"Received responses: {response_delete_request}") 
-        
-        delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request)
-        
-        if delete_request_zero_score:
-            validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
+        if delete_request is not None:
+            response_delete_request = await self.dendrite(
+                axons = [self.metagraph.axons[miner_uid]],
+                synapse = delete_request,
+                deserialize = True,
+                timeout = 20,
+            )
+            
+            bt.logging.info(f"Received responses: {response_delete_request}") 
+            
+            delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request)
+            
+            if delete_request_zero_score:
+                validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
         
     read_request, content = await generate_read_request(validator_db_manager)
     
-    response_read = await self.dendrite(
-        axons = [self.metagraph.axons[miner_uid]],
-        synapse = read_request,
-        deserialize = True,
-        timeout = 30,
-    )
-    
-    bt.logging.info(f"Received responses: {response_read}")
-    
-    read_score = evaluate_read_request(read_request, response_read, content)
+    if read_request is not None:
+        response_read = await self.dendrite(
+            axons = [self.metagraph.axons[miner_uid]],
+            synapse = read_request,
+            deserialize = True,
+            timeout = 30,
+        )
+        
+        bt.logging.info(f"Received responses: {response_read}")
+        
+        read_score = evaluate_read_request(read_request, response_read, content)
     
     weight = weight_controller(miner_uid, cur_count_synapse)
     

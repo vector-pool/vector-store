@@ -3,15 +3,15 @@ import bittensor as bt
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from vectornet.embedding.embed import TextToEmbedding
-
+from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
 
 def evaluate_create_request(response, validator_db_manager, query):
     
     if response is None:
-        # bt.logging.info("aresponse doesn't have a value")
+        bt.logging.info("aresponse doesn't have a value")
         return 0
     if len(response) != 3:
-        # bt.logging.info("response's length is not 3, it contains less or more ingegers.")
+        bt.logging.info("response's length is not 3, it contains less or more ingegers.")
         return 0
     user_id, organization_id, namespace_id = get_ids_from_response(response)
     db_user_id, db_user_name, db_organization_id, db_organization_name, db_namespace_id, db_namespace_name = validator_db_manager.get_db_data(user_id, organization_id, namespace_id)
@@ -29,10 +29,10 @@ def evaluate_create_request(response, validator_db_manager, query):
 def evaluate_update_request(query, response):
     
     if response is None:
-        # bt.logging.info("update request response doesn't have a value")
+        bt.logging.info("update request response doesn't have a value")
         return 0
     if len(response) != 3:
-        # bt.logging.info("response's length is not 3, it contains less or more ingegers.")
+        bt.logging.info("response's length is not 3, it contains less or more ingegers.")
         return 0
     user_id, organization_id, namespace_id = get_ids_from_response(response)
     if (
@@ -79,7 +79,8 @@ def evaluate_read_request(query, response, original_content):
         ids[2] != query.namespace_id
     ):
         zero_score = 0
-    contents = get_wiki_contents(ids)
+    get_wiki_article_content_with_pageid
+    contents = get_wiki_contents_with(ids)
     if content not in contents:
         return 0
     if content == original_content:
