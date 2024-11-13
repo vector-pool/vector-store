@@ -60,7 +60,7 @@ async def forward(self):
     count_manager.add_count(miner_uid)
     cur_count_synapse = count_manager.read_count()
     
-    category, articles, create_request = generate_create_request(
+    category, articles, create_request = await generate_create_request(
         validator_db_manager = validator_db_manager,
         article_size = 30,
     )
@@ -90,7 +90,7 @@ async def forward(self):
             pageids,
         )
     for i in range(0, 3):
-        category, articles, update_request = generate_update_request(
+        category, articles, update_request = await generate_update_request(
             article_zize = 30,
             validator_db_manager = validator_db_manager,
         )
@@ -119,7 +119,7 @@ async def forward(self):
     
     random_num = random.choice()
     if random_num < 0.3:
-        delete_request = generate_delete_request(validator_db_manager)
+        delete_request = await generate_delete_request(validator_db_manager)
         
         response_delete_request = await self.dendrite(
             axons = [self.metagraph.axons[miner_uid]],
@@ -135,7 +135,7 @@ async def forward(self):
         if delete_request_zero_score:
             validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
         
-    read_request, content = generate_read_request(validator_db_manager)
+    read_request, content = await generate_read_request(validator_db_manager)
     
     response_read = await self.dendrite(
         axons = [self.metagraph.axons[miner_uid]],
