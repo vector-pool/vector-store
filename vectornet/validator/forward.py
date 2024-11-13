@@ -153,7 +153,14 @@ async def forward(self):
     if weight is None:
         raise Exception("error occurs in weight mapping in evaluation")
     
-    rewards = get_rewards(create_request_zero_score, update_request_zero_score, delete_request_zero_score, read_score, weight)
+    rewards = get_rewards(
+        self,
+        create_request_zero_score,
+        update_request_zero_score,
+        delete_request_zero_score,
+        read_score,
+        weight,
+    )
 
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
