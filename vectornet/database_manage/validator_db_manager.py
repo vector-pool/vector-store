@@ -7,6 +7,9 @@ class ValidatorDBManager:
         """Initialize ValidatorDBManager with a miner uid."""
         self.db_name = db_name
         self.conn = None
+        self.ensure_database_exists()
+        self.connect_to_db()
+        self.create_tables()
 
     def ensure_database_exists(self) -> bool:
         """Ensure the database exists, create if not."""
@@ -188,9 +191,9 @@ class ValidatorDBManager:
         if request_type.lower() != 'create':
             raise ValueError("Invalid request type. Expected 'create'.")
 
-        self.ensure_database_exists()
-        self.connect_to_db()
-        self.create_tables()
+        # self.ensure_database_exists()
+        # self.connect_to_db()
+        # self.create_tables()
 
         self.add_user(user_id, user_name)
         self.add_organization(organization_id, user_id, organization_name)

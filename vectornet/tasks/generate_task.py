@@ -4,6 +4,8 @@ import bittensor as bt
 from traceback import print_exception
 import openai
 import os
+import asyncio
+
 from vectornet.utils.config import len_limit
 from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
 from vectornet.protocol import(
@@ -14,7 +16,7 @@ from vectornet.protocol import(
 )
 from vectornet.utils.version import get_version
 from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
-
+from vectornet.database_manage.validator_db_manager import ValidatorDBManager
 
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
@@ -31,15 +33,16 @@ def generate_create_request(validator_db_manager, article_size = 30) -> CreateSy
         user_name = random.choice(user_names)
         organization_name = random.choice(organization_names)
         category = random.choice(wiki_categories)
-        uniquness = validator_db_manager.check_uniquness(user_name, category, uniquness)
+        uniquness = validator_db_manager.check_uniquness(user_name, organization_name, category)
+        print("user_name, organization_name, category, uniquness", user_name, organization_name, category, uniquness)
         if uniquness:
             break
-    
-    articles = wikipedia_scraper(article_size, category)
+    articles = asyncio.run(wikipedia_scraper(article_size, category))
     contents = []
     for article in articles:
         contents.append(article['content'][:len_limit])
     version = get_version()
+    print("version =", version)
     query = CreateSynapse(
         version = version,
         type = 'CREATE',
@@ -48,6 +51,7 @@ def generate_create_request(validator_db_manager, article_size = 30) -> CreateSy
         namespace_name = category,
         index_data = contents,
     )
+    print(contents[2])
     
     return category, articles, query
     
@@ -157,3 +161,12 @@ def generate_query_content(llm_client, content):
     except Exception as e:
         bt.logging.error(f"Error during LLM completion: {e}")
         bt.logging.debug(print_exception(type(e), e, e.__traceback__))
+        
+
+if __name__ == '__main__':
+    print(len_limit)
+    miner_uid = 15
+    validator_db_manager = ValidatorDBManager(miner_uid)
+    request = generate_create_request(validator_db_manager, 3)
+    print(request[3])
+    print(request[3].__dict__)

@@ -5,7 +5,7 @@ import re
 import logging
 
 async def get_article_extracts(pageid):
-    print(pageid)
+    # print(pageid)
     async with aiohttp.ClientSession() as session:
         async with session.get(
             "https://en.wikipedia.org/w/api.php",
@@ -20,7 +20,7 @@ async def get_article_extracts(pageid):
             data = await response.json()
             pages = data.get("query", {}).get("pages", {})
             for page in pages.values():
-                print(page)
+                # print(page)
                 extract = page.get("extract", "No extract available")
                 # Remove newlines, extra spaces, and quotes
                 cleaned_extract = re.sub(r'[\'\"\\\n]', '', re.sub(r'\s+', ' ', extract)).strip()
@@ -69,13 +69,13 @@ async def wikipedia_scraper(k : int, category: str):
             'extract': article['content']
         })
 
-    with open('result.txt', 'w', encoding='utf-8') as f:
+    with open('result_wiki.txt', 'w', encoding='utf-8') as f:
         for result in results:
             f.write(f"{result}\n")  # Write each result as a dictionary
 
     elasped_time = datetime.now() - start_time
     logging.info(elasped_time.total_seconds())
-
+    print("wiki_contents are scraped correctly")
     return articles
 
 async def get_wiki_article_content_with_pageid(pageid):
