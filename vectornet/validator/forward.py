@@ -37,7 +37,7 @@ from vectornet.evaludation.evaluate import (
     evaluate_delete_request,
     evaluate_read_request,
 )
-from vectornet.database_manage.validator_db_manager import ValidatorDBManager
+from vectornet.database_manage.validator_db_manager import ValidatorDBManager, CountManager
 from vectornet.utils.weight_control import weight_controller
 
 async def forward(self):
@@ -55,6 +55,10 @@ async def forward(self):
     miner_uid = miner_uids[0] # the default sample_size is one
     
     validator_db_manager = ValidatorDBManager(miner_uid)
+    count_manager = CountManager()
+    
+    count_manager.add_count(miner_uid)
+    cur_count_synapse = count_manager.read_count()
     
     category, articles, create_request = generate_create_request(
         validator_db_manager = validator_db_manager,
@@ -144,12 +148,12 @@ async def forward(self):
     
     read_score = evaluate_read_request(read_request, response_read, content)
     
-    weight = weight_controller(miner_uid)
+    weight = weight_controller(miner_uid, cur_count_synapse)
     
     if weight is None:
         raise Exception("error occurs in weight mapping in evaluation")
     
-    rewards = create_request_zero_score * update_request_zero_score * delete_request_zero_score * read_score * weight
+    rewards = get_rewards(create_request_zero_score, update_request_zero_score, delete_request_zero_score, read_score, weight)
 
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
