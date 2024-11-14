@@ -67,7 +67,7 @@ class Miner(BaseMinerNeuron):
         print(RED + "\n\nRecieved Create Request !" + RESET)
         print(GREEN + "Recieved Create Request !\n\n" + RESET)
         # print(query.index_data)
-        print("query = ", query)
+        # print("query = ", query)
             
         self.check_version(query.version)
         
@@ -130,6 +130,8 @@ class Miner(BaseMinerNeuron):
             results.append({'text': top_vector['original_text'], 'embedding': top_vector['embedding']})
 
         query.results = results
+        
+        return query
         
     async def forward_update_request(self, query: UpdateSynapse) -> UpdateSynapse:
         """

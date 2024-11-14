@@ -111,33 +111,33 @@ async def forward(self, miner_uid):
             category,
             pageids,
         )
-    # for i in range(0, 3):
-    #     category, articles, update_request = await generate_update_request(
-    #         article_size = 3,
-    #         validator_db_manager = validator_db_manager,
-    #     )
-    #     if update_request is not None:
-    #         response_update_request = await self.dendrite(
-    #             axons = [self.metagraph.axons[miner_uid]],
-    #             synapse = update_request,
-    #             deserialize = True,
-    #             timeout = 10,
-    #         )
+    for i in range(0, 3):
+        category, articles, update_request = await generate_update_request(
+            article_size = 3,
+            validator_db_manager = validator_db_manager,
+        )
+        if update_request is not None:
+            response_update_request = await self.dendrite(
+                axons = [self.metagraph.axons[miner_uid]],
+                synapse = update_request,
+                deserialize = True,
+                timeout = 10,
+            )
             
-    #         bt.logging.info(f"Received responses: {response_update_request}")
+            bt.logging.info(f"Received responses: {response_update_request}")
             
-    #         update_request_zero_score = evaluate_update_request(update_request, response_update_request)
+            update_request_zero_score = evaluate_update_request(update_request, response_update_request)
                 
-    #         if update_request_zero_score:
-    #             validator_db_manager.update_operation(
-    #                 "UPDATE",
-    #                 update_request.perform,
-    #                 update_request.user_id,
-    #                 update_request.organization_id,
-    #                 update_request.namespace_id,
-    #                 category,
-    #                 pageids,
-    #             )
+            if update_request_zero_score:
+                validator_db_manager.update_operation(
+                    "UPDATE",
+                    update_request.perform,
+                    update_request.user_id,
+                    update_request.organization_id,
+                    update_request.namespace_id,
+                    category,
+                    pageids,
+                )
     
     # random_num = random.random()
     # if random_num < 0.3:
