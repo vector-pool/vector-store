@@ -3,7 +3,7 @@ from vectornet.miner_group.check_new_miners import check_miner_status
 from typing import Dict
 
 
-def weight_controller(miner_uid: str, count: int) -> float:
+def weight_controller(count: int) -> float:
     """Determine the weight for a miner based on their age derived from count.
 
     Args:
@@ -42,7 +42,7 @@ def weight_controller(miner_uid: str, count: int) -> float:
     
     miner_age = get_age_from_count(count)
     weight = count_to_weight.get(miner_age)
-    
+    print("weight = ", weight)
     return weight
 
 

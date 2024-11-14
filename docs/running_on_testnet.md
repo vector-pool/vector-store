@@ -3,5 +3,5 @@ python neurons/miner.py --subtensor.network test --netuid 140 --wallet.name myte
 
 btcli wallet regen_coldkey 
 btcli wallet regen_hotkey
-
+btcli s metagraph --subnet.network test --netuid 140
 

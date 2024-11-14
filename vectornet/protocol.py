@@ -34,9 +34,9 @@ class CreateSynapse(bt.Synapse):
     organization_name: Optional[str] = None
     namespace_name: Optional[str] = None
     index_data: Optional[List[str]] = None
-    results: Optional[List[int]] = None  # Corrected line
+    results: Optional[Tuple[int, int, int]] = None  # Corrected line
 
-    def deserialize(self) -> List[Dict]:
+    def deserialize(self):
         return self.results
 
 class ReadSynapse(bt.Synapse):

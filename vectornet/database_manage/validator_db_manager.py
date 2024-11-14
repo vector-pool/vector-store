@@ -138,8 +138,8 @@ class ValidatorDBManager:
     
     def get_db_data(self, user_id, organization_id, namespace_id):
         db_user_id, db_user_name = self.get_user(user_id)
-        db_organization_id, db_organization_name = self.get_organization(organization_id)
-        db_namespace_id, db_namespace_name = self.get_namespace(namespace_id)
+        db_organization_id, db_organization_name = self.get_organization(user_id, organization_id)
+        db_namespace_id, db_namespace_name = self.get_namespace(user_id, organization_id, namespace_id)
         
         return db_user_id, db_user_name, db_organization_id, db_organization_name, db_namespace_id, db_namespace_name
 
