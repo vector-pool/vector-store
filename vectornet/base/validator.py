@@ -35,7 +35,8 @@ from vectornet.base.utils.weight_utils import (
 )  # TODO: Replace when bittensor switches to numpy
 from vectornet.mock import MockDendrite
 from vectornet.utils.config import add_validator_args
-
+from vectornet.database_manage.validator_db_manager import CountManager
+from vectornet.utils.uids import get_random_uids
 
 class BaseValidatorNeuron(BaseNeuron):
     """
@@ -55,6 +56,9 @@ class BaseValidatorNeuron(BaseNeuron):
         # Save a copy of the hotkeys to local memory.
         self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)
 
+        validator_db_manager = CountManager()
+        validator_db_manager.init_count_synapse()
+        
         # Dendrite lets us send messages to other nodes (axons) in the network.
         if self.config.mock:
             self.dendrite = MockDendrite(wallet=self.wallet)
@@ -110,9 +114,15 @@ class BaseValidatorNeuron(BaseNeuron):
             pass
 
     async def concurrent_forward(self):
+        random_uids = get_random_uids(self, 3)
+        random_uids = [6]
+        # coroutines = [
+        #     self.forward()
+        #     for _ in range(self.config.neuron.num_concurrent_forwards)
+        # ]
+        print("random_uids : ", random_uids)
         coroutines = [
-            self.forward()
-            for _ in range(self.config.neuron.num_concurrent_forwards)
+            self.forward(uid) for uid in random_uids
         ]
         await asyncio.gather(*coroutines)
 

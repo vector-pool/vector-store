@@ -22,7 +22,7 @@ import argparse
 import bittensor as bt
 from .logging import setup_events_logger
 
-len_limit = 31e4
+len_limit = int(1e4)
 
 
 def is_cuda_available():
@@ -193,7 +193,7 @@ def add_validator_args(cls, parser):
         "--neuron.num_concurrent_forwards",
         type=int,
         help="The number of concurrent forwards running at any time.",
-        default=10,
+        default=1,
     )
 
     parser.add_argument(

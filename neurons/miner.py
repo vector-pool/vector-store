@@ -37,6 +37,10 @@ from vectornet.embedding.embed import TextToEmbedding
 from vectornet.database_manage.miner_db_manager import MinerDBManager
 from vectornet.search_engine.search import SearchEngine
 
+RED = "\033[31m"
+GREEN = "\033[32m"
+RESET = "\033[0m"
+
 class Miner(BaseMinerNeuron):
     """
     Your miner neuron class. You should use this class to define your miner's behavior. In particular, you should replace the forward function with your own logic. You may also want to override the blacklist and priority functions according to your needs.
@@ -56,6 +60,15 @@ class Miner(BaseMinerNeuron):
         """
         processes the incoming CreateSynapse by creating new embeddings and saving them in database
         """
+            
+
+
+        # Print colored text
+        print(RED + "\n\nRecieved Create Request !" + RESET)
+        print(GREEN + "Recieved Create Request !\n\n" + RESET)
+        # print(query.index_data)
+        print("query = ", query)
+            
         self.check_version(query.version)
         
         request_type = query.type
@@ -70,19 +83,26 @@ class Miner(BaseMinerNeuron):
         embedding_manager = TextToEmbedding()
         
         embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
-        results = []
+        # print(embeddings)
+        
         user_id, organization_id, namespace_id = validator_db_manager.create_operation(request_type, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
-        results.append(user_id)
-        results.append(organization_id)
-        results.append(namespace_id)
+        results = (user_id, organization_id, namespace_id)
+        
+        print(GREEN + "\n\n this is the results !\n\n" + RESET)
         
         query.results = results
+        
+        return query
         
     async def forward_read_request(self, query: ReadSynapse) -> ReadSynapse:
         """
         processes the incoming ReadSynapse by searching the most similar texts with query by comparing embeddings
         between query and saved data using advanced searching algorithms
         """
+        
+        print(RED + "\n\nRecieved Read Request !" + RESET)
+        print(GREEN + "Recieved Read Request !\n\n" + RESET)
+        
         self.check_version(query.version)
         
         request_type = query.type
@@ -115,6 +135,10 @@ class Miner(BaseMinerNeuron):
         """
         processes the incoming UpdateSynapse by updating existing embeddings that saved in database
         """
+        
+        print(RED + "\n\nRecieved Update Request !" + RESET)
+        print(GREEN + "Recieved Update Request !\n\n" + RESET)
+        
         self.check_version(query.version)
         
         perform = query.perform.lower()
@@ -133,7 +157,7 @@ class Miner(BaseMinerNeuron):
         embedding_manager = TextToEmbedding()
         
         embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
-        
+        print(embeddings)
         results = []
         user_id, organization_id, namespace_id = validator_db_manager.update_operation(request_type, perform, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
         results.append(user_id)
@@ -143,6 +167,10 @@ class Miner(BaseMinerNeuron):
         query.results = results
         
     async def forward_delete_request(self, query: DeleteSynapse) -> DeleteSynapse:
+        
+        print(RED + "\n\nRecieved Delete Request !" + RESET)
+        print(GREEN + "Recieved Delete Request !\n\n" + RESET)
+        
         self.check_version(query.version)
         
         perform = query.perform.lower()
@@ -166,8 +194,8 @@ class Miner(BaseMinerNeuron):
         query.results = results
 
     async def forward(
-        self, synapse: vectornet.protocol.Dummy
-    ) -> vectornet.protocol.Dummy:
+        self,
+    ):
         """
         Processes the incoming 'Dummy' synapse by performing a predefined operation on the input data.
         This method should be replaced with actual logic relevant to the miner's purpose.
@@ -182,8 +210,7 @@ class Miner(BaseMinerNeuron):
         the miner's intended operation. This method demonstrates a basic transformation of input data.
         """
         # TODO(developer): Replace with actual implementation logic.
-        synapse.dummy_output = synapse.dummy_input * 2
-        return synapse
+        return self
 
     def check_version(self, version):
         """

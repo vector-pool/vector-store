@@ -151,6 +151,8 @@ class MinerDBManager:
 
     def create_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts: List[str]):
         """Handle create operations."""
+        print("in create operation")
+        print(request_type, user_name, organization_name, namespace_name, texts, embeddings, original_texts)
         if request_type.lower() != 'create':
             raise ValueError("Invalid request type. Expected 'create'.")
 

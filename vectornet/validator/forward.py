@@ -20,14 +20,6 @@
 import time
 import bittensor as bt
 import random
-
-
-from vectornet.protocol import (
-    CreateSynapse,
-    ReadSynapse,
-    UpdateSynapse,
-    DeleteSynapse,    
-)
 from vectornet.validator.reward import get_rewards
 from vectornet.utils.uids import get_random_uids
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager
@@ -45,12 +37,10 @@ from vectornet.evaludation.evaluate import (
     evaluate_delete_request,
     evaluate_read_request,
 )
-from vectornet.database_manage.validator_db_manager import ValidatorDBManager
+from vectornet.database_manage.validator_db_manager import ValidatorDBManager, CountManager
 from vectornet.utils.weight_control import weight_controller
 
-
-
-async def forward(self):
+async def forward(self, miner_uid):
     """
     The forward function is called by the validator every time step.
 
@@ -61,24 +51,51 @@ async def forward(self):
 
     """
     
-    miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-    miner_uid = miner_uids[0] # the default sample size is one
+    # miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+    # miner_uid = miner_uids[0] # the default sample_size is one
     
+    create_request_zero_score, update_request_zero_score, delete_request_zero_score, read_score = 0, 0, 0, 0
+    
+    
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    RESET = "\033[0m"
+
+    # Print colored text
+    print(RED + "This text is red!" + RESET)
+    print(GREEN + "This text is green!" + RESET)
+    
+    
+    miner_uid = int(miner_uid)
+    # print(miner_uid)
+    # print(type(miner_uid))
     validator_db_manager = ValidatorDBManager(miner_uid)
+    count_manager = CountManager()
     
-    category, articles, create_request = generate_create_request(
-        article_size = 30,
+    count_manager.add_count(miner_uid)
+    cur_count_synapse = count_manager.read_count(miner_uid)
+    
+    category, articles, create_request = await generate_create_request(
+        validator_db_manager = validator_db_manager,
+        article_size = 1,
     )
+    print(create_request)
     pageids = [article['pageid'] for article in articles]
     
-    response_create_request = await self.dendrite(
+    print(RED + "\n\n Sent Create_request\n\n" + RESET)
+    
+    responses = await self.dendrite(
         axons = [self.metagraph.axons[miner_uid]],
         synapse = create_request,
         deserialize = True,
-        timeout = 90,
+        timeout = 60,
     )
     
-    bt.logging.info(f"Received responses: {response_create_request}")
+    if len(responses) != 1:
+        bt.logging.info("Something went wrong, number of CreateSynaspe responses bigger than one.")
+    response_create_request = responses[0]
+    
+    bt.logging.info(f"Received responses : {response_create_request} from {miner_uid}")
     
     create_request_zero_score = evaluate_create_request(response_create_request, validator_db_manager, create_request)
     
@@ -88,77 +105,90 @@ async def forward(self):
             create_request.user_name,
             create_request.organization_name,
             create_request.namespace_name,
-            response_create_request['user_id'],
-            response_create_request['organization_id'],
-            response_create_request['namespace_id'],
+            response_create_request[0],
+            response_create_request[1],
+            response_create_request[2],
             category,
             pageids,
         )
+    # for i in range(0, 3):
+    #     category, articles, update_request = await generate_update_request(
+    #         article_size = 3,
+    #         validator_db_manager = validator_db_manager,
+    #     )
+    #     if update_request is not None:
+    #         response_update_request = await self.dendrite(
+    #             axons = [self.metagraph.axons[miner_uid]],
+    #             synapse = update_request,
+    #             deserialize = True,
+    #             timeout = 10,
+    #         )
+            
+    #         bt.logging.info(f"Received responses: {response_update_request}")
+            
+    #         update_request_zero_score = evaluate_update_request(update_request, response_update_request)
+                
+    #         if update_request_zero_score:
+    #             validator_db_manager.update_operation(
+    #                 "UPDATE",
+    #                 update_request.perform,
+    #                 update_request.user_id,
+    #                 update_request.organization_id,
+    #                 update_request.namespace_id,
+    #                 category,
+    #                 pageids,
+    #             )
     
-    category, articles, update_request = generate_update_request(
-        article_zize = 30,
-        validator_db_manager = validator_db_manager,
-    )
-
-    response_update_request = await self.dendrite(
-        axons = [self.metagraph.axons[miner_uid]],
-        synapse = update_request,
-        deserialize = True,
-        timeout = 90,
-    )
-    
-    bt.logging.info(f"Received responses: {response_update_request}")
-    
-    update_request_zero_score = evaluate_update_request(update_request, response_update_request)
+    # random_num = random.random()
+    # if random_num < 0.3:
+    #     delete_request = await generate_delete_request(validator_db_manager)
         
-    if update_request_zero_score:
-        validator_db_manager.update_operation(
-            "UPDATE",
-            update_request.perform,
-            update_request.user_id,
-            update_request.organization_id,
-            update_request.namespace_id,
-            category,
-            pageids,
-        )
+    #     if delete_request is not None:
+    #         response_delete_request = await self.dendrite(
+    #             axons = [self.metagraph.axons[miner_uid]],
+    #             synapse = delete_request,
+    #             deserialize = True,
+    #             timeout = 20,
+    #         )
+            
+    #         bt.logging.info(f"Received responses: {response_delete_request}") 
+            
+    #         delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request)
+            
+    #         if delete_request_zero_score:
+    #             validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
         
-    delete_request = generate_delete_request(validator_db_manager)
+    # read_request, content = await generate_read_request(validator_db_manager)
     
-    response_delete_request = await self.dendrite(
-        axons = [self.metagraph.axons[miner_uid]],
-        synapse = delete_request,
-        deserialize = True,
-        timeout = 20,
-    )
+    # if read_request is not None:
+        
+    #     response_read = await self.dendrite(
+    #         axons = [self.metagraph.axons[miner_uid]],
+    #         synapse = read_request,
+    #         deserialize = True,
+    #         timeout = 30,
+    #     )
+        
+    #     bt.logging.info(f"Received responses: {response_read}")
+        
+    #     read_score = evaluate_read_request(read_request, response_read, content)
     
-    bt.logging.info(f"Received responses: {response_delete_request}") 
+    # weight = weight_controller(cur_count_synapse)
     
-    delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request)
+    # if weight is None:
+    #     raise Exception("error occurs in weight mapping in evaluation")
     
-    if delete_request_zero_score:
-        validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
-    
-    read_request, content = generate_read_request(validator_db_manager)
-    
-    response_read = await self.dendrite(
-        axons = [self.metagraph.axons[miner_uid]],
-        synapse = read_request,
-        deserialize = True,
-        timeout = 30,
-    )
-    
-    bt.logging.info(f"Received responses: {response_read}")
-    
-    read_score = evaluate_read_request(read_request, response_read, content)
-    
-    weight = weight_controller(miner_uid)
-    
-    if weight is None:
-        raise Exception("error occurs in weight mapping in evaluation")
-    
-    rewards = create_request_zero_score * update_request_zero_score * delete_request_zero_score * read_score * weight
+    # rewards = get_rewards(
+    #     self,
+    #     create_request_zero_score,
+    #     update_request_zero_score,
+    #     delete_request_zero_score,
+    #     read_score,
+    #     weight,
+    # )
 
-    bt.logging.info(f"Scored responses: {rewards}")
-    # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
-    self.update_scores(rewards, [miner_uid])
-    time.sleep(5)
+    # bt.logging.info(f"Scored responses: {rewards}")
+    # # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
+    # self.update_scores(rewards, [miner_uid])
+    time.sleep(20)
+    

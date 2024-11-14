@@ -4,6 +4,8 @@ import bittensor as bt
 from traceback import print_exception
 import openai
 import os
+import asyncio
+
 from vectornet.utils.config import len_limit
 from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
 from vectornet.protocol import(
@@ -14,6 +16,7 @@ from vectornet.protocol import(
 )
 from vectornet.utils.version import get_version
 from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
+from vectornet.database_manage.validator_db_manager import ValidatorDBManager
 
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
@@ -23,17 +26,27 @@ wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
 
-def generate_create_request(article_size = 30) -> CreateSynapse:
+async def generate_create_request(validator_db_manager, article_size = 30) -> CreateSynapse:
     
-    category = random.choice(wiki_categories)
-    organization_name = random.choice(organization_names)
-    user_name = random.choice(user_names)
-    
-    articles = wikipedia_scraper(article_size, category)
+    user_name, organization_name, category = None, None, None
+    while True:
+        user_name = random.choice(user_names)
+        organization_name = random.choice(organization_names)
+        category = random.choice(wiki_categories)
+        uniquness = validator_db_manager.check_uniquness(user_name, organization_name, category)
+        print("user_name, organization_name, category, uniquness        :        ", user_name, organization_name, category, uniquness)
+        if uniquness:
+            break
+    articles = await wikipedia_scraper(article_size, category)
     contents = []
     for article in articles:
+        # print(type(len_limit))
+        # print("article")
+        # print(article['content'])
         contents.append(article['content'][:len_limit])
+    # print(contents)
     version = get_version()
+    # print("version =", version)
     query = CreateSynapse(
         version = version,
         type = 'CREATE',
@@ -42,12 +55,18 @@ def generate_create_request(article_size = 30) -> CreateSynapse:
         namespace_name = category,
         index_data = contents,
     )
+    # print(contents[2])
     
     return category, articles, query
     
-def generate_read_request(validator_db_manager):
+async def generate_read_request(validator_db_manager):
 
-    user_id, organization_id, namespace_id, category, pageids = validator_db_manager.get_random_unit_ids()
+    result = validator_db_manager.get_random_unit_ids()
+    
+    if result is not None:
+        user_id, organization_id, namespace_id, category, pageids = result
+    else:
+        return None, None
     
     pageid = random.choice(pageids)
     
@@ -73,10 +92,14 @@ def generate_read_request(validator_db_manager):
     
     return query, content
 
-def generate_update_request(article_size, validator_db_manager):
+async def generate_update_request(article_size, validator_db_manager):
     
-    user_id, organization_id, namespace_id, category, pageids = validator_db_manager.get_random_unit_ids()
+    result = validator_db_manager.get_random_unit_ids()
     
+    if result is not None:
+        user_id, organization_id, namespace_id, category, pageids = result
+    else:
+        return None, None, None
     articles = wikipedia_scraper(article_size, category)
     contents = []
     for article in articles:
@@ -99,9 +122,14 @@ def generate_update_request(article_size, validator_db_manager):
     
     return category, articles, query
     
-def generate_delete_request(validator_db_manager):
+async def generate_delete_request(validator_db_manager):
     
-    user_id, organization_id, namespace_id, category, pageids = validator_db_manager.get_random_unit_ids()
+    result = validator_db_manager.get_random_unit_ids()
+    
+    if result is not None:
+        user_id, organization_id, namespace_id, category, pageids = result
+    else:
+        return None
     
     version = get_version()
     
@@ -122,8 +150,8 @@ def generate_query_content(llm_client, content):
     )
     prompt += content
     prompt += (
-        "Generate a summary of the original content using approximately 300-500 characters.",
-        "Provide only the generated summary, without any additional context or explanation.",
+        "Generate a summary of the original content using approximately 700-900 characters."
+        "Provide only the generated summary in plain text, without any additional context, explanation, or formatting. single and double quotes or new lines."
     )
 
     bt.logging.debug(f"Prompt: {prompt}")
@@ -151,3 +179,8 @@ def generate_query_content(llm_client, content):
     except Exception as e:
         bt.logging.error(f"Error during LLM completion: {e}")
         bt.logging.debug(print_exception(type(e), e, e.__traceback__))
+        
+
+if __name__ == '__main__':
+    pass
+    
