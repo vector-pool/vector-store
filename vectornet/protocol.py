@@ -56,9 +56,9 @@ class UpdateSynapse(bt.Synapse):
     version: Optional[Version] = None
     type: str = pydantic.Field("UPDATE")
     perform: Optional[str] = None
-    user_id: Optional[int] = None
-    organization_id: Optional[int] = None
-    namespace_id: Optional[int] = None
+    user_name: Optional[str] = None
+    organization_name: Optional[str] = None
+    namespace_name: Optional[str] = None
     index_data: Optional[List[str]] = None
     results: Optional[Tuple[int, int, int, List[int]]] = None  
 
@@ -69,9 +69,9 @@ class DeleteSynapse(bt.Synapse):
     version: Optional[Version] = None
     type: str = pydantic.Field("DELETE")
     perform: Optional[str] = None
-    user_id: Optional[str] = None
-    organization_id: Optional[str] = None
-    namespace_id: Optional[str] = None
+    user_name: Optional[str] = None
+    organization_name: Optional[str] = None
+    namespace_name: Optional[str] = None
     results: Optional[Tuple[int, int, int]] = None  
 
     def deserialize(self) -> List[Dict]:

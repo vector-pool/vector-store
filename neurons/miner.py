@@ -143,7 +143,7 @@ class Miner(BaseMinerNeuron):
         
         print(RED + "\n\nRecieved Update Request !" + RESET)
         print(GREEN + "Recieved Update Request !\n\n" + RESET)
-        
+        print(query)
         self.check_version(query.version)
         
         perform = query.perform.lower()
@@ -168,7 +168,8 @@ class Miner(BaseMinerNeuron):
         results = (user_id, organization_id, namespace_id, vector_ids)
         
         query.results = results
-        print(GREEN + "Thes is the resutls" + RESET, results)
+        bt.logging.debug(GREEN + "Thes is the resutls" + RESET, results)
+        
         return query
         
     async def forward_delete_request(self, query: DeleteSynapse) -> DeleteSynapse:

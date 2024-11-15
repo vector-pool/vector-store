@@ -8,11 +8,13 @@ from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with
 def evaluate_create_request(response, validator_db_manager, query, pageids):
     
     if response is None:
-        bt.logging.info("aresponse doesn't have a value")
+        bt.logging.error("aresponse doesn't have a value")
         return 0
-    if len(response) != 3:
-        bt.logging.info("response's length is not 3, it contains less or more ingegers.")
+    if len(response) != 4:
+        bt.logging.error("response's length is not 4, it contains less or more ingegers.")
         return 0
+    if not response[3]:
+        bt.logging.error("It returns empty validator_id list, it may cause validator sent empty index_data")
     user_id, organization_id, namespace_id, vector_ids = get_ids_from_response(response)
     db_user_id, db_user_name, db_organization_id, db_organization_name, db_namespace_id, db_namespace_name = validator_db_manager.get_db_data(user_id, organization_id, namespace_id)
     if db_user_id:
@@ -28,35 +30,38 @@ def evaluate_create_request(response, validator_db_manager, query, pageids):
     return 1
     
         
-def evaluate_update_request(query, response):
+def evaluate_update_request(query, response, query_user_id, query_organization_id, query_namespace_id, pageids):
     
     if response is None:
-        bt.logging.info("update request response doesn't have a value")
+        bt.logging.error("update request response doesn't have a value")
         return 0
-    if len(response) != 3:
-        bt.logging.info("response's length is not 3, it contains less or more ingegers.")
+    if len(response) != 4:
+        bt.logging.error("response's length is not 3, it contains less or more ingegers.")
         return 0
-    user_id, organization_id, namespace_id = get_ids_from_response(response)
+    response_user_id, response_organization_id, response_namespace_id, vector_ids = get_ids_from_response(response)
     if (
-        query.user_id != user_id or
-        query.organization_id != organization_id or
-        query.namespace_id != namespace_id
+        response_user_id != query_user_id or
+        response_organization_id != query_organization_id or
+        response_namespace_id != query_namespace_id
     ):
+        return 0
+    if len(pageids) != len(vector_ids):
         return 0
     
     return 1
 
-def evaluate_delete_request(query, response):
+def evaluate_delete_request(query, response, query_user_id, query_organization_id, query_namespace_id,):
     
     if response is None:
         return 0
     if len(response) != 3:
         return 0
-    user_id, organization_id, namespace_id = get_ids_from_response(response)
+    response_user_id, response_organization_id, response_namespace_id = response
+    
     if (
-        query.user_id != user_id or
-        query.organization_id != organization_id or
-        query.namespace_id != namespace_id
+        query_user_id != response_user_id or
+        query_organization_id != response_organization_id or
+        query_namespace_id != response_namespace_id
     ):
         return 0
     

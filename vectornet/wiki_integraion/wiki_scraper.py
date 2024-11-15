@@ -3,7 +3,7 @@ import asyncio
 from datetime import datetime
 import re
 import logging
-
+import bittensor as bt
 async def get_article_extracts(pageid):
     # print(pageid)
     async with aiohttp.ClientSession() as session:
@@ -56,10 +56,10 @@ async def wikipedia_scraper(k : int, category: str):
     
     start_time = datetime.now()
     category = "Category:" + category
-    logging.info(f"Selected Category: {category}")
+    bt.logging.info(f"Selected Category: {category}")
 
     articles = await get_articles_in_category(category, k)
-    logging.info(f"Fetched {len(articles)} articles.")
+    bt.logging.info(f"Fetched {len(articles)} articles.")
 
     results = []
     for article in articles:
