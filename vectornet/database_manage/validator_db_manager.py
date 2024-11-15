@@ -61,7 +61,7 @@ class ValidatorDBManager:
                 category VARCHAR(255) NOT NULL,
                 user_id INTEGER NOT NULL REFERENCES users(user_id),
                 organization_id INTEGER NOT NULL REFERENCES organizations(organization_id),
-                pageids INTEGER[] NOT NULL
+                pageids_info JSONB NOT NULL  
             )
             """
         )
@@ -69,6 +69,7 @@ class ValidatorDBManager:
             for command in commands:
                 cur.execute(command)
             self.conn.commit()
+
 
     def get_user(self, user_id: int) -> Tuple[Optional[int], Optional[str]]:
         """Retrieve user ID and name by user_id."""
@@ -124,17 +125,18 @@ class ValidatorDBManager:
                 self.conn.commit()
         return organization_id
 
-    def add_namespace(self, namespace_id: int, user_id: int, organization_id: int, name: str, category: str, pageids: List[int]) -> int:
+    def add_namespace(self, namespace_id: int, user_id: int, organization_id: int, name: str, category: str, pageids_info: List[dict]) -> int:
         """Add a new namespace, return namespace ID."""
         existing_namespace_id, existing_namespace_name = self.get_namespace(user_id, organization_id, namespace_id)
         if existing_namespace_id is None:
             with self.conn.cursor() as cur:
                 cur.execute(
-                    "INSERT INTO namespaces (namespace_id, user_id, organization_id, name, category, pageids) VALUES (%s, %s, %s, %s, %s, %s) RETURNING namespace_id",
-                    (namespace_id, user_id, organization_id, name, category, pageids)
+                    "INSERT INTO namespaces (namespace_id, user_id, organization_id, name, category, pageids_info) VALUES (%s, %s, %s, %s, %s, %s) RETURNING namespace_id",
+                    (namespace_id, user_id, organization_id, name, category, pageids_info)
                 )
                 self.conn.commit()
         return namespace_id
+
     
     def get_db_data(self, user_id, organization_id, namespace_id):
         db_user_id, db_user_name = self.get_user(user_id)
@@ -143,10 +145,28 @@ class ValidatorDBManager:
         
         return db_user_id, db_user_name, db_organization_id, db_organization_name, db_namespace_id, db_namespace_name
 
-    def get_random_unit_ids(self) -> Optional[Tuple[int, int, int, str, List[int]]]:
-        """Retrieve one random row from the namespace table."""
+    def get_random_unit_ids(self) -> Optional[Tuple[int, int, int, str, str, str, str, List[int]]]:
+        """Retrieve one random row from the namespaces table with user and organization details, including category and pageids."""
         with self.conn.cursor() as cur:
-            cur.execute("SELECT user_id, organization_id, namespace_id, category, pageids FROM namespaces ORDER BY RANDOM() LIMIT 1;")
+            cur.execute("""
+                SELECT 
+                    n.user_id, 
+                    n.organization_id, 
+                    n.namespace_id, 
+                    u.name AS user_name, 
+                    o.name AS organization_name, 
+                    n.name AS namespace_name,
+                    n.category,
+                    n.pageids_info
+                FROM 
+                    namespaces n
+                JOIN 
+                    users u ON n.user_id = u.user_id
+                JOIN 
+                    organizations o ON n.organization_id = o.organization_id
+                ORDER BY RANDOM() 
+                LIMIT 1;
+            """)
             result = cur.fetchone()
             return result if result else None
 
@@ -186,7 +206,7 @@ class ValidatorDBManager:
             organization_id: int,
             namespace_id: int,
             category: str,
-            pageids: List[int]
+            pageids_info: List[dict],
         ):
         """Handle create operations."""
         if request_type.lower() != 'create':
@@ -198,7 +218,7 @@ class ValidatorDBManager:
 
         self.add_user(user_id, user_name)
         self.add_organization(organization_id, user_id, organization_name)
-        self.add_namespace(namespace_id, user_id, organization_id, namespace_name, category, pageids)
+        self.add_namespace(namespace_id, user_id, organization_id, namespace_name, category, pageids_info)
 
     def update_operation(
             self,
@@ -208,7 +228,7 @@ class ValidatorDBManager:
             organization_id: int,
             namespace_id: int,
             category: str,
-            pageids: List[int],
+            pageids_info: List[dict]
         ) -> Optional[str]:
         """Update the pageids list for a specific namespace."""
         if request_type.lower() != 'update':
@@ -256,38 +276,6 @@ class ValidatorDBManager:
             )
             
             self.conn.commit()  
-            
-    def init_count_synapse_db(self):
-        self.ensure_database_exists()
-        # Create the count_synapse database and table
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS count_synapse (
-                miner_uid INTEGER PRIMARY KEY,
-                count INTEGER DEFAULT 0
-            )
-        ''')
-        # Fill the table with miner_uid from 0 to 255 and count as 0
-        for uid in range(256):
-            self.cursor.execute('''
-                INSERT OR IGNORE INTO count_synapse (miner_uid, count) VALUES (?, ?)
-            ''', (uid, 0))
-        self.connection.commit()
-
-    def add_count(self, uid):
-        # Increment the count for the specified miner_uid
-        self.cursor.execute('''
-            UPDATE count_synapse SET count = count + 1 WHERE miner_uid = ?
-        ''', (uid,))
-        self.connection.commit()
-
-    def read_count(self, uid):
-        # Read the count for the specified miner_uid
-        self.cursor.execute('''
-            SELECT count FROM count_synapse WHERE miner_uid = ?
-        ''', (uid,))
-        result = self.cursor.fetchone()
-        return result[0] if result else None
-
 
 
     def close_connection(self):
@@ -382,7 +370,9 @@ class CountManager:
             return result[0] if result else None
 
     def close(self):
-        self.conn.close()
+        """Close the database connection."""
+        if self.conn:
+            self.conn.close()
 
 
 # Example Usage

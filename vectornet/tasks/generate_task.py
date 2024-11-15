@@ -64,10 +64,10 @@ async def generate_read_request(validator_db_manager):
     result = validator_db_manager.get_random_unit_ids()
     
     if result is not None:
-        user_id, organization_id, namespace_id, category, pageids = result
+        user_id, organization_id, namespace_id, category, pageids_info = result
     else:
         return None, None
-    
+    pageids = list(pageids_info.keys())
     pageid = random.choice(pageids)
     
     content = get_wiki_article_content_with_pageid(pageid)
@@ -95,15 +95,15 @@ async def generate_read_request(validator_db_manager):
 async def generate_update_request(article_size, validator_db_manager):
     
     result = validator_db_manager.get_random_unit_ids()
-    
+    print("This is random uids: ", result)
     if result is not None:
-        user_id, organization_id, namespace_id, category, pageids = result
+        user_id, organization_id, namespace_id, category, pageids_info = result
     else:
         return None, None, None
-    articles = wikipedia_scraper(article_size, category)
+    articles = await wikipedia_scraper(article_size, category)
     contents = []
     for article in articles:
-        contents.append(article['content'][len_limit])
+        contents.append(article['content'][:len_limit])
     
     version = get_version() 
     

@@ -129,25 +129,35 @@ class MinerDBManager:
                 self.conn.commit()
         return organization_id
 
-    def add_namespace(self, user_id: int, organization_id: int, name: str) -> int:
+    def add_namespace(self, namespace_id: int, user_id: int, organization_id: int, name: str, category: str, pageid_info: dict) -> int:
         """Add a new namespace, return namespace ID."""
-        with self.conn.cursor() as cur:
-            cur.execute("INSERT INTO namespaces (name, user_id, organization_id) VALUES (%s, %s, %s) RETURNING namespace_id", (name, user_id, organization_id))
-            namespace_id = cur.fetchone()[0]
-            self.conn.commit()
+        existing_namespace_id, existing_namespace_name = self.get_namespace(user_id, organization_id, namespace_id)
+        if existing_namespace_id is None:
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    "INSERT INTO namespaces (namespace_id, user_id, organization_id, name, category, pageid_info) VALUES (%s, %s, %s, %s, %s, %s) RETURNING namespace_id",
+                    (namespace_id, user_id, organization_id, name, category, pageid_info)
+                )
+                self.conn.commit()
         return namespace_id
 
-    def add_vectors(self, user_id: int, organization_id: int, namespace_id: int, vectors: List[dict]):
-        """Add vectors to the database."""
+
+    def add_vectors(self, user_id: int, organization_id: int, namespace_id: int, vectors: List[dict]) -> List[int]:
+        """Add vectors to the database and return the list of newly added vector IDs."""
+        vector_ids = []  # List to store the IDs of newly added vectors
         with self.conn.cursor() as cur:
             for vector in vectors:
                 print(vector['original_text'], vector['text'], vector['embedding'], user_id, organization_id, namespace_id)
                 cur.execute(
-                    "INSERT INTO vectors (text, embedding, user_id, organization_id, namespace_id, original_text) VALUES (%s, %s, %s, %s, %s, %s)",
+                    "INSERT INTO vectors (text, embedding, user_id, organization_id, namespace_id, original_text) VALUES (%s, %s, %s, %s, %s, %s) RETURNING vector_id",
                     (vector['text'], vector['embedding'], user_id, organization_id, namespace_id, vector['original_text'])
                 )
+                vector_id = cur.fetchone()[0]  # Fetch the newly created vector_id
+                vector_ids.append(vector_id)  # Add it to the list
             self.conn.commit()
         print("success creating")
+        return vector_ids  # Return the list of vector IDs
+
 
     def create_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts: List[str]):
         """Handle create operations."""
@@ -169,8 +179,8 @@ class MinerDBManager:
             for original_text, text, embedding in zip(original_texts, texts, embeddings)
         ]
         print(vectors)
-        self.add_vectors(user_id, organization_id, namespace_id, vectors)
-        return user_id, organization_id, namespace_id
+        vector_ids = self.add_vectors(user_id, organization_id, namespace_id, vectors)
+        return user_id, organization_id, namespace_id, vector_ids
 
     def read_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str) -> List[Tuple]:
         """Handle read operations."""
@@ -210,39 +220,42 @@ class MinerDBManager:
         return vectors
 
 
-    def update_operation(self, request_type: str, perform: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts):
-        """Handle update operations."""
+    def update_operation(
+            self,
+            request_type: str,
+            perform: str,
+            user_id: int,
+            organization_id: int,
+            namespace_id: int,
+            category: str,
+            pageid_info: dict,
+        ) -> Optional[str]:
+        """Update the pageid_info for a specific namespace."""
         if request_type.lower() != 'update':
-            raise ValueError("Invalid request type. Must be 'update'.")
+            raise ValueError("Invalid request type. Expected 'update'.")
 
-        if not self.ensure_database_exists():
-            raise Exception(f"Validator '{self.db_name}' has no saved data.")
+        if perform == "ADD":
+            with self.conn.cursor() as cur:
+                # Step 1: Fetch the existing pageid_info
+                cur.execute("SELECT pageid_info FROM namespaces WHERE namespace_id = %s;", (namespace_id,))
+                result = cur.fetchone()
+                
+                if result is None:
+                    raise Exception(f"Namespace not found in update_operation: {namespace_id}")
 
-        self.connect_to_db()
+                existing_pageid_info = result[0]  # Get the current pageid_info dictionary
+                
+                # Step 2: Update existing dictionary with new entries
+                existing_pageid_info.update(pageid_info)
 
-        user_id = self.get_user_id(user_name)
-        if user_id is None:
-            raise Exception(f"User '{user_name}' does not exist.")
-
-        organization_id = self.get_organization_id(user_id, organization_name)
-        if organization_id is None:
-            raise Exception(f"Organization '{organization_name}' does not exist for user '{user_name}'.")
-
-        namespace_id = self.get_namespace_id(user_id, organization_id, namespace_name)
-        if namespace_id is None:
-            raise Exception(f"Namespace '{namespace_name}' does not exist for user '{user_name}' and organization '{organization_name}'.")
-
-        with self.conn.cursor() as cur:
-            if perform == 'replace':
-                cur.execute("DELETE FROM vectors WHERE namespace_id = %s", (namespace_id,))
-                self.conn.commit()
-
-            for text, embedding, original_text in zip(texts, embeddings, original_texts):
+                # Step 3: Update the row in the database
                 cur.execute(
-                    "INSERT INTO vectors (original_text, text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (original_text, text, embedding, user_id, organization_id, namespace_id)
+                    "UPDATE namespaces SET pageid_info = %s WHERE namespace_id = %s;",
+                    (existing_pageid_info, namespace_id)
                 )
-            self.conn.commit()
+
+                self.conn.commit()  # Commit the changes
+
 
     def delete_operation(self, request_type: str, perform: str, user_name: Optional[str] = None, organization_name: Optional[str] = None, namespace_name: Optional[str] = None):
         """Handle delete operations."""

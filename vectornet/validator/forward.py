@@ -97,8 +97,11 @@ async def forward(self, miner_uid):
     
     bt.logging.info(f"Received responses : {response_create_request} from {miner_uid}")
     
-    create_request_zero_score = evaluate_create_request(response_create_request, validator_db_manager, create_request)
-    
+    create_request_zero_score = evaluate_create_request(response_create_request, validator_db_manager, create_request, pageids)
+    pageids_info = []
+    for pageid, vector_id in zip(pageids, response_create_request[3]):
+        pageids_info.append({pageid:vector_id})
+        
     if create_request_zero_score:
         validator_db_manager.create_operation(
             "CREATE",
@@ -109,14 +112,17 @@ async def forward(self, miner_uid):
             response_create_request[1],
             response_create_request[2],
             category,
-            pageids,
+            pageids_info,
         )
+    
     for i in range(0, 3):
         category, articles, update_request = await generate_update_request(
             article_size = 3,
             validator_db_manager = validator_db_manager,
         )
+        pageids = [article['pageid'] for article in articles]
         if update_request is not None:
+            print(RED + "\n\n Sent update_request\n\n" + RESET)
             response_update_request = await self.dendrite(
                 axons = [self.metagraph.axons[miner_uid]],
                 synapse = update_request,
@@ -124,10 +130,13 @@ async def forward(self, miner_uid):
                 timeout = 10,
             )
             
-            bt.logging.info(f"Received responses: {response_update_request}")
-            
+            bt.logging.info(f"Received Update responses : {response_update_request} from {miner_uid}")
             update_request_zero_score = evaluate_update_request(update_request, response_update_request)
-                
+            
+            pageid_info = {}
+            for pageid, vector_id in zip(pageids, response_create_request[3]):
+                pageid_info[pageid] = vector_id
+            
             if update_request_zero_score:
                 validator_db_manager.update_operation(
                     "UPDATE",
@@ -136,59 +145,59 @@ async def forward(self, miner_uid):
                     update_request.organization_id,
                     update_request.namespace_id,
                     category,
-                    pageids,
+                    pageids_info,
                 )
     
-    # random_num = random.random()
-    # if random_num < 0.3:
-    #     delete_request = await generate_delete_request(validator_db_manager)
+    random_num = random.random()
+    if random_num < 0.3:
+        delete_request = await generate_delete_request(validator_db_manager)
         
-    #     if delete_request is not None:
-    #         response_delete_request = await self.dendrite(
-    #             axons = [self.metagraph.axons[miner_uid]],
-    #             synapse = delete_request,
-    #             deserialize = True,
-    #             timeout = 20,
-    #         )
+        if delete_request is not None:
+            response_delete_request = await self.dendrite(
+                axons = [self.metagraph.axons[miner_uid]],
+                synapse = delete_request,
+                deserialize = True,
+                timeout = 20,
+            )
             
-    #         bt.logging.info(f"Received responses: {response_delete_request}") 
+            bt.logging.info(f"Received responses: {response_delete_request}") 
             
-    #         delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request)
+            delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request)
             
-    #         if delete_request_zero_score:
-    #             validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
+            if delete_request_zero_score:
+                validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
         
-    # read_request, content = await generate_read_request(validator_db_manager)
+    read_request, content = await generate_read_request(validator_db_manager)
     
-    # if read_request is not None:
+    if read_request is not None:
         
-    #     response_read = await self.dendrite(
-    #         axons = [self.metagraph.axons[miner_uid]],
-    #         synapse = read_request,
-    #         deserialize = True,
-    #         timeout = 30,
-    #     )
+        response_read = await self.dendrite(
+            axons = [self.metagraph.axons[miner_uid]],
+            synapse = read_request,
+            deserialize = True,
+            timeout = 30,
+        )
         
-    #     bt.logging.info(f"Received responses: {response_read}")
+        bt.logging.info(f"Received responses: {response_read}")
         
-    #     read_score = evaluate_read_request(read_request, response_read, content)
+        read_score = evaluate_read_request(read_request, response_read, content)
     
-    # weight = weight_controller(cur_count_synapse)
+    weight = weight_controller(cur_count_synapse)
     
-    # if weight is None:
-    #     raise Exception("error occurs in weight mapping in evaluation")
+    if weight is None:
+        raise Exception("error occurs in weight mapping in evaluation")
     
-    # rewards = get_rewards(
-    #     self,
-    #     create_request_zero_score,
-    #     update_request_zero_score,
-    #     delete_request_zero_score,
-    #     read_score,
-    #     weight,
-    # )
+    rewards = get_rewards(
+        self,
+        create_request_zero_score,
+        update_request_zero_score,
+        delete_request_zero_score,
+        read_score,
+        weight,
+    )
 
-    # bt.logging.info(f"Scored responses: {rewards}")
-    # # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
-    # self.update_scores(rewards, [miner_uid])
+    bt.logging.info(f"Scored responses: {rewards}")
+    # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
+    self.update_scores(rewards, [miner_uid])
     time.sleep(20)
     
