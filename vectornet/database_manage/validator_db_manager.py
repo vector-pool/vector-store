@@ -2,6 +2,7 @@ import psycopg2
 from psycopg2 import sql
 from typing import List, Optional, Tuple
 import bittensor as bt
+import json
 
 class ValidatorDBManager:
     def __init__(self, db_name: str):
@@ -34,7 +35,7 @@ class ValidatorDBManager:
         """Connect to the specified database."""
         self.conn = psycopg2.connect(dbname=self.db_name, user='vali', password='lucky', host='localhost', port=5432)
         print("correctly connected")
-
+        
     def create_tables(self):
         """Create tables if they do not exist."""
         commands = (
@@ -61,7 +62,7 @@ class ValidatorDBManager:
                 category VARCHAR(255) NOT NULL,
                 user_id INTEGER NOT NULL REFERENCES users(user_id),
                 organization_id INTEGER NOT NULL REFERENCES organizations(organization_id),
-                pageids INTEGER[] NOT NULL
+                pageids_info JSONB NOT NULL  -- Changed from INTEGER[] to JSONB
             )
             """
         )
@@ -123,17 +124,18 @@ class ValidatorDBManager:
                 cur.execute("INSERT INTO organizations (organization_id, user_id, name) VALUES (%s, %s, %s) RETURNING organization_id", (organization_id, user_id, name))
                 self.conn.commit()
         return organization_id
-
-    def add_namespace(self, namespace_id: int, user_id: int, organization_id: int, name: str, category: str, pageids: List[int]) -> int:
+    
+    def add_namespace(self, namespace_id: int, user_id: int, organization_id: int, name: str, category: str, pageids_info: dict) -> int:
         """Add a new namespace, return namespace ID."""
         existing_namespace_id, existing_namespace_name = self.get_namespace(user_id, organization_id, namespace_id)
         if existing_namespace_id is None:
             with self.conn.cursor() as cur:
                 cur.execute(
-                    "INSERT INTO namespaces (namespace_id, user_id, organization_id, name, category, pageids) VALUES (%s, %s, %s, %s, %s, %s) RETURNING namespace_id",
-                    (namespace_id, user_id, organization_id, name, category, pageids)
+                    "INSERT INTO namespaces (namespace_id, user_id, organization_id, name, category, pageids_info) VALUES (%s, %s, %s, %s, %s, %s) RETURNING namespace_id",
+                    (namespace_id, user_id, organization_id, name, category, json.dumps(pageids_info))  # Convert dict to JSON string
                 )
                 self.conn.commit()
+                return cur.fetchone()[0]  # Return the newly created namespace ID
         return namespace_id
     
     def get_db_data(self, user_id, organization_id, namespace_id):
@@ -143,10 +145,28 @@ class ValidatorDBManager:
         
         return db_user_id, db_user_name, db_organization_id, db_organization_name, db_namespace_id, db_namespace_name
 
-    def get_random_unit_ids(self) -> Optional[Tuple[int, int, int, str, List[int]]]:
-        """Retrieve one random row from the namespace table."""
+    def get_random_unit_ids(self) -> Optional[Tuple[int, int, int, str, str, str, str, List[int]]]:
+        """Retrieve one random row from the namespaces table with user and organization details, including category and pageids."""
         with self.conn.cursor() as cur:
-            cur.execute("SELECT user_id, organization_id, namespace_id, category, pageids FROM namespaces ORDER BY RANDOM() LIMIT 1;")
+            cur.execute("""
+                SELECT 
+                    n.user_id, 
+                    n.organization_id, 
+                    n.namespace_id, 
+                    u.name AS user_name, 
+                    o.name AS organization_name, 
+                    n.name AS namespace_name,
+                    n.category,
+                    n.pageids_info
+                FROM 
+                    namespaces n
+                JOIN 
+                    users u ON n.user_id = u.user_id
+                JOIN 
+                    organizations o ON n.organization_id = o.organization_id
+                ORDER BY RANDOM() 
+                LIMIT 1;
+            """)
             result = cur.fetchone()
             return result if result else None
 
@@ -186,19 +206,15 @@ class ValidatorDBManager:
             organization_id: int,
             namespace_id: int,
             category: str,
-            pageids: List[int]
+            pageids_info: List[dict],
         ):
         """Handle create operations."""
         if request_type.lower() != 'create':
             raise ValueError("Invalid request type. Expected 'create'.")
 
-        # self.ensure_database_exists()
-        # self.connect_to_db()
-        # self.create_tables()
-
         self.add_user(user_id, user_name)
         self.add_organization(organization_id, user_id, organization_name)
-        self.add_namespace(namespace_id, user_id, organization_id, namespace_name, category, pageids)
+        self.add_namespace(namespace_id, user_id, organization_id, namespace_name, category, pageids_info)
 
     def update_operation(
             self,
@@ -208,28 +224,30 @@ class ValidatorDBManager:
             organization_id: int,
             namespace_id: int,
             category: str,
-            pageids: List[int],
+            pageids_info: dict,
         ) -> Optional[str]:
-        """Update the pageids list for a specific namespace."""
+        """Update the pageids_info for a specific namespace."""
         if request_type.lower() != 'update':
             raise ValueError("Invalid request type. Expected 'update'.")
+
         if perform == "ADD":
             with self.conn.cursor() as cur:
-                # Step 1: Fetch the existing pageids
-                cur.execute("SELECT pageids FROM namespaces WHERE namespace_id = %s;", (namespace_id,))
+                # Step 1: Fetch the existing pageids_info
+                cur.execute("SELECT pageids_info FROM namespaces WHERE namespace_id = %s;", (namespace_id,))
                 result = cur.fetchone()
                 
                 if result is None:
-                    raise Exception(f"Namespace not found in update_operation, {namespace_id}")
-                existing_pageids = result[0]  # Get the current pageids list
+                    raise Exception(f"Namespace not found in update_operation: {namespace_id}")
                 
-                # Step 2: Combine existing pageids with the new ones
-                updated_pageids = list(set(existing_pageids + pageids))  # Remove duplicates if necessary
+                existing_pageids_info = result[0]  # Get the current pageids_info dictionary
                 
-                # Step 3: Update the row in the database
+                # Step 2: Update existing dictionary with new entries
+                existing_pageids_info.update(pageids_info)
+
+                # Step 3: Convert to JSON string and update the row in the database
                 cur.execute(
-                    "UPDATE namespaces SET pageids = %s WHERE namespace_id = %s;",
-                    (updated_pageids, namespace_id)
+                    "UPDATE namespaces SET pageids_info = %s WHERE namespace_id = %s;",
+                    (json.dumps(existing_pageids_info), namespace_id)  # Convert dict to JSON string
                 )
 
                 self.conn.commit()  # Commit the changes
@@ -256,47 +274,12 @@ class ValidatorDBManager:
             )
             
             self.conn.commit()  
-            
-    def init_count_synapse_db(self):
-        self.ensure_database_exists()
-        # Create the count_synapse database and table
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS count_synapse (
-                miner_uid INTEGER PRIMARY KEY,
-                count INTEGER DEFAULT 0
-            )
-        ''')
-        # Fill the table with miner_uid from 0 to 255 and count as 0
-        for uid in range(256):
-            self.cursor.execute('''
-                INSERT OR IGNORE INTO count_synapse (miner_uid, count) VALUES (?, ?)
-            ''', (uid, 0))
-        self.connection.commit()
-
-    def add_count(self, uid):
-        # Increment the count for the specified miner_uid
-        self.cursor.execute('''
-            UPDATE count_synapse SET count = count + 1 WHERE miner_uid = ?
-        ''', (uid,))
-        self.connection.commit()
-
-    def read_count(self, uid):
-        # Read the count for the specified miner_uid
-        self.cursor.execute('''
-            SELECT count FROM count_synapse WHERE miner_uid = ?
-        ''', (uid,))
-        result = self.cursor.fetchone()
-        return result[0] if result else None
-
 
 
     def close_connection(self):
         """Close the database connection."""
         if self.conn:
             self.conn.close()
-
-
-
 
 
 class CountManager:
@@ -332,13 +315,7 @@ class CountManager:
     def init_count_synapse(self):
         self.ensure_database_exists()
         self.connect_to_db()
-        # Create the count_synapse table
-        # with self.conn.cursor() as cur:
-        #     for command in commands:
-        #         cur.execute(command)
-        #     self.conn.commit()
-        
-        
+
         with self.conn.cursor() as cur:
             # Create the table if it does not exist
             cur.execute('''
@@ -382,7 +359,9 @@ class CountManager:
             return result[0] if result else None
 
     def close(self):
-        self.conn.close()
+        """Close the database connection."""
+        if self.conn:
+            self.conn.close()
 
 
 # Example Usage

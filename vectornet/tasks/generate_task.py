@@ -37,16 +37,12 @@ async def generate_create_request(validator_db_manager, article_size = 30) -> Cr
         print("user_name, organization_name, category, uniquness        :        ", user_name, organization_name, category, uniquness)
         if uniquness:
             break
+    print("user_name, organization_name, category, uniquness : ", user_name, organization_name, category, uniquness)
     articles = await wikipedia_scraper(article_size, category)
     contents = []
     for article in articles:
-        # print(type(len_limit))
-        # print("article")
-        # print(article['content'])
         contents.append(article['content'][:len_limit])
-    # print(contents)
     version = get_version()
-    # print("version =", version)
     query = CreateSynapse(
         version = version,
         type = 'CREATE',
@@ -55,7 +51,6 @@ async def generate_create_request(validator_db_manager, article_size = 30) -> Cr
         namespace_name = category,
         index_data = contents,
     )
-    # print(contents[2])
     
     return category, articles, query
     
@@ -64,10 +59,10 @@ async def generate_read_request(validator_db_manager):
     result = validator_db_manager.get_random_unit_ids()
     
     if result is not None:
-        user_id, organization_id, namespace_id, category, pageids = result
+        user_id, organization_id, namespace_id, category, pageids_info = result
     else:
         return None, None
-    
+    pageids = list(pageids_info.keys())
     pageid = random.choice(pageids)
     
     content = get_wiki_article_content_with_pageid(pageid)
@@ -95,15 +90,16 @@ async def generate_read_request(validator_db_manager):
 async def generate_update_request(article_size, validator_db_manager):
     
     result = validator_db_manager.get_random_unit_ids()
-    
+    print("This is random uids: ", result)
     if result is not None:
-        user_id, organization_id, namespace_id, category, pageids = result
+        user_id, organization_id, namespace_id, user_name, organization_name, namespace_name, category, pageids_info = result
     else:
         return None, None, None
-    articles = wikipedia_scraper(article_size, category)
+    print("Starting wiki-scraper")
+    articles = await wikipedia_scraper(article_size, category)
     contents = []
     for article in articles:
-        contents.append(article['content'][len_limit])
+        contents.append(article['content'][:len_limit])
     
     version = get_version() 
     
@@ -114,33 +110,35 @@ async def generate_update_request(article_size, validator_db_manager):
         version = version,
         type = 'UPDATE',
         perform = "ADD",
-        user_id = user_id,
-        organization_id = organization_id,
-        namespace_id = namespace_id,
+        user_name = user_name,
+        organization_name = organization_name,
+        namespace_name = namespace_name,
         index_data = contents,
     )
     
-    return category, articles, query
+    return user_id, organization_id, namespace_id, category, articles, query
     
 async def generate_delete_request(validator_db_manager):
     
     result = validator_db_manager.get_random_unit_ids()
     
     if result is not None:
-        user_id, organization_id, namespace_id, category, pageids = result
+        user_id, organization_id, namespace_id, user_name, organization_name, namespace_name, category, pageids_info = result
     else:
         return None
     
     version = get_version()
     
-    return DeleteSynapse(
+    query = DeleteSynapse(
         version = version,
         type = 'DELETE',
         perform = 'namespace',
-        user_id = user_id,
-        organization_id = organization_id,
-        namespace_id = namespace_id,
+        user_id = user_name,
+        organization_id = organization_name,
+        namespace_id = namespace_name,
     )
+    
+    return user_id, organization_id, namespace_id, query
 
 def generate_query_content(llm_client, content):
     prompt = (

@@ -137,17 +137,22 @@ class MinerDBManager:
             self.conn.commit()
         return namespace_id
 
-    def add_vectors(self, user_id: int, organization_id: int, namespace_id: int, vectors: List[dict]):
-        """Add vectors to the database."""
+    def add_vectors(self, user_id: int, organization_id: int, namespace_id: int, vectors: List[dict]) -> List[int]:
+        """Add vectors to the database and return the list of newly added vector IDs."""
+        vector_ids = []  # List to store the IDs of newly added vectors
         with self.conn.cursor() as cur:
             for vector in vectors:
                 print(vector['original_text'], vector['text'], vector['embedding'], user_id, organization_id, namespace_id)
                 cur.execute(
-                    "INSERT INTO vectors (text, embedding, user_id, organization_id, namespace_id, original_text) VALUES (%s, %s, %s, %s, %s, %s)",
+                    "INSERT INTO vectors (text, embedding, user_id, organization_id, namespace_id, original_text) VALUES (%s, %s, %s, %s, %s, %s) RETURNING vector_id",
                     (vector['text'], vector['embedding'], user_id, organization_id, namespace_id, vector['original_text'])
                 )
+                vector_id = cur.fetchone()[0]  # Fetch the newly created vector_id
+                vector_ids.append(vector_id)  # Add it to the list
             self.conn.commit()
         print("success creating")
+        return vector_ids  # Return the list of vector IDs
+
 
     def create_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts: List[str]):
         """Handle create operations."""
@@ -169,8 +174,8 @@ class MinerDBManager:
             for original_text, text, embedding in zip(original_texts, texts, embeddings)
         ]
         print(vectors)
-        self.add_vectors(user_id, organization_id, namespace_id, vectors)
-        return user_id, organization_id, namespace_id
+        vector_ids = self.add_vectors(user_id, organization_id, namespace_id, vectors)
+        return user_id, organization_id, namespace_id, vector_ids
 
     def read_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str) -> List[Tuple]:
         """Handle read operations."""
@@ -232,17 +237,19 @@ class MinerDBManager:
         if namespace_id is None:
             raise Exception(f"Namespace '{namespace_name}' does not exist for user '{user_name}' and organization '{organization_name}'.")
 
-        with self.conn.cursor() as cur:
-            if perform == 'replace':
-                cur.execute("DELETE FROM vectors WHERE namespace_id = %s", (namespace_id,))
-                self.conn.commit()
-
-            for text, embedding, original_text in zip(texts, embeddings, original_texts):
-                cur.execute(
-                    "INSERT INTO vectors (original_text, text, embedding, user_id, organization_id, namespace_id) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (original_text, text, embedding, user_id, organization_id, namespace_id)
-                )
-            self.conn.commit()
+        vectors = [
+            {'original_text': original_text, 'text': text, 'embedding': embedding}
+            for original_text, text, embedding in zip(original_texts, texts, embeddings)
+        ]
+        
+        if perform == 'replace':
+            # cur.execute("DELETE FROM vectors WHERE namespace_id = %s", (namespace_id,))
+            # self.conn.commit()
+            pass
+        
+        vector_ids = self.add_vectors(user_id, organization_id, namespace_id, vectors)
+        
+        return user_id, organization_id, namespace_id, vector_ids
 
     def delete_operation(self, request_type: str, perform: str, user_name: Optional[str] = None, organization_name: Optional[str] = None, namespace_name: Optional[str] = None):
         """Handle delete operations."""

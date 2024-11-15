@@ -67,7 +67,7 @@ class Miner(BaseMinerNeuron):
         print(RED + "\n\nRecieved Create Request !" + RESET)
         print(GREEN + "Recieved Create Request !\n\n" + RESET)
         # print(query.index_data)
-        print("query = ", query)
+        # print("query = ", query)
             
         self.check_version(query.version)
         
@@ -85,11 +85,11 @@ class Miner(BaseMinerNeuron):
         embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
         # print(embeddings)
         
-        user_id, organization_id, namespace_id = validator_db_manager.create_operation(request_type, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
-        results = (user_id, organization_id, namespace_id)
+        user_id, organization_id, namespace_id, vector_ids = validator_db_manager.create_operation(request_type, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
+        results = (user_id, organization_id, namespace_id, vector_ids)
         
         print(GREEN + "\n\n this is the results !\n\n" + RESET)
-        
+        print(results)
         query.results = results
         
         return query
@@ -130,6 +130,11 @@ class Miner(BaseMinerNeuron):
             results.append({'text': top_vector['original_text'], 'embedding': top_vector['embedding']})
 
         query.results = results
+        print(GREEN + "\n\n this is the results !\n\n" + RESET)
+        print(results)
+        query.results = results
+        
+        return query
         
     async def forward_update_request(self, query: UpdateSynapse) -> UpdateSynapse:
         """
@@ -138,7 +143,7 @@ class Miner(BaseMinerNeuron):
         
         print(RED + "\n\nRecieved Update Request !" + RESET)
         print(GREEN + "Recieved Update Request !\n\n" + RESET)
-        
+        print(query)
         self.check_version(query.version)
         
         perform = query.perform.lower()
@@ -157,14 +162,15 @@ class Miner(BaseMinerNeuron):
         embedding_manager = TextToEmbedding()
         
         embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
-        print(embeddings)
+        # print(embeddings)
         results = []
-        user_id, organization_id, namespace_id = validator_db_manager.update_operation(request_type, perform, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
-        results.append(user_id)
-        results.append(organization_id)
-        results.append(namespace_id)
+        user_id, organization_id, namespace_id, vector_ids = validator_db_manager.update_operation(request_type, perform, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
+        results = (user_id, organization_id, namespace_id, vector_ids)
         
         query.results = results
+        bt.logging.debug(GREEN + "Thes is the resutls" + RESET, results)
+        
+        return query
         
     async def forward_delete_request(self, query: DeleteSynapse) -> DeleteSynapse:
         
