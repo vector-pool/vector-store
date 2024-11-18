@@ -155,22 +155,23 @@ async def get_random_articles(count):
 
 async def wikipedia_scraper(k : int, category: str):
     
-    start_time = datetime.now()
-    category = "Category:" + category
-    bt.logging.info(f"Selected Category: {category}")
+    # start_time = datetime.now()
+    # category = "Category:" + category
+    # bt.logging.info(f"Selected Category: {category}")
 
-    articles = await get_articles_in_category(category)
-    bt.logging.info(f"Fetched {len(articles)} articles.")
+    # articles = await get_articles_in_category(category)
+    # bt.logging.info(f"Fetched {len(articles)} articles.")
 
-    # with open('result_wiki.txt', 'w', encoding='utf-8') as f:
-    #     for result in results:
-    #         f.write(f"{result}\n")  # Write each result as a dictionary
+    # # with open('result_wiki.txt', 'w', encoding='utf-8') as f:
+    # #     for result in results:
+    # #         f.write(f"{result}\n")  # Write each result as a dictionary
 
-    elasped_time = datetime.now() - start_time
-    logging.info(elasped_time.total_seconds())
-    print("wiki_contents are scraped correctly")
-    # print(articles)
-    return articles
+    # elasped_time = datetime.now() - start_time
+    # logging.info(elasped_time.total_seconds())
+    # print("wiki_contents are scraped correctly")
+    # # print(articles)
+    # return articles
+    return get_random_articles(k)
 
 async def get_wiki_article_content_with_pageid(pageid):
     content = await get_article_extracts(pageid)

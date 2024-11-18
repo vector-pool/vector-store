@@ -59,18 +59,22 @@ def get_rewards(
     Returns:
         np.ndarray: The calculated miner reward as a NumPy array.
     """
-    initial_score = 1.0
+    initial_create_score, initial_delete_score, initial_update_score = 1.0, 1.0, 1.0
     
     zero_scores = [
         create_request_zero_score,
         delete_request_zero_score,
     ]
     
-    if any(score == 0 for score in zero_scores):
-        initial_score = 0.5
-    if any(score == 0 for score in update_request_zero_scores):
-        initial_score = 0.5
+    if create_request_zero_score == 0:
+        initial_create_score = 0.5
         
-    miner_reward = reward(initial_score * read_score, weight)
+    if delete_request_zero_score == 0:
+        initial_delete_score = 0.5
+    
+    if any(score == 0 for score in update_request_zero_scores):
+        initial_update_score = 0.5
+        
+    miner_reward = reward(initial_create_score * initial_delete_score * initial_update_score * read_score, weight)
     
     return np.array(miner_reward)
