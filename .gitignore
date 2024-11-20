@@ -168,6 +168,7 @@ testing/
 .DS_store
 Miniconda3-latest-MacOSX-x86_64.sh
 test.py
+test1.py
 result.txt
 result_wiki.txt
 note.txt
