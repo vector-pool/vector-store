@@ -52,15 +52,13 @@ Miners receive CRUD queries from validators. They are responsible for embedding 
 
 Miners receive CRUD queries from validators, and as they remain in the system longer, maintaining performance becomes challenging due to the continuous increase in data size. To address this, miners are categorized into five groups based on the number of synapse circles they have processed, with older miners receiving higher weights.
 
-count < 100: ***Very Young***: weight = 0.6
+*** Squire ***: count < 100 (weight = 0.6)
+*** Knight ***: count < 150 (weight = 0.7)
+*** Champion ***: count < 250 (weight = 0.8)
+*** Paladin ***: count < 400 (weight = 0.9)
+*** Lord ***: count ≥ 400 (weight = 1.0) 🌱
 
-count < 150: ***Young***: weight = 0.7
-
-count < 250: ***Mature***: weight = 0.8
-
-count < 400: ***Old***: weight = 0.9
-
-cound ≥ 400: ***Very Old***: weight = 1.0
+These settings will be modified during the testing phase.
 
 ***Rewarding***
 
@@ -99,19 +97,6 @@ V2 and further:
 
 - Extending the embedding data with audio and image
 - …
-
-## Restarting PostgreSQL Database
-
-```
-rm -rf /opt/homebrew/var/postgres
-brew uninstall postgresql@14
-brew install postgresql@14
-sudo initdb /opt/homebrew/var/postgres
-brew services start postgresql@14
-createuser -s postgres
-psql -U postgres
-pqsl -d postgres
-```
 
 
 
