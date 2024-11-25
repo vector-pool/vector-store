@@ -61,13 +61,8 @@ class Miner(BaseMinerNeuron):
         processes the incoming CreateSynapse by creating new embeddings and saving them in database
         """
             
-
-
-        # Print colored text
-        print(RED + "\n\nRecieved Create Request !" + RESET)
-        print(GREEN + "Recieved Create Request !\n\n" + RESET)
-        # print(query.index_data)
-        # print("query = ", query)
+        bt.logging.info(RED + "\n\nRecieved Create Request !" + RESET)
+        bt.logging.info(GREEN + "Recieved Create Request !\n\n" + RESET)
             
         self.check_version(query.version)
         
@@ -83,13 +78,12 @@ class Miner(BaseMinerNeuron):
         embedding_manager = TextToEmbedding()
         
         embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
-        # print(embeddings)
         
         user_id, organization_id, namespace_id, vector_ids = validator_db_manager.create_operation(request_type, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
         results = (user_id, organization_id, namespace_id, vector_ids)
         
-        print(GREEN + "\n\n this is the results !\n\n" + RESET)
-        print(results)
+        bt.logging.info(GREEN + "\n\n this is the results !\n\n" + RESET)
+        bt.logging.info(results)
         query.results = results
         
         return query
@@ -100,8 +94,8 @@ class Miner(BaseMinerNeuron):
         between query and saved data using advanced searching algorithms
         """
         
-        print(RED + "\n\nRecieved Read Request !" + RESET)
-        print(GREEN + "Recieved Read Request !\n\n" + RESET)
+        bt.logging.info(RED + "\n\nRecieved Read Request !" + RESET)
+        bt.logging.info(GREEN + "Recieved Read Request !\n\n" + RESET)
         
         self.check_version(query.version)
         
@@ -130,8 +124,8 @@ class Miner(BaseMinerNeuron):
             results.append({'text': top_vector['original_text'], 'embedding': top_vector['embedding']})
 
         query.results = results
-        print(GREEN + "\n\n this is the results !\n\n" + RESET)
-        print(results)
+        bt.logging.info(GREEN + "\n\n this is the results !\n\n" + RESET)
+        bt.logging.info(results)
         query.results = results
         
         return query
@@ -141,9 +135,8 @@ class Miner(BaseMinerNeuron):
         processes the incoming UpdateSynapse by updating existing embeddings that saved in database
         """
         
-        print(RED + "\n\nRecieved Update Request !" + RESET)
-        print(GREEN + "Recieved Update Request !\n\n" + RESET)
-        print(query)
+        bt.logging.info(RED + "\n\nRecieved Update Request !" + RESET)
+        bt.logging.info(GREEN + "Recieved Update Request !\n\n" + RESET)
         self.check_version(query.version)
         
         perform = query.perform.lower()
@@ -162,7 +155,6 @@ class Miner(BaseMinerNeuron):
         embedding_manager = TextToEmbedding()
         
         embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
-        # print(embeddings)
         results = []
         user_id, organization_id, namespace_id, vector_ids = validator_db_manager.update_operation(request_type, perform, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
         results = (user_id, organization_id, namespace_id, vector_ids)
@@ -174,8 +166,8 @@ class Miner(BaseMinerNeuron):
         
     async def forward_delete_request(self, query: DeleteSynapse) -> DeleteSynapse:
         
-        print(RED + "\n\nRecieved Delete Request !" + RESET)
-        print(GREEN + "Recieved Delete Request !\n\n" + RESET)
+        bt.logging.info(RED + "\n\nRecieved Delete Request !" + RESET)
+        bt.logging.info(GREEN + "Recieved Delete Request !\n\n" + RESET)
         
         self.check_version(query.version)
         
@@ -245,7 +237,7 @@ class Miner(BaseMinerNeuron):
             f"Incentive:{metagraph.I[self.uid]} | "
             f"Emission:{metagraph.E[self.uid]}"
         )
-        bt.logging.info(log)
+        print(log)
 
 # This is the main function, which runs the miner.
 if __name__ == "__main__":

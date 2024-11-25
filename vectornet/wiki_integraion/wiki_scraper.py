@@ -12,7 +12,6 @@ with open('config.yaml', 'r') as file:
 wiki_categories = config['wiki_categories']
 
 async def get_article_extracts(pageid):
-    # print(pageid)
     async with aiohttp.ClientSession() as session:
         async with session.get(
             "https://en.wikipedia.org/w/api.php",
@@ -27,7 +26,6 @@ async def get_article_extracts(pageid):
             data = await response.json()
             pages = data.get("query", {}).get("pages", {})
             for page in pages.values():
-                # print(page)
                 extract = page.get("extract", None)
                 # Remove newlines, extra spaces, and quotes
                 if extract:
@@ -47,14 +45,11 @@ async def get_articles_in_category(category, k):
             },
         ) as response:
             data = await response.json()
-            # print(data)
             articles = []
             if 'query' in data and 'categorymembers' in data['query'] and len(data['query']['categorymembers']) != 0:
                 for article in data['query']['categorymembers']:
-                    # print(article)
                     pageid = article['pageid']
                     content = await get_article_extracts(pageid)  # Await the async function
-                    # print(content)
                     articles.append({
                         'title': article['title'],
                         'pageid': article['pageid'],
@@ -74,7 +69,6 @@ async def get_articles_in_category_with_max_size(category):
                 "action": "query",
                 "list": "categorymembers",
                 "cmtitle": category,
-                # "cmpageid": "8966941",
                 "cmlimit": "max",  # Use max to get the maximum number of results per request
                 "format": "json"
             }
@@ -90,21 +84,18 @@ async def get_articles_in_category_with_max_size(category):
                     continuation = data.get('continue', {}).get('cmcontinue')
                     
                     if not continuation:
-                        break  # Exit the loop if there's no continuation token
+                        break  
                 else:
-                    break  # Exit the loop if the response is not as expected
+                    break  
 
         # Now, fetch extracts for all articles
         results = []
         for article in articles:
             pageid = article['pageid']
-            # content = await get_article_extracts(pageid)  # Await the async function
             results.append({
                 'title': article['title'],
                 'pageid': pageid,
-                # 'content': content,
             })
-        # print(results)
         return results
     
 async def get_random_articles(count):
@@ -116,7 +107,7 @@ async def get_random_articles(count):
                 "action": "query",
                 "list": "random",
                 'cmtype': "page",
-                "rnlimit": count,  # Number of random pages to retrieve
+                "rnlimit": count, 
                 "format": "json"
             }
             
@@ -137,9 +128,7 @@ async def get_random_articles(count):
                     #     })                
                     
                     for page in data['query']['random']:
-                        # print("pageid = ", page['id'])
                         content = await get_article_extracts(page['id'])
-                        # print(content)
                         if content:    
                             articles.append({
                                 'title': page['title'],
@@ -177,28 +166,3 @@ async def get_wiki_article_content_with_pageid(pageid):
     content = await get_article_extracts(pageid)
     return content
  
-# if __name__ == '__main__':
-#     with open("bad_category.txt", "w", encoding = 'utf-8') as f:
-#         for category in wiki_categories:
-#             print(f"SELECTED CATEGORY: {category}")
-#             articles = asyncio.run(wikipedia_scraper(3, category))
-#             if len(articles) != 3:
-#                 f.write(f"{category}\n")
-#             for article in articles:
-#                 if not article['content']:
-#                     f.write(f"{category}\n")
-#                 else:
-#                     pass
-#                     print(article['content'][:10])
-#             print("*******************************************************************************************************************")
-
-if __name__ == '__main__':
-    articles = asyncio.run(get_random_articles(3))
-    for article in articles:
-        print(article)
-        print("***************************")
-
-
-
-
-pageid =  16812604

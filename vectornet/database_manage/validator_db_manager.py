@@ -364,23 +364,4 @@ class CountManager:
             self.conn.close()
 
 
-# Example Usage
-if __name__ == '__main__':
-    miner_uid = 21
-    # db_manager = ValidatorDBManager(miner_uid)
-
-    # db_manager.create_operation(
-    #     request_type='create',
-    #     user_name='abc5',
-    #     organization_name='ggp',
-    #     namespace_name='name28',
-    #     user_id=13,
-    #     organization_id=125,
-    #     namespace_id=139,
-    #     category='asdf',
-    #     pageids=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    # )
-
-    # db_manager.close_connection()
-    counter_manager = CountManager()
     
