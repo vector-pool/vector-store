@@ -16,40 +16,65 @@
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
+
+
 import numpy as np
 from typing import List
-import bittensor as bt
 
+def reward(score: float, weight: float) -> float:
+    """Calculate miner reward based on score and weight.
 
-def reward(query: int, response: int) -> float:
-    """
-    Reward the miner response to the dummy request. This method returns a reward
-    value for the miner, which is used to update the miner's score.
+    Args:
+        score (float): The score to be used in the calculation.
+        weight (float): The weight to be applied.
 
     Returns:
-    - float: The reward value for the miner.
+        float: The calculated miner reward.
     """
-    bt.logging.info(
-        f"In rewards, query val: {query}, response val: {response}, rewards val: {1.0 if response == query * 2 else 0}"
-    )
-    return 1.0 if response == query * 2 else 0
-
+    low_reward = (0.8 * (score ** 7) + 
+                  0.1 * (score ** 5) + 
+                  0.1 * (score ** 3))
+    
+    miner_reward = weight * low_reward
+    
+    return miner_reward
 
 def get_rewards(
     self,
-    query: int,
-    responses: List[float],
+    create_request_zero_score: float,
+    update_request_zero_scores: float,
+    delete_request_zero_score: float,
+    read_score: float,
+    weight: float,
 ) -> np.ndarray:
-    """
-    Returns an array of rewards for the given query and responses.
+    """Calculate rewards based on request scores and weight.
 
     Args:
-    - query (int): The query sent to the miner.
-    - responses (List[float]): A list of responses from the miner.
+        create_request_zero_score (float): Score for create requests.
+        update_request_zero_score (float): Score for update requests.
+        delete_request_zero_score (float): Score for delete requests.
+        read_score (float): Score for read operations.
+        weight (float): Weight to apply in the reward calculation.
 
     Returns:
-    - np.ndarray: An array of rewards for the given query and responses.
+        np.ndarray: The calculated miner reward as a NumPy array.
     """
-    # Get all the reward results by iteratively calling your reward() function.
-
-    return np.array([reward(query, response) for response in responses])
+    initial_create_score, initial_delete_score, initial_update_score = 1.0, 1.0, 1.0
+    
+    zero_scores = [
+        create_request_zero_score,
+        delete_request_zero_score,
+    ]
+    
+    if create_request_zero_score == 0:
+        initial_create_score = 0.5
+        
+    if delete_request_zero_score == 0:
+        initial_delete_score = 0.5
+    
+    if any(score == 0 for score in update_request_zero_scores):
+        initial_update_score = 0.5
+        
+    miner_reward = reward(initial_create_score * initial_delete_score * initial_update_score * read_score, weight)
+    
+    return np.array(miner_reward)

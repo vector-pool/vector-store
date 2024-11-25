@@ -22,6 +22,8 @@ import argparse
 import bittensor as bt
 from .logging import setup_events_logger
 
+len_limit = int(1e4)
+
 
 def is_cuda_available():
     try:
@@ -198,7 +200,7 @@ def add_validator_args(cls, parser):
         "--neuron.sample_size",
         type=int,
         help="The number of miners to query in a single step.",
-        default=50,
+        default=1,
     )
 
     parser.add_argument(

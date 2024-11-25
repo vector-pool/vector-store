@@ -4,7 +4,7 @@ This is a highly advisable workflow to follow to keep your subtensor project org
 
 ## Table of contents
 
-- [Bittensor Subnet Development Workflow](#bittensor-subnet-development-workflow)
+- [vetornet subnet workflow](#vectornet)
   - [Main Branches](#main-branches)
   - [Development Model](#development-model)
       - [Feature Branches](#feature-branches)
