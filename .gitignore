@@ -170,3 +170,5 @@ Miniconda3-latest-MacOSX-x86_64.sh
 package.json
 note.txt
 bad_category.txt
+logfile
+package-lock.json
