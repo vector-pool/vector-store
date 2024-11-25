@@ -52,11 +52,15 @@ Miners receive CRUD queries from validators. They are responsible for embedding 
 
 Miners receive CRUD queries from validators, and as they remain in the system longer, maintaining performance becomes challenging due to the continuous increase in data size. To address this, miners are categorized into five groups based on the number of synapse circles they have processed, with older miners receiving higher weights.
 
-*** Squire ***: count < 100 (weight = 0.6)
-*** Knight ***: count < 150 (weight = 0.7)
-*** Champion ***: count < 250 (weight = 0.8)
-*** Paladin ***: count < 400 (weight = 0.9)
-*** Lord ***: count ≥ 400 (weight = 1.0) 🌱
+***Squire*** : count < 100 (weight = 0.6)
+
+***Knight*** : count < 150 (weight = 0.7)
+
+***Champion*** : count < 250 (weight = 0.8)
+
+***Paladin*** : count < 400 (weight = 0.9)
+
+***Lord*** : count ≥ 400 (weight = 1.0) 🌱
 
 These settings will be modified during the testing phase.
 
