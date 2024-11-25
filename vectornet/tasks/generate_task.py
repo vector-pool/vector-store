@@ -57,15 +57,16 @@ async def generate_create_request(validator_db_manager, article_size = 30) -> Cr
 async def generate_read_request(validator_db_manager):
 
     result = validator_db_manager.get_random_unit_ids()
-    
+    print("This is random uids: ", result)
     if result is not None:
-        user_id, organization_id, namespace_id, category, pageids_info = result
+        user_id, organization_id, namespace_id, user_name, organization_name, namespace_name, category, pageids_info = result
     else:
         return None, None
+    # pageid, vector_id = random.choice(list(pageids_info.items()))
     pageids = list(pageids_info.keys())
     pageid = random.choice(pageids)
     
-    content = get_wiki_article_content_with_pageid(pageid)
+    content = await get_wiki_article_content_with_pageid(pageid)
     
     llm_client = openai.OpenAI(
         api_key=os.environ["OPENAI_API_KEY"],
@@ -79,13 +80,13 @@ async def generate_read_request(validator_db_manager):
     query = ReadSynapse(
         version = version,
         type = 'READ',
-        user_id = user_id,
-        organization_id = organization_id,
-        namespace_id = namespace_id,
+        user_name = user_name,
+        organization_name = organization_name,
+        namespace_name = namespace_name,
         query_data = query_content,
     )
     
-    return query, content
+    return query, content, user_id, organization_id, namespace_id, pageids_info
 
 async def generate_update_request(article_size, validator_db_manager):
     
@@ -133,9 +134,9 @@ async def generate_delete_request(validator_db_manager):
         version = version,
         type = 'DELETE',
         perform = 'namespace',
-        user_id = user_name,
-        organization_id = organization_name,
-        namespace_id = namespace_name,
+        user_name = user_name,
+        organization_name = organization_name,
+        namespace_name = namespace_name,
     )
     
     return user_id, organization_id, namespace_id, query

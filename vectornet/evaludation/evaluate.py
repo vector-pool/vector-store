@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from vectornet.embedding.embed import TextToEmbedding
 from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
+import asyncio
 
 def evaluate_create_request(response, validator_db_manager, query, pageids):
     
@@ -67,33 +68,37 @@ def evaluate_delete_request(query, response, query_user_id, query_organization_i
     
     return 1
     
-def evaluate_read_request(query, response, original_content):
+def evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response, original_content):
     
     zero_score = 1
     score = 0
     
-    ids = response[0]
-    content = response[1]
+    if len(response) != 5:
+        return 0
+    
+    response_user_id, response_organization_id, response_namespace_id, response_vector_id, response_content = response
+    
+    vector_to_pageid = {v: k for k, v in pageids_info.items()}
+    pageid = vector_to_pageid.get(response_vector_id)
+    
+    if vector_to_pageid is None:
+        return 0
+    else :
+        content = asyncio.run(get_wiki_article_content_with_pageid(pageid))
+        if response_content != content:
+            return 0
     
     if (
-        ids is None or
-        content is None
+        response_user_id != query_user_id or
+        response_organization_id != query_organization_id or
+        response_namespace_id != query_namespace_id
     ):
-        zero_score = 0
-    if (
-        ids[0] != query.user_id or
-        ids[1] != query.organization_id or
-        ids[2] != query.namespace_id
-    ):
-        zero_score = 0
-    get_wiki_article_content_with_pageid
-    contents = get_wiki_contents_with(ids)
-    if content not in contents:
         return 0
-    if content == original_content:
+        
+    if response_content == original_content:
         score = 1
     else:
-        score = evaluate_similarity(original_content, content)
+        score = evaluate_similarity(original_content, response_content)
     return score * zero_score
         
 def evaluate_similarity(original_content, content):

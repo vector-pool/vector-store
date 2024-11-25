@@ -761,4 +761,8 @@ wiki_categories:
   - Systems Engineering
 
 
+user_name:
+  - vali #If you are a validator
+  - miner #If you are a miner
+
 

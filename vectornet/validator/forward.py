@@ -136,6 +136,8 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
             category,
             pageids_info,
         )
+        
+    return create_request_zero_score
 
 async def forward_update_request(self, validator_db_manager, miner_uid):
     update_request_zero_scores = []
@@ -196,23 +198,26 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
             delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request, user_id, organization_id, namespace_id)
             
             if delete_request_zero_score:
-                validator_db_manager.delete_operation("DELETE", delete_request.user_id, delete_request.organization_id, delete_request.namespace_id)
+                validator_db_manager.delete_operation("DELETE", user_id, organization_id, namespace_id)
     return delete_request_zero_score
      
 async def forward_read_request(self, validator_db_manager, miner_uid):
-    read_request, content = await generate_read_request(validator_db_manager)
+    read_request, content, query_user_id, query_organization_id, query_namespace_id, pageids_info = await generate_read_request(validator_db_manager)
     
+    read_score = 0
     if read_request is not None:
-        
         response = await self.dendrite(
             axons = [self.metagraph.axons[miner_uid]],
             synapse = read_request,
             deserialize = True,
             timeout = 30,
         )
+        
         response_read = response[0]
+        
         bt.logging.info(f"Received responses: {response_read}")
         
-        read_score = evaluate_read_request(read_request, response_read, content)
+        read_score = evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, read_request, response_read, content)
+        
     return read_score
     
