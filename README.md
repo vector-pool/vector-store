@@ -8,11 +8,11 @@
 
 ### Validator Installation
 
-Please see [Validator Setup](https://github.com/MetaSearch-IO/decentralized-search/blob/main/quickstart.md#validator-setup) in the [quick start guide](https://github.com/MetaSearch-IO/decentralized-search/blob/main/quickstart.md).
+Please see [Validator Setup](https://github.com/vector-pool/vector-store/blob/main/docs/validator_setup) in the [quick start guide](https://github.com/vector-pool/vector-store/blob/main/docs/quickstart.md).
 
 ### Miner Installation
 
-Please see [Miner Setup](https://github.com/MetaSearch-IO/decentralized-search/blob/main/quickstart.md#miner-setup) in the [quick start guide](https://github.com/MetaSearch-IO/decentralized-search/blob/main/quickstart.md).
+Please see [Miner Setup](https://github.com/vector-pool/vector-store/blob/main/docs/miner_setup.md) in the [quick start guide](https://github.com/vector-pool/vector-store/blob/main/docs/quickstart.md).
 
 <!-- ---
 
