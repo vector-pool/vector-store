@@ -91,13 +91,55 @@ Embedding model training and advanced searching algorithm(ranking algorithm) for
 
 ## Development Roadmap
 
+### Distributed Storage Network with Dual Synapse Architecture
+
+**Current Status**
+The subnet currently operates with synthetic synapses only, where validators scrape and store Wikipedia data.
+
+**Upcoming Features**
+* Dual Synapse System
+     * Synthetic Synapses: Automated data collection and storage
+     * Organic Synapses: User-submitted data storage
+
+* User-Friendly Storage Interface:
+We're developing a Pinecone-like application that allows users to:
+     * Store custom text data
+     * Store vector embeddings
+     * Query stored data efficiently
+
+* Data Flow Architecture
+     * User requests are received by validators
+     * Validators distribute data to mining nodes
+     * Mining nodes handle storage and processing
+
+* Data Reliability & Redundancy.
+     To ensure data persistence and reliability we are going to build storage & back-up feature using S3 bucket.
+
+     * Automatic backup system monitors miner status
+     * If a miner deregisters, their stored data is:
+         * Backed up immediately
+         * Redistributed to active miners
+     * This prevents data loss and maintains service reliability
+
+* Benefits
+     * Fault-tolerant storage system
+     * High data availability
+     * Reliable service for users
+     * Distributed backup mechanism
+
 V1:
 
 - The text-embedding model evaluation and incentive mechanism
 - Subnet dashboard with miner's performance growing curve, total-data size and similiarity-score
 - Subnet API for integration of our subnet with other subnets like sn4: Targon, Sn5: Openkaito etc.
 
-V2 and further:
+V2:
+
+- Building the user-interface for real-world usage
+- Building the Storage & Backup platform to prevent data loss
+- Adding the type of organic Synapses and evaluation mechanism
+
+V3 and further:
 
 - Extending the embedding data with audio and image
 - …

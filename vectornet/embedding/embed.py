@@ -33,6 +33,7 @@ class TextToEmbedding:
         summed_mask = torch.sum(attention_mask, 1)  # (batch_size, 1)
 
         pooled_embedding = summed_embeddings / summed_mask
+        
         return pooled_embedding  # (batch_size, hidden_size)
 
     def chunk_text(self, text):
