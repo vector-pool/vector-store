@@ -160,9 +160,15 @@ async def wikipedia_scraper(k : int, category: str):
     # print("wiki_contents are scraped correctly")
     # # print(articles)
     # return articles
-    return get_random_articles(k)
+    return await get_random_articles(k)
 
 async def get_wiki_article_content_with_pageid(pageid):
     content = await get_article_extracts(pageid)
     return content
  
+ 
+ 
+if __name__ == "__main__":
+    
+    articles = asyncio.run(wikipedia_scraper(5, "music"))
+    print(articles)
