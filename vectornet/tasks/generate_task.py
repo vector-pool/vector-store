@@ -21,7 +21,6 @@ from vectornet.database_manage.validator_db_manager import ValidatorDBManager
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
 
-
 wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
