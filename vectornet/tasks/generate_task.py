@@ -25,7 +25,7 @@ wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
 
-async def generate_create_request(validator_db_manager, article_size = 30) -> CreateSynapse:
+async def generate_create_request(validator_db_manager, article_size = 10) -> CreateSynapse:
     
     user_name, organization_name, category = None, None, None
     while True:
@@ -37,7 +37,8 @@ async def generate_create_request(validator_db_manager, article_size = 30) -> Cr
         if uniquness:
             break
     print("user_name, organization_name, category, uniquness : ", user_name, organization_name, category, uniquness)
-    articles = await wikipedia_scraper(article_size, category)
+    # articles = await wikipedia_scraper(article_size, category)
+    articles = await wikipedia_scraper(article_size)
     contents = []
     for article in articles:
         contents.append(article['content'][:len_limit])
