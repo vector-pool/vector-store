@@ -22,8 +22,17 @@ CREATE ROLE your_user_name WITH LOGIN SUPERUSER PASSWORD 'your_password';
 brew services restart postgresql@14
 ```
 
-python neurons/validator.py --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey miner55 --logging.debug
-python neurons/miner.py --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey validator55 --logging.debug
+
+
+
+
+
+
+python neurons/validator.py --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey miner55 --logging.debug --axon.port 51711
+python neurons/miner.py --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey validator55 --logging.debug --axon.port 51711
+
+
+
 
 btcli wallet regen_coldkey 
 btcli wallet regen_hotkey
