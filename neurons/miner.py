@@ -111,21 +111,25 @@ class Miner(BaseMinerNeuron):
         
         embedding_manager = TextToEmbedding()
         
-        vectors = validator_db_manager.read_operation(request_type, user_name, organization_name, namespace_name)
+        user_id, organization_id, namespace_id, vectors = validator_db_manager.read_operation(request_type, user_name, organization_name, namespace_name)
         
-        query_embedding = embedding_manager.embed(query_data)
+        if vectors is None:
+            bt.logging.error("Check the ReadRequest, There is an error in reading the DB with user_name, organization_name, namespace_name.")
+                
+        query_embedding = embedding_manager.embed([query_data])[1][0]
         
         search_engine = SearchEngine()
         
         top_vectors = search_engine.cosine_similarity_search(query_embedding, vectors, size)
         
-        results = []
-        for top_vector in top_vectors:
-            results.append({'text': top_vector['original_text'], 'embedding': top_vector['embedding']})
-
-        query.results = results
+        # results = []
+        # for top_vector in top_vectors:
+        #     results.append({'text': top_vector['original_text'], 'embedding': top_vector['embedding']})
+        result_content = top_vectors[0]['original_text']
+        vector_id = top_vectors[0]['vector_id']
+        results = (user_id, organization_id, namespace_id, vector_id, result_content)
         bt.logging.info(GREEN + "\n\n this is the results !\n\n" + RESET)
-        bt.logging.info(results)
+        # bt.logging.info(results)
         query.results = results
         
         return query
