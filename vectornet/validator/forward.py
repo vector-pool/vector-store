@@ -111,9 +111,14 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         timeout = 20,
     )
     
+    
     if len(responses) != 1:
         bt.logging.info("Something went wrong, number of CreateSynaspe responses bigger than one.")
     response_create_request = responses[0]
+    
+    print("responses is ", response_create_request)
+    if response_create_request is None:
+        return 0
     
     bt.logging.info(f"Received responses : {response_create_request} from {miner_uid}")
     
@@ -146,6 +151,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
             article_size = 3,
             validator_db_manager = validator_db_manager,
         )
+        
         pageids = [article['pageid'] for article in articles]
         if update_request is not None:
             print(RED + "\n\n Sent update_request\n\n" + RESET)

@@ -17,27 +17,31 @@ from vectornet.protocol import(
 from vectornet.utils.version import get_version
 from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
-
 
 wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
 
-async def generate_create_request(validator_db_manager, article_size = 30) -> CreateSynapse:
+async def generate_create_request(validator_db_manager, article_size = 10) -> CreateSynapse:
     
-    user_name, organization_name, category = None, None, None
+    user_name, organization_name, namespace_name = None, None, None
     while True:
         user_name = random.choice(user_names)
         organization_name = random.choice(organization_names)
-        category = random.choice(wiki_categories)
-        uniquness = validator_db_manager.check_uniquness(user_name, organization_name, category)
-        print("user_name, organization_name, category, uniquness        :        ", user_name, organization_name, category, uniquness)
+        namespace_name = random.choice(wiki_categories)
+        uniquness = validator_db_manager.check_uniquness(user_name, organization_name, namespace_name)
+        print("user_name, organization_name, category, uniquness        :        ", user_name, organization_name, namespace_name, uniquness)
         if uniquness:
             break
-    print("user_name, organization_name, category, uniquness : ", user_name, organization_name, category, uniquness)
+    print("user_name, organization_name, category, uniquness : ", user_name, organization_name, namespace_name, uniquness)
+    category = "random"
     articles = await wikipedia_scraper(article_size, category)
     contents = []
     for article in articles:
@@ -48,7 +52,7 @@ async def generate_create_request(validator_db_manager, article_size = 30) -> Cr
         type = 'CREATE',
         user_name = user_name,
         organization_name = organization_name,
-        namespace_name = category,
+        namespace_name = namespace_name,
         index_data = contents,
     )
     
@@ -68,12 +72,18 @@ async def generate_read_request(validator_db_manager):
     
     content = await get_wiki_article_content_with_pageid(pageid)
     
+    if content is None:
+        bt.logging.error("The wiki-scraper with pageid doesn't work when creating ReadRequest.")
+    
     llm_client = openai.OpenAI(
         api_key=os.environ["OPENAI_API_KEY"],
         max_retries=3,
     )
     
     query_content = generate_query_content(llm_client, content)
+    
+    if query_content is None:
+        bt.logging.error("The query_content is None for ReadRequest, Check again openai operation.")
     
     version = get_version()
     
@@ -95,7 +105,7 @@ async def generate_update_request(article_size, validator_db_manager):
     if result is not None:
         user_id, organization_id, namespace_id, user_name, organization_name, namespace_name, category, pageids_info = result
     else:
-        return None, None, None
+        return None, None, None, None, None, None
     print("Starting wiki-scraper")
     articles = await wikipedia_scraper(article_size, category)
     contents = []
@@ -143,17 +153,16 @@ async def generate_delete_request(validator_db_manager):
 
 def generate_query_content(llm_client, content):
     prompt = (
-        "You are an embedding evaluator. Your task is to generate a query from the given original content to assess how well the embedding engines perform.",
-        "You will be provided with the original content as your source of information. Your job is to create a summarized version of this content.",
-        "This summary will be used to evaluate the performance quality of different embedding engines by comparing the embeddings of the query content with the results from each engine.",
+        """You are an embedding evaluator. Your task is to generate a query from the given original content to assess how well the embedding engines perform.
+        You will be provided with the original content as your source of information. Your job is to create a summarized version of this content.
+        This summary will be used to evaluate the performance quality of different embedding engines by comparing the embeddings of the query content with the results from each engine."""
     )
-    prompt += content
+    prompt += content + " "
     prompt += (
-        "Generate a summary of the original content using approximately 700-900 characters."
-        "Provide only the generated summary in plain text, without any additional context, explanation, or formatting. single and double quotes or new lines."
+        """Generate a summary of the original content using approximately 700-900 characters. Provide only the generated summary in plain text, without any additional context, explanation, or formatting. single and double quotes or new lines."""
     )
 
-    bt.logging.debug(f"Prompt: {prompt}")
+    print(f"Prompt: {prompt}")
 
     try:
         output = llm_client.chat.completions.create(
@@ -168,16 +177,17 @@ def generate_query_content(llm_client, content):
             timeout=30,
         )
 
-        bt.logging.debug(
+        print(
             f"generation questions LLM response: {output.choices[0].message.content}"
         )
-        bt.logging.debug(
+        print(
             f"LLM usage: {output.usage}, finish reason: {output.choices[0].finish_reason}"
         )
         return output.choices[0].message.content
     except Exception as e:
-        bt.logging.error(f"Error during LLM completion: {e}")
-        bt.logging.debug(print_exception(type(e), e, e.__traceback__))
+        print(f"Error during LLM completion: {e}")
+        print(print_exception(type(e), e, e.__traceback__))
+        return None
         
 
 if __name__ == '__main__':

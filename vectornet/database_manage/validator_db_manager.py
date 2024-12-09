@@ -15,7 +15,7 @@ class ValidatorDBManager:
 
     def ensure_database_exists(self) -> bool:
         """Ensure the database exists, create if not."""
-        conn = psycopg2.connect(dbname='postgres', user='vali', password='lucky', host='localhost', port=5432)
+        conn = psycopg2.connect(dbname='postgres', user='vali1', password='lucky', host='localhost', port=51967)
         conn.autocommit = True
         try:
             with conn.cursor() as cur:
@@ -33,7 +33,7 @@ class ValidatorDBManager:
 
     def connect_to_db(self):
         """Connect to the specified database."""
-        self.conn = psycopg2.connect(dbname=self.db_name, user='vali', password='lucky', host='localhost', port=5432)
+        self.conn = psycopg2.connect(dbname=self.db_name, user='vali1', password='lucky', host='localhost', port=51967)
         print("correctly connected")
         
     def create_tables(self):
@@ -285,13 +285,13 @@ class ValidatorDBManager:
 class CountManager:
     def __init__(self):
         self.db_name = "count_synapses"
-        self.conn = psycopg2.connect(dbname='postgres', user='vali', password='lucky', host='localhost', port=5432)
+        self.conn = psycopg2.connect(dbname='postgres', user='vali1', password='lucky', host='localhost', port=51967)
         # self.conn.autocommit = True
         self.init_count_synapse()
         
     def ensure_database_exists(self) -> bool:
         """Ensure the database exists, create if not."""
-        conn = psycopg2.connect(dbname='postgres', user='vali', password='lucky', host='localhost', port=5432)
+        conn = psycopg2.connect(dbname='postgres', user='vali1', password='lucky', host='localhost', port=51967)
         conn.autocommit = True
         try:
             with conn.cursor() as cur:
@@ -309,7 +309,7 @@ class CountManager:
             
     def connect_to_db(self):
         """Connect to the specified database."""
-        self.conn = psycopg2.connect(dbname=self.db_name, user='vali', password='lucky', host='localhost', port=5432)
+        self.conn = psycopg2.connect(dbname=self.db_name, user='vali1', password='lucky', host='localhost', port=51967)
         print("correctly connected")
         
     def init_count_synapse(self):
@@ -364,23 +364,4 @@ class CountManager:
             self.conn.close()
 
 
-# Example Usage
-if __name__ == '__main__':
-    miner_uid = 21
-    # db_manager = ValidatorDBManager(miner_uid)
-
-    # db_manager.create_operation(
-    #     request_type='create',
-    #     user_name='abc5',
-    #     organization_name='ggp',
-    #     namespace_name='name28',
-    #     user_id=13,
-    #     organization_id=125,
-    #     namespace_id=139,
-    #     category='asdf',
-    #     pageids=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    # )
-
-    # db_manager.close_connection()
-    counter_manager = CountManager()
     

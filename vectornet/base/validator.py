@@ -93,7 +93,8 @@ class BaseValidatorNeuron(BaseNeuron):
 
         bt.logging.info("serving ip to chain...")
         try:
-            self.axon = bt.axon(wallet=self.wallet, config=self.config)
+            self.axon = bt.axon(wallet=self.wallet, config=self.config, port = self.config.axon.port)
+            
 
             try:
                 self.subtensor.serve_axon(
@@ -115,7 +116,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
     async def concurrent_forward(self):
         random_uids = get_random_uids(self, 3)
-        random_uids = [6]
+        random_uids = [5]
         # coroutines = [
         #     self.forward()
         #     for _ in range(self.config.neuron.num_concurrent_forwards)

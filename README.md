@@ -8,11 +8,11 @@
 
 ### Validator Installation
 
-Please see [Validator Setup](https://github.com/MetaSearch-IO/decentralized-search/blob/main/quickstart.md#validator-setup) in the [quick start guide](https://github.com/MetaSearch-IO/decentralized-search/blob/main/quickstart.md).
+Please see [Validator Setup](https://github.com/vector-pool/vector-store/blob/main/docs/validator_setup) in the [quick start guide](https://github.com/vector-pool/vector-store/blob/main/docs/quickstart.md).
 
 ### Miner Installation
 
-Please see [Miner Setup](https://github.com/MetaSearch-IO/decentralized-search/blob/main/quickstart.md#miner-setup) in the [quick start guide](https://github.com/MetaSearch-IO/decentralized-search/blob/main/quickstart.md).
+Please see [Miner Setup](https://github.com/vector-pool/vector-store/blob/main/docs/miner_setup.md) in the [quick start guide](https://github.com/vector-pool/vector-store/blob/main/docs/quickstart.md).
 
 <!-- ---
 
@@ -52,15 +52,17 @@ Miners receive CRUD queries from validators. They are responsible for embedding 
 
 Miners receive CRUD queries from validators, and as they remain in the system longer, maintaining performance becomes challenging due to the continuous increase in data size. To address this, miners are categorized into five groups based on the number of synapse circles they have processed, with older miners receiving higher weights.
 
-count < 100: ***Very Young***: weight = 0.6
+***Squire*** : count < 100 (weight = 0.6)
 
-count < 150: ***Young***: weight = 0.7
+***Knight*** : count < 150 (weight = 0.7)
 
-count < 250: ***Mature***: weight = 0.8
+***Champion*** : count < 250 (weight = 0.8)
 
-count < 400: ***Old***: weight = 0.9
+***Paladin*** : count < 400 (weight = 0.9)
 
-cound ≥ 400: ***Very Old***: weight = 1.0
+***Lord*** : count ≥ 400 (weight = 1.0) 🌱
+
+These settings will be modified during the testing phase.
 
 ***Rewarding***
 
@@ -89,29 +91,58 @@ Embedding model training and advanced searching algorithm(ranking algorithm) for
 
 ## Development Roadmap
 
+### Distributed Storage Network with Dual Synapse Architecture
+
+**Current Status**
+The subnet currently operates with synthetic synapses only, where validators scrape and store Wikipedia data.
+
+**Upcoming Features**
+* Dual Synapse System
+     * Synthetic Synapses: Automated data collection and storage
+     * Organic Synapses: User-submitted data storage
+
+* User-Friendly Storage Interface:
+We're developing a Pinecone-like application that allows users to:
+     * Store custom text data
+     * Store vector embeddings
+     * Query stored data efficiently
+
+* Data Flow Architecture
+     * User requests are received by validators
+     * Validators distribute data to mining nodes
+     * Mining nodes handle storage and processing
+
+* Data Reliability & Redundancy.
+     To ensure data persistence and reliability we are going to build storage & back-up feature using S3 bucket.
+
+     * Automatic backup system monitors miner status
+     * If a miner deregisters, their stored data is:
+         * Backed up immediately
+         * Redistributed to active miners
+     * This prevents data loss and maintains service reliability
+
+* Benefits
+     * Fault-tolerant storage system
+     * High data availability
+     * Reliable service for users
+     * Distributed backup mechanism
+
 V1:
 
 - The text-embedding model evaluation and incentive mechanism
 - Subnet dashboard with miner's performance growing curve, total-data size and similiarity-score
 - Subnet API for integration of our subnet with other subnets like sn4: Targon, Sn5: Openkaito etc.
 
-V2 and further:
+V2:
+
+- Building the user-interface for real-world usage
+- Building the Storage & Backup platform to prevent data loss
+- Adding the type of organic Synapses and evaluation mechanism
+
+V3 and further:
 
 - Extending the embedding data with audio and image
 - …
-
-## Restarting PostgreSQL Database
-
-```
-rm -rf /opt/homebrew/var/postgres
-brew uninstall postgresql@14
-brew install postgresql@14
-sudo initdb /opt/homebrew/var/postgres
-brew services start postgresql@14
-createuser -s postgres
-psql -U postgres
-pqsl -d postgres
-```
 
 
 
