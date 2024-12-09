@@ -11,7 +11,7 @@ class MinerDBManager:
     def ensure_database_exists(self) -> bool:
         """Ensure the database exists, create if not."""
         # Create the connection
-        conn = psycopg2.connect(dbname='postgres', user='eros', password='lucky', host='localhost', port=5432)
+        conn = psycopg2.connect(dbname='postgres', user='miner1', password='lucky', host='localhost', port=8080)
         # Set autocommit before creating the cursor
         conn.autocommit = True
         try:
@@ -30,7 +30,7 @@ class MinerDBManager:
 
     def connect_to_db(self):
         """Connect to the specified database."""
-        self.conn = psycopg2.connect(dbname=self.db_name, user='eros', password='lucky', host='localhost', port=5432)
+        self.conn = psycopg2.connect(dbname=self.db_name, user='miner1', password='lucky', host='localhost', port=8080)
         self.conn.autocommit = True  # Ensure autocommit is enabled
 
     def create_tables(self):

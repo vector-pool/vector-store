@@ -27,18 +27,18 @@ user_names = config['user_names']
 
 async def generate_create_request(validator_db_manager, article_size = 10) -> CreateSynapse:
     
-    user_name, organization_name, category = None, None, None
+    user_name, organization_name, namespace_name = None, None, None
     while True:
         user_name = random.choice(user_names)
         organization_name = random.choice(organization_names)
-        category = random.choice(wiki_categories)
-        uniquness = validator_db_manager.check_uniquness(user_name, organization_name, category)
-        print("user_name, organization_name, category, uniquness        :        ", user_name, organization_name, category, uniquness)
+        namespace_name = random.choice(wiki_categories)
+        uniquness = validator_db_manager.check_uniquness(user_name, organization_name, namespace_name)
+        print("user_name, organization_name, category, uniquness        :        ", user_name, organization_name, namespace_name, uniquness)
         if uniquness:
             break
-    print("user_name, organization_name, category, uniquness : ", user_name, organization_name, category, uniquness)
-    # articles = await wikipedia_scraper(article_size, category)
-    articles = await wikipedia_scraper(article_size)
+    print("user_name, organization_name, category, uniquness : ", user_name, organization_name, namespace_name, uniquness)
+    category = "random"
+    articles = await wikipedia_scraper(article_size, category)
     contents = []
     for article in articles:
         contents.append(article['content'][:len_limit])
@@ -48,7 +48,7 @@ async def generate_create_request(validator_db_manager, article_size = 10) -> Cr
         type = 'CREATE',
         user_name = user_name,
         organization_name = organization_name,
-        namespace_name = category,
+        namespace_name = namespace_name,
         index_data = contents,
     )
     

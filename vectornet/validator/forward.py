@@ -111,6 +111,9 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         timeout = 20,
     )
     
+    if responses is None:
+        return
+    
     if len(responses) != 1:
         bt.logging.info("Something went wrong, number of CreateSynaspe responses bigger than one.")
     response_create_request = responses[0]
