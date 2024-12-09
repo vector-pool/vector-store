@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 class SearchEngine:
-    def __init__():
+    def __init__(self):
         pass
     
     def cosine_similarity_search(self, query_embedding, vectors, size):
@@ -34,6 +34,7 @@ class SearchEngine:
                 'original_text': vector['original_text'],
                 'text': vector['text'],
                 'embedding': vector['embedding'],
+                'vector_id': vector['vector_id'],
                 'similarity': similarity_score,
             })
 
