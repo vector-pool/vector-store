@@ -28,3 +28,8 @@ docker-compose up -d
 ## create database 
 
 psql -h localhost -U your_username -d your_database
+
+
+
+
+psql -U postgres
