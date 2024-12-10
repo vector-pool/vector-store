@@ -180,7 +180,6 @@ def evaluate_create_request(response, validator_db_manager, query, pageids):
         return 0
     
     return 1
-    
 
 def evaluate_update_request(query, response, query_user_id, query_organization_id, query_namespace_id, pageids):
     
@@ -228,7 +227,6 @@ def evaluate_delete_request(query, response, query_user_id, query_organization_i
     
     return 1
     
-
 def evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response, original_content):
     zero_score = 1
     score = 0
@@ -266,7 +264,6 @@ def evaluate_read_request(query_user_id, query_organization_id, query_namespace_
     
     return score * zero_score
     
-
 def evaluate_similarity(original_content, content):
     embedding_manager = TextToEmbedding()
     original_embedding_tensor = embedding_manager.embed([original_content])[1][0]

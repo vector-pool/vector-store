@@ -21,7 +21,6 @@ import bittensor as bt
 import random
 from vectornet.validator.reward import get_rewards
 from vectornet.utils.uids import get_random_uids
-from vectornet.database_manage.validator_db_manager import ValidatorDBManager
 from vectornet.miner_group.miner_group import make_miner_group
 from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
 from vectornet.tasks.generate_task import (

@@ -2,6 +2,15 @@ import psycopg2
 from psycopg2 import sql
 from typing import List, Tuple, Optional
 import bittensor as bt
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+db_user_name = os.getenv("POSTGRESQL_MINER_USER_NAME")
+password = os.getenv("MINER_DB_PASSWORD")
+db_port = os.getenv("DB_PORT")
+
+
 class MinerDBManager:
     def __init__(self, validator_hotkey: str):
         """Initialize MinerDBManager with a validator hotkey."""
@@ -11,7 +20,7 @@ class MinerDBManager:
     def ensure_database_exists(self) -> bool:
         """Ensure the database exists, create if not."""
         # Create the connection
-        conn = psycopg2.connect(dbname='postgres', user='miner1', password='lucky', host='localhost', port=51967)
+        conn = psycopg2.connect(dbname='postgres', user=db_user_name, password=password, host='localhost', port=db_port)
         # Set autocommit before creating the cursor
         conn.autocommit = True
         try:
@@ -30,7 +39,7 @@ class MinerDBManager:
 
     def connect_to_db(self):
         """Connect to the specified database."""
-        self.conn = psycopg2.connect(dbname=self.db_name, user='miner1', password='lucky', host='localhost', port=51967)
+        self.conn = psycopg2.connect(dbname=self.db_name, user=db_user_name, password=password, host='localhost', port=db_port)
         self.conn.autocommit = True  # Ensure autocommit is enabled
 
     def create_tables(self):

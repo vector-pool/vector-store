@@ -3,6 +3,13 @@ from psycopg2 import sql
 from typing import List, Optional, Tuple
 import bittensor as bt
 import json
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+db_user_name = os.getenv("POSTGRESQL_VALIDATOR_USER_NAME")
+password = os.getenv("VALI_DB_PASSWORD")
+db_port = os.getenv("DB_PORT")
 
 class ValidatorDBManager:
     def __init__(self, db_name: str):
@@ -15,7 +22,7 @@ class ValidatorDBManager:
 
     def ensure_database_exists(self) -> bool:
         """Ensure the database exists, create if not."""
-        conn = psycopg2.connect(dbname='postgres', user='vali1', password='lucky', host='localhost', port=51967)
+        conn = psycopg2.connect(dbname='postgres', user=db_user_name, password=password, host='localhost', port=db_port)
         conn.autocommit = True
         try:
             with conn.cursor() as cur:
@@ -33,7 +40,7 @@ class ValidatorDBManager:
 
     def connect_to_db(self):
         """Connect to the specified database."""
-        self.conn = psycopg2.connect(dbname=self.db_name, user='vali1', password='lucky', host='localhost', port=51967)
+        self.conn = psycopg2.connect(dbname=self.db_name, user=db_user_name, password=password, host='localhost', port=db_port)
         bt.logging.debug("Correctly connected to MinerDBManager")
         
     def create_tables(self):
@@ -275,23 +282,21 @@ class ValidatorDBManager:
             
             self.conn.commit()  
 
-
     def close_connection(self):
         """Close the database connection."""
         if self.conn:
             self.conn.close()
 
-
 class CountManager:
     def __init__(self):
         self.db_name = "count_synapses"
-        self.conn = psycopg2.connect(dbname='postgres', user='vali1', password='lucky', host='localhost', port=51967)
+        self.conn = psycopg2.connect(dbname='postgres', user=db_user_name, password=password, host='localhost', port=db_port)
         # self.conn.autocommit = True
         self.init_count_synapse()
         
     def ensure_database_exists(self) -> bool:
         """Ensure the database exists, create if not."""
-        conn = psycopg2.connect(dbname='postgres', user='vali1', password='lucky', host='localhost', port=51967)
+        conn = psycopg2.connect(dbname='postgres', user=db_user_name, password=password, host='localhost', port=db_port)
         conn.autocommit = True
         try:
             with conn.cursor() as cur:
@@ -309,7 +314,7 @@ class CountManager:
             
     def connect_to_db(self):
         """Connect to the specified database."""
-        self.conn = psycopg2.connect(dbname=self.db_name, user='vali1', password='lucky', host='localhost', port=51967)
+        self.conn = psycopg2.connect(dbname=self.db_name, user=db_user_name, password=password, host='localhost', port=db_port)
         bt.logging.debug("Correctly connected to CounterManager.")
         
     def init_count_synapse(self):
@@ -317,7 +322,6 @@ class CountManager:
         self.connect_to_db()
 
         with self.conn.cursor() as cur:
-            # Create the table if it does not exist
             cur.execute('''
                 CREATE TABLE IF NOT EXISTS count_synapse (
                     miner_uid SERIAL PRIMARY KEY,
@@ -325,11 +329,9 @@ class CountManager:
                 )
             ''')
 
-            # Check if the table is empty
             cur.execute('SELECT COUNT(*) FROM count_synapse')
             row_count = cur.fetchone()[0]
 
-            # If the table is empty, fill it with miner_uid from 0 to 255 and count as 0
             if row_count == 0:
                 for uid in range(256):
                     cur.execute('''
@@ -337,12 +339,10 @@ class CountManager:
                         ON CONFLICT (miner_uid) DO NOTHING
                     ''', (uid, 0))
 
-            # Commit the transaction if needed
             self.conn.commit()
         bt.logging.info("Created Counter database and table correctly")
 
     def add_count(self, uid):
-        # Increment the count for the specified miner_uid
         with self.conn.cursor() as cur:
             cur.execute('''
                 UPDATE count_synapse SET count = count + 1 WHERE miner_uid = %s
@@ -350,7 +350,6 @@ class CountManager:
             self.conn.commit()
 
     def read_count(self, uid):
-        # Read the count for the specified miner_uid
         with self.conn.cursor() as cur:
             cur.execute('''
                 SELECT count FROM count_synapse WHERE miner_uid = %s
