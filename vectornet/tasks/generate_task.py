@@ -38,7 +38,7 @@ async def generate_create_request(validator_db_manager, article_size = 10) -> Cr
         namespace_name = random.choice(wiki_categories)
         uniquness = validator_db_manager.check_uniquness(user_name, organization_name, namespace_name)
         if uniquness:
-            bt.logging.debug(f"Selted unique name triple: user, organization, namespace: {user_name}, {organization_name}, {namespace_name}.")
+            bt.logging.debug(f"Selected unique name triple: user, organization, namespace: {user_name}, {organization_name}, {namespace_name}.")
             break
 
     category = "random"

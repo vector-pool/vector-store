@@ -6,13 +6,9 @@
 
 </div>
 
-### Validator Installation
+### Validator and Miner Installation
 
-Please see [Validator Setup](https://github.com/vector-pool/vector-store/blob/main/docs/validator_setup) in the [quick start guide](https://github.com/vector-pool/vector-store/blob/main/docs/quickstart.md).
-
-### Miner Installation
-
-Please see [Miner Setup](https://github.com/vector-pool/vector-store/blob/main/docs/miner_setup.md) in the [quick start guide](https://github.com/vector-pool/vector-store/blob/main/docs/quickstart.md).
+Please see [Validator and Miner Setup](docs/setup_guide.md)
 
 <!-- ---
 

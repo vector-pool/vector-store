@@ -69,7 +69,7 @@ async def forward(self, miner_uid):
     create_request_zero_score = await forward_create_request(self, validator_db_manager, miner_uid)
     time.sleep(30)
     update_request_zero_scores = await forward_update_request(self, validator_db_manager, miner_uid)
-    time.sleep(50)
+    time.sleep(30)
     delete_request_zero_score = await forward_delete_request(self, validator_db_manager, miner_uid)
     time.sleep(20)
     read_score = await forward_read_request(self, validator_db_manager, miner_uid)
@@ -169,11 +169,12 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
             bt.logging.info(f"\n\nReceived Update responses : {response_update_request} from {miner_uid}\n\n")
             update_request_zero_score = evaluate_update_request(update_request, response_update_request, user_id, organization_id, namespace_id, pageids)
             
-            pageids_info = {}
-            for pageid, vector_id in zip(pageids, response_update_request[3]):
-                pageids_info[pageid] = vector_id
             
             if update_request_zero_score:
+                pageids_info = {}
+                for pageid, vector_id in zip(pageids, response_update_request[3]):
+                    pageids_info[pageid] = vector_id
+                        
                 validator_db_manager.update_operation(
                     "UPDATE",
                     update_request.perform,
@@ -184,6 +185,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
                     pageids_info,
                 )
             update_request_zero_scores.append(update_request_zero_score)
+        time.sleep(30)
     return update_request_zero_scores
     
 async def forward_delete_request(self, validator_db_manager, miner_uid):
