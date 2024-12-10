@@ -160,7 +160,7 @@ async def wikipedia_scraper(k: int, category: str):
     if category == "random":
         return await get_random_articles(k)
     else :
-        bt.logging.error("Current category should be random, not the certain one.")
+        bt.logging.error("category in current subnet structure should be random, not the certain one.")
 
 async def get_wiki_article_content_with_pageid(pageid):
     content = await get_article_extracts(pageid)
