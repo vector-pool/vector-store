@@ -5,7 +5,9 @@ import re
 import logging
 import bittensor as bt
 import yaml
-
+from typing import Optional, Any, Callable
+from functools import partial
+from vectornet.utils.config import len_limit
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
 
@@ -33,14 +35,17 @@ async def get_article_extracts(pageid):
                 "explaintext": "1",
                 "format": "json"
             },
+            timeout = 10,
         ) as response:
             data = await response.json()
             pages = data.get("query", {}).get("pages", {})
-            for page in pages.values():
-                extract = page.get("extract", None)
-                if extract:
-                    cleaned_extract = re.sub(r'[\'\"\\\n]', '', re.sub(r'\s+', ' ', extract)).strip()
-                return cleaned_extract if extract else None
+            if pages:    
+                for page in pages.values():
+                    extract = page.get("extract", None)
+                    if extract:
+                        cleaned_extract = re.sub(r'[\'\"\\\n]', '', re.sub(r'\s+', ' ', extract)).strip()
+                        # print ("cleaned_extranct", cleaned_extract[:len_limit])
+                        return cleaned_extract
             return None
 
     async with aiohttp.ClientSession() as session:
@@ -74,6 +79,7 @@ async def get_articles_in_category(category, k):
                 })
         else:
             print("Wrong category name")
+            return None
         return articles
 
 async def get_articles_in_category_with_max_size(category):
@@ -154,11 +160,11 @@ async def wikipedia_scraper(k: int, category: str):
     if category == "random":
         return await get_random_articles(k)
     else :
-        bt.logging.error("Current category should be random, not the certain one.")
+        bt.logging.error("category in current subnet structure should be random, not the certain one.")
 
 async def get_wiki_article_content_with_pageid(pageid):
     content = await get_article_extracts(pageid)
-    return content
+    return content[:len_limit]
 
 if __name__ == "__main__":
     articles = asyncio.run(wikipedia_scraper(5))

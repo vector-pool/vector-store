@@ -39,10 +39,9 @@ def reward(score: float, weight: float) -> float:
     
     return miner_reward
 
-def get_rewards(
-    self,
+async def get_rewards(
     create_request_zero_score: float,
-    update_request_zero_scores: float,
+    update_request_zero_scores: List[float],
     delete_request_zero_score: float,
     read_score: float,
     weight: float,
@@ -72,9 +71,13 @@ def get_rewards(
     if delete_request_zero_score == 0:
         initial_delete_score = 0.5
     
-    if any(score == 0 for score in update_request_zero_scores):
-        initial_update_score = 0.5
+    # if any(score == 0 for score in update_request_zero_scores):
+    #     initial_update_score = 0.5
+    initial_update_score = 1
+    for score in update_request_zero_scores:
+        if score == 0:
+            initial_update_score = initial_update_score * 0.5
         
     miner_reward = reward(initial_create_score * initial_delete_score * initial_update_score * read_score, weight)
-    
+    print("\n\n\n miner_reward is ", miner_reward)
     return np.array(miner_reward)

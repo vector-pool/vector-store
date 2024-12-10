@@ -201,7 +201,7 @@ class MinerDBManager:
 
         with self.conn.cursor() as cur:
             cur.execute("""
-                SELECT original_text, text, embedding
+                SELECT original_text, text, embedding, vector_id
                 FROM vectors
                 WHERE namespace_id = %s
             """, (namespace_id,))
@@ -209,10 +209,10 @@ class MinerDBManager:
             rows = cur.fetchall()
             
             vectors = [
-                {'original_text': row[0], 'text': row[1], 'embedding': row[2]}
+                {'original_text': row[0], 'text': row[1], 'embedding': row[2], 'vector_id': row[3]}
                 for row in rows
             ]
-        return vectors
+            return user_id, organization_id, namespace_id, vectors
 
 
     def update_operation(self, request_type: str, perform: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts):
@@ -299,6 +299,8 @@ class MinerDBManager:
                 cur.execute("DELETE FROM namespaces WHERE namespace_id = %s", (namespace_id,))
 
             self.conn.commit()
+        
+        return user_id, organization_id, namespace_id
 
     def close_connection(self):
         """Close the database connection."""

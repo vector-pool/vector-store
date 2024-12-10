@@ -65,7 +65,7 @@ async def generate_read_request(validator_db_manager):
     if result is not None:
         user_id, organization_id, namespace_id, user_name, organization_name, namespace_name, category, pageids_info = result
     else:
-        return None, None
+        return None, None, None, None, None, None
     # pageid, vector_id = random.choice(list(pageids_info.items()))
     pageids = list(pageids_info.keys())
     pageid = random.choice(pageids)
@@ -74,13 +74,15 @@ async def generate_read_request(validator_db_manager):
     
     if content is None:
         bt.logging.error("The wiki-scraper with pageid doesn't work when creating ReadRequest.")
-    
+    print("OPENAIKEY = ", os.getenv("OPENAI_API_KEY"))
     llm_client = openai.OpenAI(
-        api_key=os.environ["OPENAI_API_KEY"],
-        max_retries=3,
+        api_key = os.getenv("OPENAI_API_KEY"),
+        max_retries = 3,
     )
     
     query_content = generate_query_content(llm_client, content)
+    
+    bt.logging.debug(query_content)
     
     if query_content is None:
         bt.logging.error("The query_content is None for ReadRequest, Check again openai operation.")
@@ -93,6 +95,7 @@ async def generate_read_request(validator_db_manager):
         user_name = user_name,
         organization_name = organization_name,
         namespace_name = namespace_name,
+        size = 1,
         query_data = query_content,
     )
     
@@ -177,10 +180,7 @@ def generate_query_content(llm_client, content):
             timeout=30,
         )
 
-        print(
-            f"generation questions LLM response: {output.choices[0].message.content}"
-        )
-        print(
+        bt.logging.debug(
             f"LLM usage: {output.usage}, finish reason: {output.choices[0].finish_reason}"
         )
         return output.choices[0].message.content

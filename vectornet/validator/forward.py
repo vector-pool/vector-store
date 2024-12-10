@@ -70,19 +70,25 @@ async def forward(self, miner_uid):
     create_request_zero_score = await forward_create_request(self, validator_db_manager, miner_uid)
     time.sleep(20)
     update_request_zero_scores = await forward_update_request(self, validator_db_manager, miner_uid)
-    time.sleep(45)
+    time.sleep(30)
     delete_request_zero_score = await forward_delete_request(self, validator_db_manager, miner_uid)
     time.sleep(10)
     read_score = await forward_read_request(self, validator_db_manager, miner_uid)
     time.sleep(30)
     
+    bt.logging.debug("Passed all these 4 synapses successfully.")
+    bt.logging.info(f"current count of synapse cycle is {cur_count_synapse}.")
     weight = weight_controller(cur_count_synapse)
     
     if weight is None:
         raise Exception("error occurs in weight mapping in evaluation")
     
-    rewards = get_rewards(
-        self,
+    create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 1], 1, 1
+    
+    print(print(GREEN + "This is the 4 scores" + RESET))
+    print(create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score)
+    
+    rewards = await get_rewards(
         create_request_zero_score,
         update_request_zero_scores,
         delete_request_zero_score,
@@ -110,7 +116,6 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         deserialize = True,
         timeout = 20,
     )
-    
     
     if len(responses) != 1:
         bt.logging.info("Something went wrong, number of CreateSynaspe responses bigger than one.")
@@ -162,7 +167,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
                 timeout = 40,
             )
             response_update_request = response[0]
-            bt.logging.info(f"Received Update responses : {response_update_request} from {miner_uid}")
+            bt.logging.info(f"\n\nReceived Update responses : {response_update_request} from {miner_uid}\n\n")
             update_request_zero_score = evaluate_update_request(update_request, response_update_request, user_id, organization_id, namespace_id, pageids)
             
             pageids_info = {}
@@ -185,6 +190,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
 async def forward_delete_request(self, validator_db_manager, miner_uid):
     random_num = random.random()
     delete_request_zero_score = 1
+    # random_num = 0.1
     if random_num < 0.3:
         
         bt.logging.debug("random number = ", random_num)
@@ -192,6 +198,10 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
         user_id, organization_id, namespace_id, delete_request = await generate_delete_request(validator_db_manager)
         
         if delete_request is not None:
+            print(RED + "\n\n Sent delete_request\n\n" + RESET)
+            print(GREEN + "\n\n Sent delete_request\n\n" + RESET)
+            print(delete_request)
+            
             response = await self.dendrite(
                 axons = [self.metagraph.axons[miner_uid]],
                 synapse = delete_request,
@@ -212,6 +222,10 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
     
     read_score = 0
     if read_request is not None:
+        print(RED + "\n\n Sent read_request\n\n" + RESET)
+        print(GREEN + "\n\n Sent read_request\n\n" + RESET)
+        print(read_request)
+        
         response = await self.dendrite(
             axons = [self.metagraph.axons[miner_uid]],
             synapse = read_request,
@@ -220,10 +234,9 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
         )
         
         response_read = response[0]
+        bt.logging.info(f"Received READ responses : {response_read} from {miner_uid}")
         
-        bt.logging.info(f"Received responses: {response_read}")
-        
-        read_score = evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, read_request, response_read, content)
+        read_score = evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response_read, content)
         
     return read_score
     
