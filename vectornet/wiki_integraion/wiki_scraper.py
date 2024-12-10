@@ -44,7 +44,6 @@ async def get_article_extracts(pageid):
                     extract = page.get("extract", None)
                     if extract:
                         cleaned_extract = re.sub(r'[\'\"\\\n]', '', re.sub(r'\s+', ' ', extract)).strip()
-                        # print ("cleaned_extranct", cleaned_extract[:len_limit])
                         return cleaned_extract
             return None
 

@@ -15,7 +15,7 @@ def check_miner_status():
         uid = record[0].value  # Accessing U16 value
         block_number = record[1].value  # Accessing U64 value
         miner_cur_status.append({'uid': uid, 'registered_block_number': block_number})
-    print(miner_cur_status)
+    bt.logging.debug(miner_cur_status)
     
     
     miner_pre_status = []
@@ -63,10 +63,8 @@ def check_miner_status():
             category = "very_old"
 
         miner_ages.append({'uid': miner['uid'], 'age': age, 'category': category})
-    print("*****************************************************************")
-    print(miner_ages)
+    bt.logging.debug(miner_ages)
 
-    
     return new_miner_uids, miner_ages
 
 if __name__ == '__main__':

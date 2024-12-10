@@ -1,7 +1,7 @@
 
 from vectornet.miner_group.check_new_miners import check_miner_status
 from typing import Dict
-
+import bittensor as bt
 
 def weight_controller(count: int) -> float:
     """Determine the weight for a miner based on their age derived from count.
@@ -42,7 +42,7 @@ def weight_controller(count: int) -> float:
     
     miner_age = get_age_from_count(count)
     weight = count_to_weight.get(miner_age)
-    print("weight = ", weight)
+    bt.logging.info("weight = ", weight)
     return weight
 
 
@@ -72,4 +72,4 @@ if __name__ == "__main__":
     miner_uid_example = "miner_123"
     count_example = 35
     weight = weight_controller(miner_uid_example, count_example)
-    print(f"Weight for miner {miner_uid_example}: {weight}")
+    bt.logging.debug(f"Weight for miner {miner_uid_example}: {weight}")

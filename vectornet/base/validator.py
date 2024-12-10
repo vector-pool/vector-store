@@ -115,13 +115,13 @@ class BaseValidatorNeuron(BaseNeuron):
             pass
 
     async def concurrent_forward(self):
-        random_uids = get_random_uids(self, 3)
+        random_uids = get_random_uids(self, self.config.neuron.num_concurrent_forwards)
         random_uids = [5]
         # coroutines = [
         #     self.forward()
         #     for _ in range(self.config.neuron.num_concurrent_forwards)
         # ]
-        print("random_uids : ", random_uids)
+        bt.logging.debug("random_uids : ", random_uids)
         coroutines = [
             self.forward(uid) for uid in random_uids
         ]

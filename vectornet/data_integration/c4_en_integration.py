@@ -1,6 +1,6 @@
 from datasets import load_dataset
 import os
-
+import bittensor as bt
 # Load the dataset with streaming enabled
 dataset = load_dataset(
     "allenai/c4",  # Updated to use allenai/c4 as per the warning
@@ -16,22 +16,22 @@ def save_subset(dataset, num_examples, min_length, output_file):
     data = []
     total_checked = 0
     
-    print("Collecting examples...")
+    bt.logging.debug("Collecting examples...")
     for example in dataset:
         total_checked += 1
         if len(example['text']) >= min_length:
             data.append(example)
             count += 1
             if count % 1000 == 0:
-                print(f"Collected {count} examples...")
+                bt.logging.debug(f"Collected {count} examples...")
         if count >= num_examples:
             break
         if total_checked % 10000 == 0:
-            print(f"Checked {total_checked} articles, found {count} matching examples...")
+            bt.logging.debug(f"Checked {total_checked} articles, found {count} matching examples...")
     
-    print(f"\nTotal articles checked: {total_checked}")
-    print(f"Articles collected: {count}")
-    print(f"Filter rate: {(count/total_checked)*100:.2f}%")
+    bt.logging.debug(f"\nTotal articles checked: {total_checked}")
+    bt.logging.debug(f"Articles collected: {count}")
+    bt.logging.debug(f"Filter rate: {(count/total_checked)*100:.2f}%")
     
     # Convert to regular dataset and save
     from datasets import Dataset
@@ -58,23 +58,20 @@ def get_directory_size(path):
     return total_size / (1024 * 1024)  # Convert to MB
 
 size_mb = get_directory_size(output_dir)
-print(f"\nDownloaded dataset size: {size_mb:.2f} MB")
-print(f"Number of examples: {len(subset)}")
+bt.logging.debug(f"\nDownloaded dataset size: {size_mb:.2f} MB")
+bt.logging.debug(f"Number of examples: {len(subset)}")
 
 # Quick verification of lengths
 lengths = [len(example['text']) for example in subset]
-print(f"\nLength verification:")
-print(f"Min length: {min(lengths)}")
-print(f"Max length: {max(lengths)}")
-print(f"Average length: {sum(lengths)/len(lengths):.2f}")
-
+bt.logging.debug(f"\nLength verification:")
+bt.logging.debug(f"Min length: {min(lengths)}")
+bt.logging.debug(f"Max length: {max(lengths)}")
+bt.logging.debug(f"Average length: {sum(lengths)/len(lengths):.2f}")
 
 from datasets import load_from_disk
 
 dataset = load_from_disk("allenai/c4", "en", streaming=True)
 random_sample = dataset["train"].shuffle(seed=42).take(1)
-
-
 
 from datasets import load_dataset
 import os
@@ -93,27 +90,18 @@ def save_subset(dataset, num_examples, min_length, output_file):
     count = 0
     data = []
     total_checked = 0
-    print("Collecting examples...")
+    bt.logging.debug("Collecting examples...")
     for example in dataset:
         total_checked += 1
         if len(example['text']) >= min_length:
             data.append(example)
             count += 1
             if count % 1000 == 0:
-                print(f"Collected {count} examples...")
+                bt.logging.debug(f"Collected {count} examples...")
         if count >= num_examples:
             break
         if total_checked % 10000 == 0:
-            print(f"Checked {total_checked} articles, found {count} matching examples...")
-
-    # print("Collecting examples...")
-    # for example in dataset:
-    #     data.append(example)
-    #     count += 1
-    #     if count >= num_examples:
-    #         break
-    #     if count % 1000 == 0:
-    #         print(f"Collected {count} examples...")
+            bt.logging.debug(f"Checked {total_checked} articles, found {count} matching examples...")
     
     # Convert to regular dataset and save
     from datasets import Dataset
@@ -135,8 +123,8 @@ def get_directory_size(path):
     return total_size / (1024 * 1024)  # Convert to MB
 
 size_mb = get_directory_size(output_dir)
-print(f"Downloaded dataset size: {size_mb:.2f} MB")
-print(f"Number of examples: {len(subset)}")
+bt.logging.debug(f"Downloaded dataset size: {size_mb:.2f} MB")
+bt.logging.debug(f"Number of examples: {len(subset)}")
 
 
 

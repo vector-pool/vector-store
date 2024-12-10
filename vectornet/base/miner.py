@@ -160,7 +160,7 @@ class BaseMinerNeuron(BaseNeuron):
         #         # Sync metagraph and potentially set weights.
         #         self.sync()
         #         self.step += 1
-        #         print(self.step)
+        #         bt.logging.debug(f"Current step: {self.step}")
         
         try:
             self.sync()
@@ -227,10 +227,7 @@ class BaseMinerNeuron(BaseNeuron):
     def resync_metagraph(self):
         """Resyncs the metagraph and updates the hotkeys and moving averages based on the new metagraph."""
         bt.logging.info("resync_metagraph()")
-        print("in here, miner.py 224 line")
         # Sync the metagraph.
-        print(self.subtensor)
-        print(self.metagraph)
         self.metagraph.sync(subtensor=self.subtensor)
 
     async def blacklist(self, synapse: bt.synapse) -> Tuple[bool, str]:

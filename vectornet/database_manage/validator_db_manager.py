@@ -34,7 +34,7 @@ class ValidatorDBManager:
     def connect_to_db(self):
         """Connect to the specified database."""
         self.conn = psycopg2.connect(dbname=self.db_name, user='vali1', password='lucky', host='localhost', port=51967)
-        print("correctly connected")
+        bt.logging.debug("Correctly connected to MinerDBManager")
         
     def create_tables(self):
         """Create tables if they do not exist."""
@@ -310,7 +310,7 @@ class CountManager:
     def connect_to_db(self):
         """Connect to the specified database."""
         self.conn = psycopg2.connect(dbname=self.db_name, user='vali1', password='lucky', host='localhost', port=51967)
-        print("correctly connected")
+        bt.logging.debug("Correctly connected to CounterManager.")
         
     def init_count_synapse(self):
         self.ensure_database_exists()

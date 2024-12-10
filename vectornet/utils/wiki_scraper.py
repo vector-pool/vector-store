@@ -31,8 +31,6 @@ async def get_wiki_content_for_page(pageid: int) -> Tuple[str, str]:
         ) as response:
             data = await response.json()
             page = data["query"]["pages"][str(pageid)]
-            print(page["extract"], page["title"])
-            print(len(page["extract"]))
             return page["extract"], page["title"]
 
 
@@ -83,10 +81,6 @@ async def sync_articles():
 
         f.write(f"{articles}\n")  # Write each result as a dictionary
 
-    print(articles)
-    print(len(articles))
-    
-    
     
 if __name__ =="__main__":
     asyncio.run(sync_articles())
