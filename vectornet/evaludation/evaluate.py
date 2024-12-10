@@ -269,12 +269,13 @@ def evaluate_similarity(original_content, content):
     original_embedding_tensor = embedding_manager.embed([original_content])[1][0]
     content_embedding_tensor = embedding_manager.embed([content])[1][0]
     
-    bt.logging.info(f"Evaluating similarity. Original content embedding: {original_embedding_tensor}, Response content embedding: {content_embedding_tensor}")
+    # bt.logging.info(f"Evaluating similarity. Original content embedding: {original_embedding_tensor}, Response content embedding: {content_embedding_tensor}")
     
     original_content_embedding_np = np.array(original_embedding_tensor).reshape(1, -1)
     content_embedding_np = np.array(content_embedding_tensor).reshape(1, -1)
         
     similarity_score = cosine_similarity(original_content_embedding_np, content_embedding_np)[0][0]
+    bt.logging.info(f"Calculated similarity_score: {similarity_score}.")
     return similarity_score
 
 def get_ids_from_response(response):

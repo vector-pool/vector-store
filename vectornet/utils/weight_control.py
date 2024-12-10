@@ -42,7 +42,7 @@ def weight_controller(count: int) -> float:
     
     miner_age = get_age_from_count(count)
     weight = count_to_weight.get(miner_age)
-    bt.logging.info("weight = ", weight)
+    bt.logging.info(f"weight = {weight}")
     return weight
 
 

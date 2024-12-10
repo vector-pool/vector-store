@@ -151,7 +151,6 @@ class MinerDBManager:
         vector_ids = []  # List to store the IDs of newly added vectors
         with self.conn.cursor() as cur:
             for vector in vectors:
-                bt.logging.debug(vector['original_text'], vector['text'], vector['embedding'], user_id, organization_id, namespace_id)
                 cur.execute(
                     "INSERT INTO vectors (text, embedding, user_id, organization_id, namespace_id, original_text) VALUES (%s, %s, %s, %s, %s, %s) RETURNING vector_id",
                     (vector['text'], vector['embedding'], user_id, organization_id, namespace_id, vector['original_text'])

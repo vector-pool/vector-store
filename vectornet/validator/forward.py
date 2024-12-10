@@ -82,8 +82,7 @@ async def forward(self, miner_uid):
     if weight is None:
         raise Exception("error occurs in weight mapping in evaluation")
 
-    bt.logging.info(GREEN + "This is the evaluated scores" + RESET)
-    bt.logging.info(create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score)
+    bt.logging.info(f"{GREEN}Evaluated scores:{RESET} Create: {create_request_zero_score}, Update: {update_request_zero_scores}, Delete: {delete_request_zero_score}, Read: {read_score}")
     
     rewards = await get_rewards(
         create_request_zero_score,
@@ -105,7 +104,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
 
     pageids = [article['pageid'] for article in articles]
     
-    bt.logging.info(RED + "\n\n Sent Create_request\n\n" + RESET)
+    bt.logging.info(f"{RED}Sent Create request{RESET}")
     
     responses = await self.dendrite(
         axons = [self.metagraph.axons[miner_uid]],
@@ -157,7 +156,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
         
         pageids = [article['pageid'] for article in articles]
         if update_request is not None:
-            bt.logging.info(RED + "\n\n Sent update_request\n\n" + RESET)
+            bt.logging.info(f"{RED}Sent Update request{RESET}")
             response = await self.dendrite(
                 axons = [self.metagraph.axons[miner_uid]],
                 synapse = update_request,
@@ -191,12 +190,12 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
     # random_num = 0.1
     if random_num < 0.3:
         
-        bt.logging.debug("Random number = ", random_num)
+        bt.logging.debug(f"Random number = {random_num}")
         
         user_id, organization_id, namespace_id, delete_request = await generate_delete_request(validator_db_manager)
         
         if delete_request is not None:
-            bt.logging.info(GREEN + "\n\n Sent delete_request\n\n" + RESET)
+            bt.logging.info(f"{RED}Sent Delete request{RESET}")
             
             response = await self.dendrite(
                 axons = [self.metagraph.axons[miner_uid]],
@@ -214,11 +213,12 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
     return delete_request_zero_score
      
 async def forward_read_request(self, validator_db_manager, miner_uid):
+    
     read_request, content, query_user_id, query_organization_id, query_namespace_id, pageids_info = await generate_read_request(validator_db_manager)
     
     read_score = 0
     if read_request is not None:
-        bt.logging.info(GREEN + "\n\n Sent read_request\n\n" + RESET)
+        bt.logging.info(f"{RED}Sent Read request{RESET}")
         
         response = await self.dendrite(
             axons = [self.metagraph.axons[miner_uid]],

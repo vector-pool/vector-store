@@ -74,5 +74,5 @@ class DeleteSynapse(bt.Synapse):
     namespace_name: Optional[str] = None
     results: Optional[Tuple[int, int, int]] = None  
 
-    def deserialize(self) -> List[Dict]:
+    def deserialize(self):
         return self.results
