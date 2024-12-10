@@ -28,17 +28,17 @@ brew services restart postgresql@14
 
 
 
-python neurons/validator.py --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey miner55 --logging.debug --axon.port 51711
-python neurons/miner.py --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey validator55 --logging.debug --axon.port 51711
+python neurons/validator.py --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey miner55 --logging.debug --axon.port 51711 --logging.record_log --logging.logging_dir logs
+python neurons/miner.py --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey validator55 --logging.debug --axon.port 51711 --logging.record_log --logging.logging_dir logs
 
 
 
 sudo apt update && sudo apt install jq && sudo apt install npm && sudo npm install pm2 -g && pm2 update
 
 
-pm2 start --name net251-validator1 --interpreter python3 ./neurons/validator.py -- --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey miner55 --logging.debug --axon.port 51711
+pm2 start --name net251-validator1 --interpreter python3 ./neurons/validator.py -- --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey miner55 --logging.debug --axon.port 51711 --logging.logging_dir logs
 
-pm2 start --name net251-miner1 --interpreter python3 ./neurons/miner.py -- --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey validator55 --logging.debug --axon.port 51711
+pm2 start --name net251-miner1 --interpreter python3 ./neurons/miner.py -- --subtensor.network test --netuid 251 --wallet.name net251 --wallet.hotkey validator55 --logging.debug --axon.port 51711 --logging.logging_dir logs
 
 
 btcli wallet regen_coldkey 
@@ -64,9 +64,13 @@ Run the following query to see which sessions are connected to the database:
 
 sql
 Copy code
+
+
 SELECT pid, usename, datname, application_name, client_addr 
 FROM pg_stat_activity 
 WHERE datname = '5';
+
+
 
 
 
@@ -85,9 +89,15 @@ If you want to terminate all connections at once:
 
 sql
 Copy code
+
+
+
 SELECT pg_terminate_backend(pid)
 FROM pg_stat_activity
 WHERE datname = '5' AND pid <> pg_backend_pid();
+DROP DATABASE "5";
+
+
 pid <> pg_backend_pid() ensures that your current session is not terminated.
 
 
@@ -97,6 +107,8 @@ After terminating all connections, you can now drop the database:
 
 sql
 Copy code
+
+
 DROP DATABASE "5";
 
 

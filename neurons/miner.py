@@ -122,10 +122,11 @@ class Miner(BaseMinerNeuron):
         # results = []
         # for top_vector in top_vectors:
         #     results.append({'text': top_vector['original_text'], 'embedding': top_vector['embedding']})
+        
         result_content = top_vectors[0]['original_text']
         vector_id = top_vectors[0]['vector_id']
         results = (user_id, organization_id, namespace_id, vector_id, result_content)
-        bt.logging.info(f"{GREEN}Results of ReadRequest:{RESET} {user_id}, {organization_id}, {namespace_id}, {vector_id}, {result_content[:20]}")
+        bt.logging.info(f"{GREEN}Results of ReadRequest:{RESET} ({user_id}, {organization_id}, {namespace_id}, {vector_id}, {result_content[:40]}......)")
         query.results = results
         
         return query
@@ -135,7 +136,8 @@ class Miner(BaseMinerNeuron):
         processes the incoming UpdateSynapse by updating existing embeddings that saved in database
         """
         
-        bt.logging.info(f"{GREEN}Results of update request:{RESET} {results}")
+        bt.logging.info(f"{GREEN}Received Update Request!{RESET}")
+        
         self.check_version(query.version)
         
         perform = query.perform.lower()
@@ -154,12 +156,12 @@ class Miner(BaseMinerNeuron):
         embedding_manager = TextToEmbedding()
         
         embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
-        results = []
         user_id, organization_id, namespace_id, vector_ids = validator_db_manager.update_operation(request_type, perform, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
         results = (user_id, organization_id, namespace_id, vector_ids)
         
-        query.results = results
         bt.logging.info(f"{GREEN}Results of update request:{RESET} {results}")
+        
+        query.results = results
         
         return query
         
@@ -183,10 +185,12 @@ class Miner(BaseMinerNeuron):
         user_id, organization_id, namespace_id = validator_db_manager.delete_operation(request_type, perform, user_name, organization_name, namespace_name)        
 
         results = (user_id, organization_id, namespace_id)
-        bt.logging.info(f"{GREEN}Results of delete request:{RESET} {user_id}, {organization_id}, {namespace_id}")     
+        bt.logging.info(f"{GREEN}Results of delete request:{RESET} ({user_id}, {organization_id}, {namespace_id})")     
         
         query.results = results
 
+        return query
+        
     async def forward(
         self,
     ):

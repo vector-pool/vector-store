@@ -350,13 +350,13 @@ class BaseMinerNeuron(BaseNeuron):
         return await self.blacklist(synapse)
     
     async def priority_create_request(self, synapse: CreateSynapse) -> float:
-        return self.priority(synapse)
+        return await self.priority(synapse)
 
     async def priority_read_request(self, synapse: ReadSynapse) -> float:
-        return self.priority(synapse)
+        return await self.priority(synapse)
 
     async def priority_update_request(self, synapse: UpdateSynapse) -> float:
-        return self.priority(synapse)
+        return await self.priority(synapse)
 
     async def priority_delete_request(self, synapse: DeleteSynapse) -> float:
-        return self.priority(synapse)
+        return await self.priority(synapse)

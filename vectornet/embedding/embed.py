@@ -1,11 +1,18 @@
 from transformers import LongformerTokenizer, LongformerModel
 import torch
+import transformers
 import bittensor as bt
+
+transformers.logging.set_verbosity_error()
+
+tokenizer = LongformerTokenizer.from_pretrained("allenai/longformer-base-4096")
+model = LongformerModel.from_pretrained("allenai/longformer-base-4096").to('cuda')
+
 class TextToEmbedding:
     def __init__(self):
         self.max_token_size = 4098  # Maximum token size for the model
-        self.tokenizer = LongformerTokenizer.from_pretrained("allenai/longformer-base-4096")
-        self.model = LongformerModel.from_pretrained("allenai/longformer-base-4096").to('cuda')  # Move model to GPU
+        self.tokenizer = tokenizer
+        self.model = model
         bt.logging.debug("Successfully initialized embeddig model")
     
     def embed(self, texts):
@@ -48,5 +55,4 @@ if __name__ == "__main__":
 
     content = ["hello, how are you?", "This is another sentence for testing.", "Adding more text to see the performance."]
     embedding = embedder.embed(content)
-
     print(embedding)

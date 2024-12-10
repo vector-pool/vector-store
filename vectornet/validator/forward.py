@@ -67,13 +67,15 @@ async def forward(self, miner_uid):
     cur_count_synapse = count_manager.read_count(miner_uid)
 
     create_request_zero_score = await forward_create_request(self, validator_db_manager, miner_uid)
-    time.sleep(20)
+    time.sleep(30)
     update_request_zero_scores = await forward_update_request(self, validator_db_manager, miner_uid)
-    time.sleep(30)
+    time.sleep(50)
     delete_request_zero_score = await forward_delete_request(self, validator_db_manager, miner_uid)
-    time.sleep(10)
+    time.sleep(20)
     read_score = await forward_read_request(self, validator_db_manager, miner_uid)
-    time.sleep(30)
+    time.sleep(40)
+    
+    # create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 0], 1, 1
     
     bt.logging.debug("Passed all these 4 synapses successfully.")
     bt.logging.info(f"current total number of synapse cycle for uid: {miner_uid} is {cur_count_synapse}.")
