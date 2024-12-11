@@ -29,11 +29,13 @@ class WandbManager:
         current = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         
         name = f"validator-{self.validator.uid}--{version}--{current}"
+        wandb_project = self.config.wandb.project_name
+        wandb_entity = self.config.wandb.entity
         self.wandb = wandb.init(
             anonymous="must",
             name=name,
-            project="vectorstore-validators",
-            entity="cs-eros111-sift-science",
+            project=wandb_project,
+            entity=wandb_entity,
             config={
                 "uid":self.validator.uid,
                 "hotkey":self.validator.wallet.hotkey.ss58_address,
