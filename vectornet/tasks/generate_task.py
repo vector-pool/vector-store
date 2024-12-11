@@ -59,7 +59,7 @@ async def generate_create_request(validator_db_manager, article_size, min_len, m
     
     return category, articles, query, total_len
     
-async def generate_read_request(validator_db_manager):
+async def generate_read_request(validator_db_manager, max_len):
 
     result = validator_db_manager.get_random_unit_ids()
     bt.logging.debug(f"Get the random unit ids from database: {result}.")
@@ -72,6 +72,12 @@ async def generate_read_request(validator_db_manager):
     pageid = random.choice(pageids)
     
     content = await get_wiki_article_content_with_pageid(pageid)
+    
+    if content is None:
+        bt.logging.error("Wiki-scraping with single pageid is failed.")
+    
+    if len(content) > max_len: 
+        content = content[:max_len]
     
     if content is None:
         raise Exception("The wiki-scraper with pageid doesn't work when creating ReadRequest.")
@@ -103,7 +109,7 @@ async def generate_read_request(validator_db_manager):
     
     return query, content, user_id, organization_id, namespace_id, pageids_info
 
-async def generate_update_request(article_size, validator_db_manager):
+async def generate_update_request(validator_db_manager, article_size, min_len, max_len):
     
     result = validator_db_manager.get_random_unit_ids()
     bt.logging.debug(f"Get the random unit ids from database: {result}.")
@@ -111,10 +117,12 @@ async def generate_update_request(article_size, validator_db_manager):
         user_id, organization_id, namespace_id, user_name, organization_name, namespace_name, category, pageids_info = result
     else:
         return None, None, None, None, None, None
-    articles = await wikipedia_scraper(article_size, category)
+    articles = await wikipedia_scraper(article_size, min_len, category)
     contents = []
+    total_len = 0
     for article in articles:
-        contents.append(article['content'][:len_limit])
+        contents.append(article['content'][:max_len])
+        total_len += article['length'] if article['length'] <= max_len else max_len
     
     version = get_version() 
     
@@ -131,7 +139,7 @@ async def generate_update_request(article_size, validator_db_manager):
         index_data = contents,
     )
     
-    return user_id, organization_id, namespace_id, category, articles, query
+    return user_id, organization_id, namespace_id, category, articles, query, total_len
     
 async def generate_delete_request(validator_db_manager):
     

@@ -37,6 +37,7 @@ from vectornet.evaludation.evaluate import (
 )
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager, CountManager
 from vectornet.utils.weight_control import weight_controller
+from vectornet.utils.size_utils import text_length_to_storage_size
 
 from vectornet.utils.config import task_size, len_limit
 
@@ -109,63 +110,76 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         max_len = self.config.neuron.max_len,        
     )
 
-    pageids = [article['pageid'] for article in articles]
-    
-    if total_len < self.config.neuron.task_size * self.config.neuron.min_len:
-        bt.logging.error(f"There is an issue to generating task, because the total_len({total_len}) is smaller than task_size * min_len({self.config.neuron.task_size} * self.config.neuron.min_len).")
-    
-    bt.logging.info(f"{RED}Sent Create request{RESET}")
-    
-    responses = await self.dendrite(
-        axons = [self.metagraph.axons[miner_uid]],
-        synapse = create_request,
-        deserialize = True,
-        timeout = 20,
-    )
-    
-    if len(responses) != 1:
-        bt.logging.info("Something went wrong, number of CreateSynaspe responses bigger than one.")
-    
-    response_create_request = responses[0]
-    
-    if response_create_request is None:
-        bt.logging.error("Error: None response of CreateRequest.")
-        return 0
-    
-    bt.logging.info(f"Received Create responses : {response_create_request} from {miner_uid}")
-    
-    create_request_zero_score = evaluate_create_request(response_create_request, validator_db_manager, create_request, pageids)
-    pageids_info = {}
-    for pageid, vector_id in zip(pageids, response_create_request[3]):
-        if type(vector_id) != type(1) or type(pageid) != type(1):
-            bt.logging.error("vector_id or pageid is not the Integer.")
-        pageids_info[pageid] = vector_id
-    
-    if create_request_zero_score:
-        validator_db_manager.create_operation(
-            "CREATE",
-            create_request.user_name,
-            create_request.organization_name,
-            create_request.namespace_name,
-            response_create_request[0],
-            response_create_request[1],
-            response_create_request[2],
-            category,
-            pageids_info,
+    create_request_zero_score = 0
+    if create_request is not None:
+        pageids = [article['pageid'] for article in articles]
+        
+        if total_len < self.config.neuron.task_size * self.config.neuron.min_len:
+            bt.logging.error(f"There is an issue to generating task, because the total_len({total_len}) is smaller than task_size * min_len.")
+     
+        bt.logging.info(f"{RED}Sent Create request{RESET}")
+        
+        responses = await self.dendrite(
+            axons = [self.metagraph.axons[miner_uid]],
+            synapse = create_request,
+            deserialize = True,
+            timeout = 20,
         )
         
+        if len(responses) != 1:
+            bt.logging.info("Something went wrong, number of CreateSynaspe responses bigger than one.")
+        
+        response_create_request = responses[0]
+        
+        if response_create_request is None:
+            bt.logging.error("Error: None response of CreateRequest.")
+            return 0
+        
+        bt.logging.info(f"Received Create responses : {response_create_request} from {miner_uid}")
+        
+        create_request_zero_score = evaluate_create_request(response_create_request, validator_db_manager, create_request, pageids)
+        
+        pageids_info = {}
+        
+        for pageid, vector_id in zip(pageids, response_create_request[3]):
+            if type(vector_id) != type(1) or type(pageid) != type(1):
+                bt.logging.error("vector_id or pageid is not the Integer.")
+            pageids_info[pageid] = vector_id
+        
+        if create_request_zero_score:
+            total_size = text_length_to_storage_size(total_len)
+            validator_db_manager.create_operation(
+                "CREATE",
+                create_request.user_name,
+                create_request.organization_name,
+                create_request.namespace_name,
+                response_create_request[0],
+                response_create_request[1],
+                response_create_request[2],
+                category,
+                pageids_info,
+                total_size,
+            )
+            
     return create_request_zero_score
 
 async def forward_update_request(self, validator_db_manager, miner_uid):
     update_request_zero_scores = []
     for i in range(0, 3):
-        user_id, organization_id, namespace_id, category, articles, update_request = await generate_update_request(
-            article_size = 3,
+        user_id, organization_id, namespace_id, category, articles, update_request, total_len = await generate_update_request(
             validator_db_manager = validator_db_manager,
+            article_size = self.config.neuron.task_size,
+            min_len = self.config.neuron.min_len,
+            max_len = self.config.neuron.max_len,   
         )
         
-        pageids = [article['pageid'] for article in articles]
         if update_request is not None:
+            pageids = [article['pageid'] for article in articles]
+            
+            if total_len < self.config.neuron.task_size * self.config.neuron.min_len:
+                bt.logging.error(f"There is an issue to generating task, because the total_len({total_len}) is smaller than task_size * min_len.")
+     
+            
             bt.logging.info(f"{RED}Sent Update request{RESET}")
             response = await self.dendrite(
                 axons = [self.metagraph.axons[miner_uid]],
@@ -182,7 +196,8 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
                 pageids_info = {}
                 for pageid, vector_id in zip(pageids, response_update_request[3]):
                     pageids_info[pageid] = vector_id
-                        
+                
+                total_size = text_length_to_storage_size(total_len)
                 validator_db_manager.update_operation(
                     "UPDATE",
                     update_request.perform,
@@ -191,6 +206,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
                     namespace_id,
                     category,
                     pageids_info,
+                    total_size,
                 )
             update_request_zero_scores.append(update_request_zero_score)
         time.sleep(30)

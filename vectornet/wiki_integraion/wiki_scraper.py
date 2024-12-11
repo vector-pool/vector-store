@@ -164,7 +164,7 @@ async def wikipedia_scraper(k: int, min_len: int, category: str):
 
 async def get_wiki_article_content_with_pageid(pageid):
     content = await get_article_extracts(pageid)
-    return content[:len_limit]
+    return content
 
 if __name__ == "__main__":
     articles = asyncio.run(wikipedia_scraper(5))

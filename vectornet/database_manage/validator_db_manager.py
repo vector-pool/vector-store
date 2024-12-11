@@ -234,39 +234,6 @@ class ValidatorDBManager:
             namespace_id: int,
             category: str,
             pageids_info: dict,
-            storage_size,
-        ) -> Optional[str]:
-        """Update the pageids_info for a specific namespace."""
-        if request_type.lower() != 'update':
-            raise ValueError("Invalid request type. Expected 'update'.")
-
-        if perform == "ADD":
-            with self.conn.cursor() as cur:
-                cur.execute("SELECT pageids_info, storage_size FROM namespaces WHERE namespace_id = %s;", (namespace_id,))
-                result = cur.fetchone()
-                
-                if result is None:
-                    raise Exception(f"Namespace not found in update_operation: {namespace_id}")
-                
-                existing_pageids_info = result[0]  
-                existing_pageids_info.update(pageids_info)
-
-                cur.execute(
-                    "UPDATE namespaces SET pageids_info = %s WHERE namespace_id = %s;",
-                    (json.dumps(existing_pageids_info), namespace_id) 
-                )
-
-                self.conn.commit() 
-
-    def update_operation(
-            self,
-            request_type: str,
-            perform: str,
-            user_id: int,
-            organization_id: int,
-            namespace_id: int,
-            category: str,
-            pageids_info: dict,
             storage_size: int,
         ) -> Optional[str]:
         """Update the pageids_info and storage_size for a specific namespace."""
