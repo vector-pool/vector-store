@@ -1,6 +1,15 @@
 import psycopg2
 from psycopg2 import sql
 from typing import List, Tuple, Optional
+import bittensor as bt
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+db_user_name = os.getenv("POSTGRESQL_MINER_USER_NAME")
+password = os.getenv("MINER_DB_PASSWORD")
+db_port = os.getenv("DB_PORT")
+
 
 class MinerDBManager:
     def __init__(self, validator_hotkey: str):
@@ -11,7 +20,7 @@ class MinerDBManager:
     def ensure_database_exists(self) -> bool:
         """Ensure the database exists, create if not."""
         # Create the connection
-        conn = psycopg2.connect(dbname='postgres', user='eros', password='lucky', host='localhost', port=5432)
+        conn = psycopg2.connect(dbname='postgres', user=db_user_name, password=password, host='localhost', port=db_port)
         # Set autocommit before creating the cursor
         conn.autocommit = True
         try:
@@ -30,7 +39,7 @@ class MinerDBManager:
 
     def connect_to_db(self):
         """Connect to the specified database."""
-        self.conn = psycopg2.connect(dbname=self.db_name, user='eros', password='lucky', host='localhost', port=5432)
+        self.conn = psycopg2.connect(dbname=self.db_name, user=db_user_name, password=password, host='localhost', port=db_port)
         self.conn.autocommit = True  # Ensure autocommit is enabled
 
     def create_tables(self):
@@ -116,7 +125,7 @@ class MinerDBManager:
                     user_id = cur.fetchone()[0]
                     self.conn.commit()
             except Exception as e:
-                print(f"Error adding user: {e}")
+                bt.logging.error(f"Error adding user: {e}")
         return user_id
 
     def add_organization(self, user_id: int, name: str) -> int:
@@ -142,7 +151,6 @@ class MinerDBManager:
         vector_ids = []  # List to store the IDs of newly added vectors
         with self.conn.cursor() as cur:
             for vector in vectors:
-                print(vector['original_text'], vector['text'], vector['embedding'], user_id, organization_id, namespace_id)
                 cur.execute(
                     "INSERT INTO vectors (text, embedding, user_id, organization_id, namespace_id, original_text) VALUES (%s, %s, %s, %s, %s, %s) RETURNING vector_id",
                     (vector['text'], vector['embedding'], user_id, organization_id, namespace_id, vector['original_text'])
@@ -150,14 +158,12 @@ class MinerDBManager:
                 vector_id = cur.fetchone()[0]  # Fetch the newly created vector_id
                 vector_ids.append(vector_id)  # Add it to the list
             self.conn.commit()
-        print("success creating")
+        bt.logging.debug("success creating vectors")
         return vector_ids  # Return the list of vector IDs
 
 
     def create_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts: List[str]):
         """Handle create operations."""
-        print("in create operation")
-        print(request_type, user_name, organization_name, namespace_name, texts, embeddings, original_texts)
         if request_type.lower() != 'create':
             raise ValueError("Invalid request type. Expected 'create'.")
 
@@ -173,8 +179,8 @@ class MinerDBManager:
             {'original_text': original_text, 'text': text, 'embedding': embedding}
             for original_text, text, embedding in zip(original_texts, texts, embeddings)
         ]
-        print(vectors)
         vector_ids = self.add_vectors(user_id, organization_id, namespace_id, vectors)
+        bt.logging.debug("Success Create Operation.")
         return user_id, organization_id, namespace_id, vector_ids
 
     def read_operation(self, request_type: str, user_name: str, organization_name: str, namespace_name: str) -> List[Tuple]:
@@ -201,7 +207,7 @@ class MinerDBManager:
 
         with self.conn.cursor() as cur:
             cur.execute("""
-                SELECT original_text, text, embedding
+                SELECT original_text, text, embedding, vector_id
                 FROM vectors
                 WHERE namespace_id = %s
             """, (namespace_id,))
@@ -209,10 +215,11 @@ class MinerDBManager:
             rows = cur.fetchall()
             
             vectors = [
-                {'original_text': row[0], 'text': row[1], 'embedding': row[2]}
+                {'original_text': row[0], 'text': row[1], 'embedding': row[2], 'vector_id': row[3]}
                 for row in rows
             ]
-        return vectors
+            bt.logging.debug("Success Read Operation.")
+            return user_id, organization_id, namespace_id, vectors
 
 
     def update_operation(self, request_type: str, perform: str, user_name: str, organization_name: str, namespace_name: str, texts: List[str], embeddings: List[List[float]], original_texts):
@@ -248,6 +255,7 @@ class MinerDBManager:
             pass
         
         vector_ids = self.add_vectors(user_id, organization_id, namespace_id, vectors)
+        bt.logging.debug("Success Update Operation.")
         
         return user_id, organization_id, namespace_id, vector_ids
 
@@ -299,6 +307,9 @@ class MinerDBManager:
                 cur.execute("DELETE FROM namespaces WHERE namespace_id = %s", (namespace_id,))
 
             self.conn.commit()
+            
+        bt.logging.debug("Success Delete Operation")
+        return user_id, organization_id, namespace_id
 
     def close_connection(self):
         """Close the database connection."""

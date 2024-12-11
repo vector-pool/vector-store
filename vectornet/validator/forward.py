@@ -21,7 +21,6 @@ import bittensor as bt
 import random
 from vectornet.validator.reward import get_rewards
 from vectornet.utils.uids import get_random_uids
-from vectornet.database_manage.validator_db_manager import ValidatorDBManager
 from vectornet.miner_group.miner_group import make_miner_group
 from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
 from vectornet.tasks.generate_task import (
@@ -57,8 +56,8 @@ async def forward(self, miner_uid):
     # miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
     # miner_uid = miner_uids[0] # the default sample_size is one
     
-    print(RED + "This start of forward!" + RESET)
-    print(GREEN + "This start of forward!" + RESET)
+    bt.logging.info(RED + "Starting Forward" + RESET)
+    bt.logging.info(GREEN + "Starting Forward" + RESET)
     
     miner_uid = int(miner_uid)
     validator_db_manager = ValidatorDBManager(miner_uid)
@@ -68,21 +67,26 @@ async def forward(self, miner_uid):
     cur_count_synapse = count_manager.read_count(miner_uid)
 
     create_request_zero_score = await forward_create_request(self, validator_db_manager, miner_uid)
-    time.sleep(20)
-    update_request_zero_scores = await forward_update_request(self, validator_db_manager, miner_uid)
-    time.sleep(45)
-    delete_request_zero_score = await forward_delete_request(self, validator_db_manager, miner_uid)
-    time.sleep(10)
-    read_score = await forward_read_request(self, validator_db_manager, miner_uid)
     time.sleep(30)
+    update_request_zero_scores = await forward_update_request(self, validator_db_manager, miner_uid)
+    time.sleep(30)
+    delete_request_zero_score = await forward_delete_request(self, validator_db_manager, miner_uid)
+    time.sleep(20)
+    read_score = await forward_read_request(self, validator_db_manager, miner_uid)
+    time.sleep(40)
     
+    # create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 0], 1, 1
+    
+    bt.logging.debug("Passed all these 4 synapses successfully.")
+    bt.logging.info(f"current total number of synapse cycle for uid: {miner_uid} is {cur_count_synapse}.")
     weight = weight_controller(cur_count_synapse)
     
     if weight is None:
         raise Exception("error occurs in weight mapping in evaluation")
+
+    bt.logging.info(f"{GREEN}Evaluated scores:{RESET} Create: {create_request_zero_score}, Update: {update_request_zero_scores}, Delete: {delete_request_zero_score}, Read: {read_score}")
     
-    rewards = get_rewards(
-        self,
+    rewards = await get_rewards(
         create_request_zero_score,
         update_request_zero_scores,
         delete_request_zero_score,
@@ -99,10 +103,10 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         validator_db_manager = validator_db_manager,
         article_size = 1,
     )
-    print(create_request)
+
     pageids = [article['pageid'] for article in articles]
     
-    print(RED + "\n\n Sent Create_request\n\n" + RESET)
+    bt.logging.info(f"{RED}Sent Create request{RESET}")
     
     responses = await self.dendrite(
         axons = [self.metagraph.axons[miner_uid]],
@@ -113,15 +117,20 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
     
     if len(responses) != 1:
         bt.logging.info("Something went wrong, number of CreateSynaspe responses bigger than one.")
+    
     response_create_request = responses[0]
     
-    bt.logging.info(f"Received responses : {response_create_request} from {miner_uid}")
+    if response_create_request is None:
+        bt.logging.error("Error: None response of CreateRequest.")
+        return 0
+    
+    bt.logging.info(f"Received Create responses : {response_create_request} from {miner_uid}")
     
     create_request_zero_score = evaluate_create_request(response_create_request, validator_db_manager, create_request, pageids)
     pageids_info = {}
     for pageid, vector_id in zip(pageids, response_create_request[3]):
         if type(vector_id) != type(1) or type(pageid) != type(1):
-            bt.logging.error("vector_id or pageid is not the Integer")
+            bt.logging.error("vector_id or pageid is not the Integer.")
         pageids_info[pageid] = vector_id
         
     if create_request_zero_score:
@@ -146,9 +155,10 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
             article_size = 3,
             validator_db_manager = validator_db_manager,
         )
+        
         pageids = [article['pageid'] for article in articles]
         if update_request is not None:
-            print(RED + "\n\n Sent update_request\n\n" + RESET)
+            bt.logging.info(f"{RED}Sent Update request{RESET}")
             response = await self.dendrite(
                 axons = [self.metagraph.axons[miner_uid]],
                 synapse = update_request,
@@ -156,14 +166,15 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
                 timeout = 40,
             )
             response_update_request = response[0]
-            bt.logging.info(f"Received Update responses : {response_update_request} from {miner_uid}")
+            bt.logging.info(f"\n\nReceived Update responses : {response_update_request} from {miner_uid}\n\n")
             update_request_zero_score = evaluate_update_request(update_request, response_update_request, user_id, organization_id, namespace_id, pageids)
             
-            pageids_info = {}
-            for pageid, vector_id in zip(pageids, response_update_request[3]):
-                pageids_info[pageid] = vector_id
             
             if update_request_zero_score:
+                pageids_info = {}
+                for pageid, vector_id in zip(pageids, response_update_request[3]):
+                    pageids_info[pageid] = vector_id
+                        
                 validator_db_manager.update_operation(
                     "UPDATE",
                     update_request.perform,
@@ -174,18 +185,22 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
                     pageids_info,
                 )
             update_request_zero_scores.append(update_request_zero_score)
+        time.sleep(30)
     return update_request_zero_scores
     
 async def forward_delete_request(self, validator_db_manager, miner_uid):
     random_num = random.random()
     delete_request_zero_score = 1
+    # random_num = 0.1
     if random_num < 0.3:
         
-        bt.logging.debug("random number = ", random_num)
+        bt.logging.debug(f"Random number = {random_num}")
         
         user_id, organization_id, namespace_id, delete_request = await generate_delete_request(validator_db_manager)
         
         if delete_request is not None:
+            bt.logging.info(f"{RED}Sent Delete request{RESET}")
+            
             response = await self.dendrite(
                 axons = [self.metagraph.axons[miner_uid]],
                 synapse = delete_request,
@@ -193,7 +208,7 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
                 timeout = 10,
             )
             response_delete_request = response[0]
-            bt.logging.debug(f"Received responses: {response_delete_request} from {miner_uid}") 
+            bt.logging.debug(f"Received Delete responses: {response_delete_request} from {miner_uid}") 
             
             delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request, user_id, organization_id, namespace_id)
             
@@ -202,10 +217,13 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
     return delete_request_zero_score
      
 async def forward_read_request(self, validator_db_manager, miner_uid):
+    
     read_request, content, query_user_id, query_organization_id, query_namespace_id, pageids_info = await generate_read_request(validator_db_manager)
     
     read_score = 0
     if read_request is not None:
+        bt.logging.info(f"{RED}Sent Read request{RESET}")
+        
         response = await self.dendrite(
             axons = [self.metagraph.axons[miner_uid]],
             synapse = read_request,
@@ -214,10 +232,9 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
         )
         
         response_read = response[0]
+        bt.logging.info(f"Received READ responses : {response_read} from {miner_uid}")
         
-        bt.logging.info(f"Received responses: {response_read}")
-        
-        read_score = evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, read_request, response_read, content)
+        read_score = evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response_read, content)
         
     return read_score
     

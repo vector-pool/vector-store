@@ -60,7 +60,8 @@ class BaseMinerNeuron(BaseNeuron):
         # The axon handles request processing, allowing validators to send this miner requests.
         self.axon = bt.axon(
             wallet=self.wallet,
-            config=self.config() if callable(self.config) else self.config,
+            # config=self.config() if callable(self.config) else self.config,
+            port=self.config.axon.port,
         )
 
         # Attach determiners which functions are called when servicing a request.
@@ -127,6 +128,7 @@ class BaseMinerNeuron(BaseNeuron):
         """
 
         # Check that miner is registered on the network.
+        
         self.sync()
 
         # Serve passes the axon information to the network + netuid we are hosting on.
@@ -142,22 +144,27 @@ class BaseMinerNeuron(BaseNeuron):
         bt.logging.info(f"Miner starting at block: {self.block}")
 
         # This loop maintains the miner's operations until intentionally stopped.
+        # try:
+        #     while not self.should_exit:
+        #         while (
+        #             self.block - self.metagraph.last_update[self.uid]
+        #             < self.config.neuron.epoch_length
+        #         ):
+        #             # Wait before checking again.
+        #             time.sleep(1)
+
+        #             # Check if we should exit.
+        #             if self.should_exit:
+        #                 break
+
+        #         # Sync metagraph and potentially set weights.
+        #         self.sync()
+        #         self.step += 1
+        #         bt.logging.debug(f"Current step: {self.step}")
+        
         try:
-            while not self.should_exit:
-                while (
-                    self.block - self.metagraph.last_update[self.uid]
-                    < self.config.neuron.epoch_length
-                ):
-                    # Wait before checking again.
-                    time.sleep(1)
-
-                    # Check if we should exit.
-                    if self.should_exit:
-                        break
-
-                # Sync metagraph and potentially set weights.
-                self.sync()
-                self.step += 1
+            self.sync()
+        
 
         # If someone intentionally stops the miner, it'll safely terminate operations.
         except KeyboardInterrupt:
@@ -220,7 +227,6 @@ class BaseMinerNeuron(BaseNeuron):
     def resync_metagraph(self):
         """Resyncs the metagraph and updates the hotkeys and moving averages based on the new metagraph."""
         bt.logging.info("resync_metagraph()")
-
         # Sync the metagraph.
         self.metagraph.sync(subtensor=self.subtensor)
 
@@ -324,6 +330,13 @@ class BaseMinerNeuron(BaseNeuron):
         )
         return priority
     
+    def save_state(self):
+        """Saves the state of the validator to a file."""
+        bt.logging.info("Saving validator state.")
+
+        # Save the state of the validator to file.
+
+
     async def blacklist_create_request(self, synapse: CreateSynapse) -> Tuple[bool, str]:
         return await self.blacklist(synapse)
     
@@ -337,13 +350,13 @@ class BaseMinerNeuron(BaseNeuron):
         return await self.blacklist(synapse)
     
     async def priority_create_request(self, synapse: CreateSynapse) -> float:
-        return self.priority(synapse)
+        return await self.priority(synapse)
 
     async def priority_read_request(self, synapse: ReadSynapse) -> float:
-        return self.priority(synapse)
+        return await self.priority(synapse)
 
     async def priority_update_request(self, synapse: UpdateSynapse) -> float:
-        return self.priority(synapse)
+        return await self.priority(synapse)
 
     async def priority_delete_request(self, synapse: DeleteSynapse) -> float:
-        return self.priority(synapse)
+        return await self.priority(synapse)
