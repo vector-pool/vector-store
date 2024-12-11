@@ -37,7 +37,10 @@ from vectornet.mock import MockDendrite
 from vectornet.utils.config import add_validator_args
 from vectornet.database_manage.validator_db_manager import CountManager
 from vectornet.utils.uids import get_random_uids
+import datetime
 
+from vectornet.validator.wandb_manager import WandbManager
+        
 class BaseValidatorNeuron(BaseNeuron):
     """
     Base class for Bittensor validators. Your validator should inherit from this class.
@@ -58,6 +61,8 @@ class BaseValidatorNeuron(BaseNeuron):
 
         validator_db_manager = CountManager()
         validator_db_manager.init_count_synapse()
+        
+        self.wandb_manager = WandbManager(validator=self)
         
         # Dendrite lets us send messages to other nodes (axons) in the network.
         if self.config.mock:
@@ -87,6 +92,8 @@ class BaseValidatorNeuron(BaseNeuron):
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
+        
+        
 
     def serve_axon(self):
         """Serve axon to enable external connections."""
@@ -182,6 +189,31 @@ class BaseValidatorNeuron(BaseNeuron):
                 str(print_exception(type(err), err, err.__traceback__))
             )
 
+    def sync(self):
+        """
+        Wrapper for synchronizing the state of the network for the given miner or validator.
+        """
+        # Ensure miner or validator hotkey is still registered on the network.
+        self.check_registered()
+
+        self.check_wandb_status()
+
+        if self.should_sync_metagraph():
+            self.resync_metagraph()
+
+        if self.should_set_weights():
+            self.set_weights()
+
+        # Always save state.
+        self.save_state()
+
+    def check_wandb_status(self):
+        if not self.config.wandb.off:
+            today = datetime.date.today()
+            if self.wandb_manager.wandb_start != today:
+                self.wandb_manager.wandb.finish()
+                self.wandb_manager.init_wandb()    
+        
     def run_in_background_thread(self):
         """
         Starts the validator's operations in a background thread upon entering the context.

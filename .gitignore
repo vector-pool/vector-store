@@ -161,6 +161,8 @@ cython_debug/
 
 testing/
 
+wandb
+
 # Editors
 .vscode/settings.json
 
