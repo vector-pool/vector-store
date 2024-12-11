@@ -22,9 +22,6 @@ import argparse
 import bittensor as bt
 from .logging import setup_events_logger
 
-len_limit = int(1e4)
-
-
 def is_cuda_available():
     try:
         output = subprocess.check_output(
@@ -244,9 +241,30 @@ def add_validator_args(cls, parser):
     parser.add_argument(
         "--wandb.entity",
         type=str,
-        help="The name of the project where you are sending the new run.",
+        help="The name of the entity where you are sending the new run.",
         default="cs-eros111-sift-science",
     )
+    
+    parser.add_argument(
+        "--neuron.task_size",
+        type=int,
+        help="The quantity of articles for each create and update request.",
+        default=3,
+    )    
+    
+    parser.add_argument(
+        "--neuron.max_len",
+        type=int,
+        help="The maximum length of wikipedia article when you are sending the ReadRequest and UpdateRequest.",
+        default=10000,
+    )    
+    
+    parser.add_argument(
+        "--neuron.min_len",
+        type=int,
+        help="The minimum length of wikipedia article when you are scraping.",
+        default=3000,
+    )    
 
 
 def config(cls):

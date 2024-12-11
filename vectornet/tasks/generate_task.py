@@ -6,7 +6,6 @@ import openai
 import os
 import asyncio
 
-from vectornet.utils.config import len_limit
 from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
 from vectornet.protocol import(
     CreateSynapse,
@@ -29,7 +28,7 @@ wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
 
-async def generate_create_request(validator_db_manager, article_size = 10) -> CreateSynapse:
+async def generate_create_request(validator_db_manager, article_size, min_len, max_len) -> CreateSynapse:
     
     user_name, organization_name, namespace_name = None, None, None
     while True:
@@ -42,10 +41,12 @@ async def generate_create_request(validator_db_manager, article_size = 10) -> Cr
             break
 
     category = "random"
-    articles = await wikipedia_scraper(article_size, category)
+    articles = await wikipedia_scraper(article_size, min_len, category)
     contents = []
+    total_len = 0
     for article in articles:
-        contents.append(article['content'][:len_limit])
+        contents.append(article['content'][:max_len])
+        total_len += article['length'] if article['length'] <= max_len else max_len
     version = get_version()
     query = CreateSynapse(
         version = version,
@@ -56,7 +57,7 @@ async def generate_create_request(validator_db_manager, article_size = 10) -> Cr
         index_data = contents,
     )
     
-    return category, articles, query
+    return category, articles, query, total_len
     
 async def generate_read_request(validator_db_manager):
 

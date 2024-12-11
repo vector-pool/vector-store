@@ -38,6 +38,8 @@ from vectornet.evaludation.evaluate import (
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager, CountManager
 from vectornet.utils.weight_control import weight_controller
 
+from vectornet.utils.config import task_size, len_limit
+
 RED = "\033[31m"
 GREEN = "\033[32m"
 RESET = "\033[0m"
@@ -99,12 +101,18 @@ async def forward(self, miner_uid):
     time.sleep(20)    
 
 async def forward_create_request(self, validator_db_manager, miner_uid):
-    category, articles, create_request = await generate_create_request(
+    
+    category, articles, create_request, total_len = await generate_create_request(
         validator_db_manager = validator_db_manager,
-        article_size = 1,
+        article_size = self.config.neuron.task_size,
+        min_len = self.config.neuron.min_len,
+        max_len = self.config.neuron.max_len,        
     )
 
     pageids = [article['pageid'] for article in articles]
+    
+    if total_len < self.config.neuron.task_size * self.config.neuron.min_len:
+        bt.logging.error(f"There is an issue to generating task, because the total_len({total_len}) is smaller than task_size * min_len({self.config.neuron.task_size} * self.config.neuron.min_len).")
     
     bt.logging.info(f"{RED}Sent Create request{RESET}")
     
@@ -132,7 +140,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         if type(vector_id) != type(1) or type(pageid) != type(1):
             bt.logging.error("vector_id or pageid is not the Integer.")
         pageids_info[pageid] = vector_id
-        
+    
     if create_request_zero_score:
         validator_db_manager.create_operation(
             "CREATE",
