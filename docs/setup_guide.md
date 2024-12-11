@@ -166,7 +166,7 @@ To use the LLM ranking result evaluation, you need to obtain an API key from [Op
 OPENAI_API_KEY="sk-xxxxxx"
 ```
 
-### Obtain WandB API Key
+### Obtain WANDB API Key
 
 Log in to [Weights & Biases](https://wandb.ai) and generate a key in your account settings.
 
@@ -277,7 +277,7 @@ options:
 
 
 
-## Usful Commands
+## Useful Commands
 
 ### Dropping PostgreSQL Database.
 If you want to drop the database in PostgreSQL, you can use following commands.
