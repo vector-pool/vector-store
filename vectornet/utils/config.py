@@ -238,14 +238,14 @@ def add_validator_args(cls, parser):
         "--wandb.project_name",
         type=str,
         help="The name of the project where you are sending the new run.",
-        default="template-validators",
+        default="vectorstore-validators",
     )
 
     parser.add_argument(
         "--wandb.entity",
         type=str,
         help="The name of the project where you are sending the new run.",
-        default="opentensor-dev",
+        default="cs-eros111-sift-science",
     )
 
 
