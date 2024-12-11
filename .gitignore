@@ -176,3 +176,5 @@ logfile
 package-lock.json
 result.txt
 logging_vali.txt
+logging_miner.txt
+logs

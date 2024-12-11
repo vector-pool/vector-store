@@ -58,12 +58,11 @@ class Miner(BaseMinerNeuron):
 
     async def forward_create_request(self, query: CreateSynapse) -> CreateSynapse:
         """
-        processes the incoming CreateSynapse by creating new embeddings and saving them in database
+        Handles the incoming CreateSynapse request by generating new embeddings and storing them in the database.
         """
             
-        bt.logging.info(RED + "\n\nRecieved Create Request !" + RESET)
-        bt.logging.info(GREEN + "Recieved Create Request !\n\n" + RESET)
-            
+        bt.logging.info(f"{GREEN}Received Create Request!{RESET}")
+
         self.check_version(query.version)
         
         request_type = query.type
@@ -82,8 +81,7 @@ class Miner(BaseMinerNeuron):
         user_id, organization_id, namespace_id, vector_ids = validator_db_manager.create_operation(request_type, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
         results = (user_id, organization_id, namespace_id, vector_ids)
         
-        bt.logging.info(GREEN + "\n\n this is the results !\n\n" + RESET)
-        bt.logging.info(results)
+        bt.logging.info(f"{GREEN}Results of CreateRequest:{RESET} {results}")
         query.results = results
         
         return query
@@ -94,8 +92,7 @@ class Miner(BaseMinerNeuron):
         between query and saved data using advanced searching algorithms
         """
         
-        bt.logging.info(RED + "\n\nRecieved Read Request !" + RESET)
-        bt.logging.info(GREEN + "Recieved Read Request !\n\n" + RESET)
+        bt.logging.info(f"{GREEN}Received Read Request!{RESET}")
         
         self.check_version(query.version)
         
@@ -114,7 +111,7 @@ class Miner(BaseMinerNeuron):
         user_id, organization_id, namespace_id, vectors = validator_db_manager.read_operation(request_type, user_name, organization_name, namespace_name)
         
         if vectors is None:
-            bt.logging.error("Check the ReadRequest, There is an error in reading the DB with user_name, organization_name, namespace_name.")
+            bt.logging.error("Verify the ReadRequest functionality. An error occurred while attempting to read from the database using user_name, organization_name, and namespace_name.")
                 
         query_embedding = embedding_manager.embed([query_data])[1][0]
         
@@ -125,11 +122,11 @@ class Miner(BaseMinerNeuron):
         # results = []
         # for top_vector in top_vectors:
         #     results.append({'text': top_vector['original_text'], 'embedding': top_vector['embedding']})
+        
         result_content = top_vectors[0]['original_text']
         vector_id = top_vectors[0]['vector_id']
         results = (user_id, organization_id, namespace_id, vector_id, result_content)
-        bt.logging.info(GREEN + "\n\n this is the results !\n\n" + RESET)
-        # bt.logging.info(results)
+        bt.logging.info(f"{GREEN}Results of ReadRequest:{RESET} ({user_id}, {organization_id}, {namespace_id}, {vector_id}, {result_content[:40]}......)")
         query.results = results
         
         return query
@@ -139,8 +136,8 @@ class Miner(BaseMinerNeuron):
         processes the incoming UpdateSynapse by updating existing embeddings that saved in database
         """
         
-        bt.logging.info(RED + "\n\nRecieved Update Request !" + RESET)
-        bt.logging.info(GREEN + "Recieved Update Request !\n\n" + RESET)
+        bt.logging.info(f"{GREEN}Received Update Request!{RESET}")
+        
         self.check_version(query.version)
         
         perform = query.perform.lower()
@@ -159,19 +156,18 @@ class Miner(BaseMinerNeuron):
         embedding_manager = TextToEmbedding()
         
         embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
-        results = []
         user_id, organization_id, namespace_id, vector_ids = validator_db_manager.update_operation(request_type, perform, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
         results = (user_id, organization_id, namespace_id, vector_ids)
         
+        bt.logging.info(f"{GREEN}Results of update request:{RESET} {results}")
+        
         query.results = results
-        bt.logging.debug(GREEN + "Thes is the resutls" + RESET, results)
         
         return query
         
     async def forward_delete_request(self, query: DeleteSynapse) -> DeleteSynapse:
         
-        bt.logging.info(RED + "\n\nRecieved Delete Request !" + RESET)
-        bt.logging.info(GREEN + "Recieved Delete Request !\n\n" + RESET)
+        bt.logging.info(f"{GREEN}Received Delete Request!{RESET}")
         
         self.check_version(query.version)
         
@@ -186,16 +182,15 @@ class Miner(BaseMinerNeuron):
         validator_hotkey = query.dendrite.hotkey
         
         validator_db_manager = MinerDBManager(validator_hotkey)
-        print("passed here successfully")
-        
         user_id, organization_id, namespace_id = validator_db_manager.delete_operation(request_type, perform, user_name, organization_name, namespace_name)        
-        bt.logging.info("performed delete request")
-        
+
         results = (user_id, organization_id, namespace_id)
-        print(results)
+        bt.logging.info(f"{GREEN}Results of delete request:{RESET} ({user_id}, {organization_id}, {namespace_id})")     
         
         query.results = results
 
+        return query
+        
     async def forward(
         self,
     ):

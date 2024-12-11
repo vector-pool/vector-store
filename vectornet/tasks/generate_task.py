@@ -37,10 +37,10 @@ async def generate_create_request(validator_db_manager, article_size = 10) -> Cr
         organization_name = random.choice(organization_names)
         namespace_name = random.choice(wiki_categories)
         uniquness = validator_db_manager.check_uniquness(user_name, organization_name, namespace_name)
-        print("user_name, organization_name, category, uniquness        :        ", user_name, organization_name, namespace_name, uniquness)
         if uniquness:
+            bt.logging.debug(f"Selected unique name triple: user, organization, namespace: {user_name}, {organization_name}, {namespace_name}.")
             break
-    print("user_name, organization_name, category, uniquness : ", user_name, organization_name, namespace_name, uniquness)
+
     category = "random"
     articles = await wikipedia_scraper(article_size, category)
     contents = []
@@ -61,7 +61,7 @@ async def generate_create_request(validator_db_manager, article_size = 10) -> Cr
 async def generate_read_request(validator_db_manager):
 
     result = validator_db_manager.get_random_unit_ids()
-    print("This is random uids: ", result)
+    bt.logging.debug(f"Get the random unit ids from database: {result}.")
     if result is not None:
         user_id, organization_id, namespace_id, user_name, organization_name, namespace_name, category, pageids_info = result
     else:
@@ -73,8 +73,9 @@ async def generate_read_request(validator_db_manager):
     content = await get_wiki_article_content_with_pageid(pageid)
     
     if content is None:
-        bt.logging.error("The wiki-scraper with pageid doesn't work when creating ReadRequest.")
-    print("OPENAIKEY = ", os.getenv("OPENAI_API_KEY"))
+        raise Exception("The wiki-scraper with pageid doesn't work when creating ReadRequest.")
+        
+        
     llm_client = openai.OpenAI(
         api_key = os.getenv("OPENAI_API_KEY"),
         max_retries = 3,
@@ -82,7 +83,7 @@ async def generate_read_request(validator_db_manager):
     
     query_content = generate_query_content(llm_client, content)
     
-    bt.logging.debug(query_content)
+    bt.logging.debug(f"The generated query form llm is this:    {query_content[30]}")
     
     if query_content is None:
         bt.logging.error("The query_content is None for ReadRequest, Check again openai operation.")
@@ -104,12 +105,11 @@ async def generate_read_request(validator_db_manager):
 async def generate_update_request(article_size, validator_db_manager):
     
     result = validator_db_manager.get_random_unit_ids()
-    print("This is random uids: ", result)
+    bt.logging.debug(f"Get the random unit ids from database: {result}.")
     if result is not None:
         user_id, organization_id, namespace_id, user_name, organization_name, namespace_name, category, pageids_info = result
     else:
         return None, None, None, None, None, None
-    print("Starting wiki-scraper")
     articles = await wikipedia_scraper(article_size, category)
     contents = []
     for article in articles:
@@ -164,8 +164,6 @@ def generate_query_content(llm_client, content):
     prompt += (
         """Generate a summary of the original content using approximately 700-900 characters. Provide only the generated summary in plain text, without any additional context, explanation, or formatting. single and double quotes or new lines."""
     )
-
-    print(f"Prompt: {prompt}")
 
     try:
         output = llm_client.chat.completions.create(
