@@ -1,0 +1,52 @@
+wandb_version: 1
+
+uid:
+  desc: null
+  value: 0
+hotkey:
+  desc: null
+  value: 5CaFsXR78pDfrZd7xRPc79tcUFJaM8fDx9MkQ37qhWYuJ7M5
+version:
+  desc: null
+  value: 1.0.0
+type:
+  desc: null
+  value: validator
+_wandb:
+  desc: null
+  value:
+    python_version: 3.12.7
+    cli_version: 0.16.4
+    framework: huggingface
+    huggingface_version: 4.46.3
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1733920413.0
+    t:
+      1:
+      - 1
+      - 5
+      - 11
+      - 49
+      - 53
+      - 55
+      - 95
+      2:
+      - 1
+      - 5
+      - 11
+      - 49
+      - 53
+      - 55
+      - 95
+      3:
+      - 13
+      - 16
+      - 23
+      - 24
+      4: 3.12.7
+      5: 0.16.4
+      6: 4.46.3
+      8:
+      - 5
+      13: linux-x86_64

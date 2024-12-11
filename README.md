@@ -140,7 +140,3 @@ V3 and further:
 - Extending the embedding data with audio and image
 - …
 
-
-
-
-
