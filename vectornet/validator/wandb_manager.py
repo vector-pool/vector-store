@@ -29,8 +29,8 @@ class WandbManager:
         current = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         
         name = f"validator-{self.validator.uid}--{version}--{current}"
-        wandb_project = self.config.wandb.project_name
-        wandb_entity = self.config.wandb.entity
+        wandb_project = self.validator.config.wandb.project_name
+        wandb_entity = self.validator.config.wandb.entity
         self.wandb = wandb.init(
             anonymous="must",
             name=name,
