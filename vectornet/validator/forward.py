@@ -132,7 +132,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         min_len = self.config.neuron.min_len,
         max_len = self.config.neuron.max_len,        
     )
-
+    create_op = None
     create_request_zero_score = 0
     if create_request is not None:
         pageids = [article['pageid'] for article in articles]
@@ -196,10 +196,12 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
     else:
         raise Exception("Error occurs in generating CreateRequest.")
             
-    return create_request_zero_score
+    return create_request_zero_score, create_op
 
 async def forward_update_request(self, validator_db_manager, miner_uid):
+    
     update_request_zero_scores = []
+    update_ops = []
     for i in range(0, 3):
         user_id, organization_id, namespace_id, category, articles, update_request, total_len = await generate_update_request(
             validator_db_manager = validator_db_manager,
@@ -207,7 +209,8 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
             min_len = self.config.neuron.min_len,
             max_len = self.config.neuron.max_len,   
         )
-        
+        update_request_zero_score = None
+        update_op = None
         if update_request is not None:
             pageids = [article['pageid'] for article in articles]
             
@@ -226,7 +229,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
             bt.logging.info(f"\n\nReceived Update responses : {response_update_request} from {miner_uid}\n\n")
             update_request_zero_score = evaluate_update_request(update_request, response_update_request, user_id, organization_id, namespace_id, pageids)
             
-            
+            s_f = "failure"
             if update_request_zero_score:
                 pageids_info = {}
                 for pageid, vector_id in zip(pageids, response_update_request[3]):
@@ -243,12 +246,23 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
                     pageids_info,
                     total_size,
                 )
+                s_f = "success"
             update_request_zero_scores.append(update_request_zero_score)
+            
+            update_op = Operation(
+                request_type = "update",
+                S_F = s_f,
+                score = update_request_zero_score,
+                timestamp=datetime.now().isoformat()
+            )
             time.sleep(30)
+            
+            update_ops.append(update_op)        
+            
         else:
             bt.logging.debug("There is no saved data in miner side, Skipping UpdateRequest, Giving zero score.")
             update_request_zero_scores = [0, 0, 0]
-    return update_request_zero_scores
+    return update_request_zero_scores, update_ops
     
 async def forward_delete_request(self, validator_db_manager, miner_uid):
     random_num = random.random()
