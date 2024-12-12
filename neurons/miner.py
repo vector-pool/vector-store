@@ -60,137 +60,150 @@ class Miner(BaseMinerNeuron):
         """
         Handles the incoming CreateSynapse request by generating new embeddings and storing them in the database.
         """
-            
-        bt.logging.info(f"{GREEN}Received Create Request!{RESET}")
+        try:   
+            bt.logging.info(f"{GREEN}Received Create Request!{RESET}")
 
-        self.check_version(query.version)
+            self.check_version(query.version)
+            
+            request_type = query.type
+            user_name = query.user_name
+            organization_name = query.organization_name
+            namespace_name = query.namespace_name
+            index_data = query.index_data
+            validator_hotkey = query.dendrite.hotkey
+            
+            validator_db_manager = MinerDBManager(validator_hotkey)
+            
+            embedding_manager = TextToEmbedding()
+            
+            embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
+            
+            user_id, organization_id, namespace_id, vector_ids = validator_db_manager.create_operation(request_type, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
+            results = (user_id, organization_id, namespace_id, vector_ids)
+            
+            bt.logging.info(f"{GREEN}Results of CreateRequest:{RESET} {results}")
+            query.results = results
+            
+            return query
         
-        request_type = query.type
-        user_name = query.user_name
-        organization_name = query.organization_name
-        namespace_name = query.namespace_name
-        index_data = query.index_data
-        validator_hotkey = query.dendrite.hotkey
-        
-        validator_db_manager = MinerDBManager(validator_hotkey)
-        
-        embedding_manager = TextToEmbedding()
-        
-        embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
-        
-        user_id, organization_id, namespace_id, vector_ids = validator_db_manager.create_operation(request_type, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
-        results = (user_id, organization_id, namespace_id, vector_ids)
-        
-        bt.logging.info(f"{GREEN}Results of CreateRequest:{RESET} {results}")
-        query.results = results
-        
-        return query
+        except Exception as e:
+            bt.logging.error(f"Error occurs during forward_create_request: {e}")
         
     async def forward_read_request(self, query: ReadSynapse) -> ReadSynapse:
         """
         processes the incoming ReadSynapse by searching the most similar texts with query by comparing embeddings
         between query and saved data using advanced searching algorithms
         """
+        try:
+            bt.logging.info(f"{GREEN}Received Read Request!{RESET}")
+            
+            self.check_version(query.version)
+            
+            request_type = query.type
+            user_name = query.user_name
+            organization_name = query.organization_name
+            namespace_name = query.namespace_name
+            query_data = query.query_data
+            size = query.size
+            valdiator_hotkey = query.dendrite.hotkey
+            
+            validator_db_manager = MinerDBManager(valdiator_hotkey)
+            
+            embedding_manager = TextToEmbedding()
+            
+            user_id, organization_id, namespace_id, vectors = validator_db_manager.read_operation(request_type, user_name, organization_name, namespace_name)
+            
+            if vectors is None:
+                bt.logging.error("Verify the ReadRequest functionality. An error occurred while attempting to read from the database using user_name, organization_name, and namespace_name.")
+                raise Exception("Verify the ReadRequest functionality. An error occurred while attempting to read from the database")
+                    
+            query_embedding = embedding_manager.embed([query_data])[1][0]
+            
+            search_engine = SearchEngine()
+            
+            top_vectors = search_engine.cosine_similarity_search(query_embedding, vectors, size)
+            
+            # results = []
+            # for top_vector in top_vectors:
+            #     results.append({'text': top_vector['original_text'], 'embedding': top_vector['embedding']})
+            
+            result_content = top_vectors[0]['original_text']
+            vector_id = top_vectors[0]['vector_id']
+            results = (user_id, organization_id, namespace_id, vector_id, result_content)
+            bt.logging.info(f"{GREEN}Results of ReadRequest:{RESET} ({user_id}, {organization_id}, {namespace_id}, {vector_id}, {result_content[:40]}......)")
+            query.results = results
+            
+            return query
         
-        bt.logging.info(f"{GREEN}Received Read Request!{RESET}")
-        
-        self.check_version(query.version)
-        
-        request_type = query.type
-        user_name = query.user_name
-        organization_name = query.organization_name
-        namespace_name = query.namespace_name
-        query_data = query.query_data
-        size = query.size
-        valdiator_hotkey = query.dendrite.hotkey
-        
-        validator_db_manager = MinerDBManager(valdiator_hotkey)
-        
-        embedding_manager = TextToEmbedding()
-        
-        user_id, organization_id, namespace_id, vectors = validator_db_manager.read_operation(request_type, user_name, organization_name, namespace_name)
-        
-        if vectors is None:
-            bt.logging.error("Verify the ReadRequest functionality. An error occurred while attempting to read from the database using user_name, organization_name, and namespace_name.")
-                
-        query_embedding = embedding_manager.embed([query_data])[1][0]
-        
-        search_engine = SearchEngine()
-        
-        top_vectors = search_engine.cosine_similarity_search(query_embedding, vectors, size)
-        
-        # results = []
-        # for top_vector in top_vectors:
-        #     results.append({'text': top_vector['original_text'], 'embedding': top_vector['embedding']})
-        
-        result_content = top_vectors[0]['original_text']
-        vector_id = top_vectors[0]['vector_id']
-        results = (user_id, organization_id, namespace_id, vector_id, result_content)
-        bt.logging.info(f"{GREEN}Results of ReadRequest:{RESET} ({user_id}, {organization_id}, {namespace_id}, {vector_id}, {result_content[:40]}......)")
-        query.results = results
-        
-        return query
+        except Exception as e:
+            bt.logging.error(f"Error occurs during forward: {e}")
         
     async def forward_update_request(self, query: UpdateSynapse) -> UpdateSynapse:
         """
         processes the incoming UpdateSynapse by updating existing embeddings that saved in database
         """
-        
-        bt.logging.info(f"{GREEN}Received Update Request!{RESET}")
-        
-        self.check_version(query.version)
-        
-        perform = query.perform.lower()
-        if perform != 'replace' and perform != 'add':
-            raise Exception(f"Undifined perform type: {perform} in UpdateSynapse")
+        try:
+            bt.logging.info(f"{GREEN}Received Update Request!{RESET}")
+            
+            self.check_version(query.version)
+            
+            perform = query.perform.lower()
+            if perform != 'replace' and perform != 'add':
+                raise Exception(f"Undifined perform type: {perform} in UpdateSynapse")
 
-        request_type = query.type
-        user_name = query.user_name
-        organization_name = query.organization_name
-        namespace_name = query.namespace_name
-        index_data = query.index_data
-        validator_hotkey = query.dendrite.hotkey
-        
-        validator_db_manager = MinerDBManager(validator_hotkey)
-        
-        embedding_manager = TextToEmbedding()
-        
-        embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
-        user_id, organization_id, namespace_id, vector_ids = validator_db_manager.update_operation(request_type, perform, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
-        results = (user_id, organization_id, namespace_id, vector_ids)
-        
-        bt.logging.info(f"{GREEN}Results of update request:{RESET} {results}")
-        
-        query.results = results
-        
-        return query
+            request_type = query.type
+            user_name = query.user_name
+            organization_name = query.organization_name
+            namespace_name = query.namespace_name
+            index_data = query.index_data
+            validator_hotkey = query.dendrite.hotkey
+            
+            validator_db_manager = MinerDBManager(validator_hotkey)
+            
+            embedding_manager = TextToEmbedding()
+            
+            embeded_data, embeddings, original_data = embedding_manager.embed(index_data)
+            user_id, organization_id, namespace_id, vector_ids = validator_db_manager.update_operation(request_type, perform, user_name, organization_name, namespace_name, embeded_data, embeddings, original_data)
+            results = (user_id, organization_id, namespace_id, vector_ids)
+            
+            bt.logging.info(f"{GREEN}Results of update request:{RESET} {results}")
+            
+            query.results = results
+            
+            return query
+        except Exception as e:
+            bt.logging.error(f"Error occurs during forward: {e}")
         
     async def forward_delete_request(self, query: DeleteSynapse) -> DeleteSynapse:
         
-        bt.logging.info(f"{GREEN}Received Delete Request!{RESET}")
-        
-        self.check_version(query.version)
-        
-        perform = query.perform.lower()
-        if perform != 'user' and perform != 'organization' and perform != 'namespace':
-            raise Exception(f"Undifined perfom type: {perform} in DeleteSynapse")
-        
-        request_type = query.type
-        user_name = query.user_name
-        organization_name = query.organization_name
-        namespace_name = query.namespace_name
-        validator_hotkey = query.dendrite.hotkey
-        
-        validator_db_manager = MinerDBManager(validator_hotkey)
-        user_id, organization_id, namespace_id = validator_db_manager.delete_operation(request_type, perform, user_name, organization_name, namespace_name)        
+        try:
+            bt.logging.info(f"{GREEN}Received Delete Request!{RESET}")
+            
+            self.check_version(query.version)
+            
+            perform = query.perform.lower()
+            if perform != 'user' and perform != 'organization' and perform != 'namespace':
+                raise Exception(f"Undifined perfom type: {perform} in DeleteSynapse")
+            
+            request_type = query.type
+            user_name = query.user_name
+            organization_name = query.organization_name
+            namespace_name = query.namespace_name
+            validator_hotkey = query.dendrite.hotkey
+            
+            validator_db_manager = MinerDBManager(validator_hotkey)
+            user_id, organization_id, namespace_id = validator_db_manager.delete_operation(request_type, perform, user_name, organization_name, namespace_name)        
 
-        results = (user_id, organization_id, namespace_id)
-        bt.logging.info(f"{GREEN}Results of delete request:{RESET} ({user_id}, {organization_id}, {namespace_id})")     
-        
-        query.results = results
+            results = (user_id, organization_id, namespace_id)
+            bt.logging.info(f"{GREEN}Results of delete request:{RESET} ({user_id}, {organization_id}, {namespace_id})")     
+            
+            query.results = results
 
-        return query
+            return query
         
+        except Exception as e:
+            bt.logging.error(f"Error occurs during forward: {e}")
+            
     async def forward(
         self,
     ):

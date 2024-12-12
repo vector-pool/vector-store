@@ -194,6 +194,7 @@ class BaseValidatorNeuron(BaseNeuron):
         Wrapper for synchronizing the state of the network for the given miner or validator.
         """
         # Ensure miner or validator hotkey is still registered on the network.
+        bt.logging.info("SYNCING NEURON...........")
         self.check_registered()
 
         self.check_wandb_status()

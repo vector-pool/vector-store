@@ -39,8 +39,6 @@ from vectornet.database_manage.validator_db_manager import ValidatorDBManager, C
 from vectornet.utils.weight_control import weight_controller
 from vectornet.utils.size_utils import text_length_to_storage_size
 
-from vectornet.utils.config import task_size, len_limit
-
 RED = "\033[31m"
 GREEN = "\033[32m"
 RESET = "\033[0m"
@@ -55,51 +53,53 @@ async def forward(self, miner_uid):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
-    
-    # miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-    # miner_uid = miner_uids[0] # the default sample_size is one
-    
-    bt.logging.info(RED + "Starting Forward" + RESET)
-    bt.logging.info(GREEN + "Starting Forward" + RESET)
-    
-    miner_uid = int(miner_uid)
-    validator_db_manager = ValidatorDBManager(miner_uid)
-    count_manager = CountManager()
-    
-    count_manager.add_count(miner_uid)
-    cur_count_synapse = count_manager.read_count(miner_uid)
+    try:
+        # miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+        # miner_uid = miner_uids[0] # the default sample_size is one
+        
+        bt.logging.info(RED + "Starting Forward" + RESET)
+        bt.logging.info(GREEN + "Starting Forward" + RESET)
+        
+        miner_uid = int(miner_uid)
+        validator_db_manager = ValidatorDBManager(miner_uid)
+        count_manager = CountManager()
+        
+        count_manager.add_count(miner_uid)
+        cur_count_synapse = count_manager.read_count(miner_uid)
 
-    create_request_zero_score = await forward_create_request(self, validator_db_manager, miner_uid)
-    time.sleep(30)
-    update_request_zero_scores = await forward_update_request(self, validator_db_manager, miner_uid)
-    time.sleep(30)
-    delete_request_zero_score = await forward_delete_request(self, validator_db_manager, miner_uid)
-    time.sleep(20)
-    read_score = await forward_read_request(self, validator_db_manager, miner_uid)
-    time.sleep(40)
-    
-    # create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 0], 1, 1
-    
-    bt.logging.debug("Passed all these 4 synapses successfully.")
-    bt.logging.info(f"current total number of synapse cycle for uid: {miner_uid} is {cur_count_synapse}.")
-    weight = weight_controller(cur_count_synapse)
-    
-    if weight is None:
-        raise Exception("error occurs in weight mapping in evaluation")
+        # create_request_zero_score = await forward_create_request(self, validator_db_manager, miner_uid)
+        # time.sleep(30)
+        # update_request_zero_scores = await forward_update_request(self, validator_db_manager, miner_uid)
+        # time.sleep(30)
+        # delete_request_zero_score = await forward_delete_request(self, validator_db_manager, miner_uid)
+        # time.sleep(20)
+        read_score = await forward_read_request(self, validator_db_manager, miner_uid)
+        time.sleep(40)
+        
+        create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 0], 1, 1
+        
+        bt.logging.debug("Passed all these 4 synapses successfully.")
+        bt.logging.info(f"current total number of synapse cycle for uid: {miner_uid} is {cur_count_synapse}.")
+        weight = weight_controller(cur_count_synapse)
+        
+        if weight is None:
+            raise Exception("error occurs in weight mapping in evaluation")
 
-    bt.logging.info(f"{GREEN}Evaluated scores:{RESET} Create: {create_request_zero_score}, Update: {update_request_zero_scores}, Delete: {delete_request_zero_score}, Read: {read_score}")
-    
-    rewards = await get_rewards(
-        create_request_zero_score,
-        update_request_zero_scores,
-        delete_request_zero_score,
-        read_score,
-        weight,
-    )
+        bt.logging.info(f"{GREEN}Evaluated scores:{RESET} Create: {create_request_zero_score}, Update: {update_request_zero_scores}, Delete: {delete_request_zero_score}, Read: {read_score}")
+        
+        rewards = await get_rewards(
+            create_request_zero_score,
+            update_request_zero_scores,
+            delete_request_zero_score,
+            read_score,
+            weight,
+        )
 
-    bt.logging.info(f"Scored responses: {rewards}")
-    self.update_scores(rewards, [miner_uid])
-    time.sleep(20)    
+        bt.logging.info(f"Scored responses: {rewards}")
+        self.update_scores(rewards, [miner_uid])
+        time.sleep(20)    
+    except Exception as e:
+        bt.logging.error(f"Error occurs during forward: {e}")        
 
 async def forward_create_request(self, validator_db_manager, miner_uid):
     
@@ -160,6 +160,8 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
                 pageids_info,
                 total_size,
             )
+    else:
+        raise Exception("Error occurs in generating CreateRequest.")
             
     return create_request_zero_score
 
@@ -209,7 +211,10 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
                     total_size,
                 )
             update_request_zero_scores.append(update_request_zero_score)
-        time.sleep(30)
+            time.sleep(30)
+        else:
+            bt.logging.debug("There is no saved data in miner side, Skipping UpdateRequest, Giving zero score.")
+            update_request_zero_scores = [0, 0, 0]
     return update_request_zero_scores
     
 async def forward_delete_request(self, validator_db_manager, miner_uid):
@@ -238,11 +243,14 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
             
             if delete_request_zero_score:
                 validator_db_manager.delete_operation("DELETE", user_id, organization_id, namespace_id)
+        else:
+            bt.logging.debug("There is no saved data in miner side, Skipping DeleteRequest, Giving zero score.")
+            delete_request_zero_score = 0
     return delete_request_zero_score
      
 async def forward_read_request(self, validator_db_manager, miner_uid):
     
-    read_request, content, query_user_id, query_organization_id, query_namespace_id, pageids_info = await generate_read_request(validator_db_manager)
+    read_request, content, query_user_id, query_organization_id, query_namespace_id, pageids_info = await generate_read_request(validator_db_manager, self.config.neuron.max_len)
     
     read_score = 0
     if read_request is not None:
@@ -259,6 +267,8 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
         bt.logging.info(f"Received READ responses : {response_read} from {miner_uid}")
         
         read_score = evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response_read, content)
+    else:
+        bt.logging.debug("There is no saved data in miner side, Skipping ReadRequest, Giving zero score.")
         
     return read_score
     

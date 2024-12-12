@@ -69,8 +69,8 @@ class ValidatorDBManager:
                 category VARCHAR(255) NOT NULL,
                 user_id INTEGER NOT NULL REFERENCES users(user_id),
                 organization_id INTEGER NOT NULL REFERENCES organizations(organization_id),
-                pageids_info JSONB NOT NULL  -- Changed from INTEGER[] to JSONB
-                storage_size INTEGER NOT NULL,
+                pageids_info JSONB NOT NULL,
+                storage_size DOUBLE PRECISION NOT NULL
             )
             """
         )

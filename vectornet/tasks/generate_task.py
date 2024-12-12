@@ -56,7 +56,7 @@ async def generate_create_request(validator_db_manager, article_size, min_len, m
         namespace_name = namespace_name,
         index_data = contents,
     )
-    
+    print(total_len)
     return category, articles, query, total_len
     
 async def generate_read_request(validator_db_manager, max_len):
@@ -80,8 +80,9 @@ async def generate_read_request(validator_db_manager, max_len):
         content = content[:max_len]
     
     if content is None:
-        raise Exception("The wiki-scraper with pageid doesn't work when creating ReadRequest.")
-        
+        bt.logging.erro("Error occurs during the generating query_content with LLM.")
+                
+    # print("CONTENT is", content)
         
     llm_client = openai.OpenAI(
         api_key = os.getenv("OPENAI_API_KEY"),
@@ -90,7 +91,10 @@ async def generate_read_request(validator_db_manager, max_len):
     
     query_content = generate_query_content(llm_client, content)
     
-    bt.logging.debug(f"The generated query form llm is this:    {query_content[30]}")
+    if query_content is None:
+        raise Exception("Error during generating query_content with LLM.")
+    
+    bt.logging.debug(f"The generated query form llm is this:    {query_content[:30]}")
     
     if query_content is None:
         bt.logging.error("The query_content is None for ReadRequest, Check again openai operation.")
@@ -113,10 +117,11 @@ async def generate_update_request(validator_db_manager, article_size, min_len, m
     
     result = validator_db_manager.get_random_unit_ids()
     bt.logging.debug(f"Get the random unit ids from database: {result}.")
+    
     if result is not None:
         user_id, organization_id, namespace_id, user_name, organization_name, namespace_name, category, pageids_info = result
     else:
-        return None, None, None, None, None, None
+        return None, None, None, None, None, None, None
     articles = await wikipedia_scraper(article_size, min_len, category)
     contents = []
     total_len = 0
@@ -138,7 +143,7 @@ async def generate_update_request(validator_db_manager, article_size, min_len, m
         namespace_name = namespace_name,
         index_data = contents,
     )
-    
+    print(total_len)
     return user_id, organization_id, namespace_id, category, articles, query, total_len
     
 async def generate_delete_request(validator_db_manager):
@@ -199,4 +204,3 @@ def generate_query_content(llm_client, content):
 
 if __name__ == '__main__':
     pass
-    

@@ -1,24 +1,8 @@
 import openai
 import os
-import yaml
-import random
-import bittensor as bt
 from traceback import print_exception
 import openai
 import os
-import asyncio
-
-from vectornet.utils.config import len_limit
-from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
-from vectornet.protocol import(
-    CreateSynapse,
-    ReadSynapse,
-    UpdateSynapse,
-    DeleteSynapse,
-)
-from vectornet.utils.version import get_version
-from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
-from vectornet.database_manage.validator_db_manager import ValidatorDBManager
 from dotenv import load_dotenv
 
 load_dotenv()

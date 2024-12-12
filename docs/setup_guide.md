@@ -282,26 +282,31 @@ options:
 ### Dropping PostgreSQL Database.
 If you want to drop the database in PostgreSQL, you can use following commands.
 
+1. Connect to PostgreSQL
 
-1. Check Active Connections
+```bash
+psql -U postgres
+```
+
+2. Check Active Connections
 Run the following query to see which sessions are connected to the database:
 
 ```bash
 SELECT pid, usename, datname, application_name, client_addr 
 FROM pg_stat_activity 
-WHERE datname = '5';
+WHERE datname = <database_name>;
 ```
 
 
-2. Terminate Active Connections
+3. Terminate Active Connections
 
 ```bash
 SELECT pg_terminate_backend(pid)
 FROM pg_stat_activity
-WHERE datname = '5' AND pid <> pg_backend_pid();
+WHERE datname = <database_name> AND pid <> pg_backend_pid();
 ```
 
-3. Drop the Database
+4. Drop the Database
 After terminating all connections, you can now drop the database:
 
 ```bash
