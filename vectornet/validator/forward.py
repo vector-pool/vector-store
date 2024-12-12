@@ -76,16 +76,25 @@ async def forward(self, miner_uid):
         operations = []
         
         create_request_zero_score, create_op = await forward_create_request(self, validator_db_manager, miner_uid)
-        operations.append(create_op)
+        
+        if create_op is not None:
+            operations.append(create_op)
         time.sleep(30)
-        update_request_zero_scores, update_op = await forward_update_request(self, validator_db_manager, miner_uid)
-        operations.append(update_op)
+        
+        update_request_zero_scores, update_ops = await forward_update_request(self, validator_db_manager, miner_uid)
+        operations.extend(update_ops)
         time.sleep(30)
+        
         delete_request_zero_score, delete_op = await forward_delete_request(self, validator_db_manager, miner_uid)
-        operations.append(delete_op)
+        
+        if delete_op is not None:
+            operations.append(delete_op)
         time.sleep(20)
+        
         read_score, read_op = await forward_read_request(self, validator_db_manager, miner_uid)
-        operations.append(read_op)
+            
+        if read_op is not None:
+            operations.append(read_op)
         time.sleep(40)
         
         total_storage_size = validator_db_manager.get_total_storage_size()
@@ -268,6 +277,7 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
     random_num = random.random()
     delete_request_zero_score = 1
     # random_num = 0.1
+    delete_op = None
     if random_num < 0.3:
         
         bt.logging.debug(f"Random number = {random_num}")
@@ -286,20 +296,31 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
             response_delete_request = response[0]
             bt.logging.debug(f"Received Delete responses: {response_delete_request} from {miner_uid}") 
             
+            s_f = "failure"
             delete_request_zero_score = evaluate_delete_request(delete_request, response_delete_request, user_id, organization_id, namespace_id)
             
             if delete_request_zero_score:
                 validator_db_manager.delete_operation("DELETE", user_id, organization_id, namespace_id)
+                s_f = "success"
+            
+            delete_op = Operation(
+                request_type = "delete",
+                S_F = s_f,
+                score = delete_request_zero_score,
+                timestamp=datetime.now().isoformat()
+            )
+            
         else:
             bt.logging.debug("There is no saved data in miner side, Skipping DeleteRequest, Giving zero score.")
             delete_request_zero_score = 0
-    return delete_request_zero_score
+    return delete_request_zero_score, delete_op
      
 async def forward_read_request(self, validator_db_manager, miner_uid):
     
     read_request, content, query_user_id, query_organization_id, query_namespace_id, pageids_info = await generate_read_request(validator_db_manager, self.config.neuron.max_len)
     
     read_score = 0
+    read_op = None
     if read_request is not None:
         bt.logging.info(f"{RED}Sent Read request{RESET}")
         
@@ -313,9 +334,22 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
         response_read = response[0]
         bt.logging.info(f"Received READ responses : {response_read} from {miner_uid}")
         
+        s_f = "failure"
+        
         read_score = evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response_read, content)
+        
+        if read_score:
+            s_f = "success"
+            
+        read_op = Operation(
+            request_type = "read",
+            S_F = s_f,
+            score = read_score,
+            timestamp=datetime.now().isoformat()
+        )
+        
     else:
         bt.logging.debug("There is no saved data in miner side, Skipping ReadRequest, Giving zero score.")
         
-    return read_score
+    return read_score, read_op
     
