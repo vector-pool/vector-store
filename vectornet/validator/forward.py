@@ -19,6 +19,8 @@
 import time
 import bittensor as bt
 import random
+from datetime import datetime
+import os
 from vectornet.validator.reward import get_rewards
 from vectornet.utils.uids import get_random_uids
 from vectornet.miner_group.miner_group import make_miner_group
@@ -38,6 +40,10 @@ from vectornet.evaludation.evaluate import (
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager, CountManager
 from vectornet.utils.weight_control import weight_controller
 from vectornet.utils.size_utils import text_length_to_storage_size
+from .dashboard.model import Operation, MinerData
+from dotenv import load_dotenv
+
+load_dotenv()
 
 RED = "\033[31m"
 GREEN = "\033[32m"
@@ -67,16 +73,33 @@ async def forward(self, miner_uid):
         count_manager.add_count(miner_uid)
         cur_count_synapse = count_manager.read_count(miner_uid)
 
-        # create_request_zero_score = await forward_create_request(self, validator_db_manager, miner_uid)
-        # time.sleep(30)
-        # update_request_zero_scores = await forward_update_request(self, validator_db_manager, miner_uid)
-        # time.sleep(30)
-        # delete_request_zero_score = await forward_delete_request(self, validator_db_manager, miner_uid)
-        # time.sleep(20)
-        read_score = await forward_read_request(self, validator_db_manager, miner_uid)
+        operations = []
+        
+        create_request_zero_score, create_op = await forward_create_request(self, validator_db_manager, miner_uid)
+        operations.append(create_op)
+        time.sleep(30)
+        update_request_zero_scores, update_op = await forward_update_request(self, validator_db_manager, miner_uid)
+        operations.append(update_op)
+        time.sleep(30)
+        delete_request_zero_score, delete_op = await forward_delete_request(self, validator_db_manager, miner_uid)
+        operations.append(delete_op)
+        time.sleep(20)
+        read_score, read_op = await forward_read_request(self, validator_db_manager, miner_uid)
+        operations.append(read_op)
         time.sleep(40)
         
-        create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 0], 1, 1
+        total_storage_size = validator_db_manager.get_total_storage_size()
+        
+        dashboard_api_token = os.getenv("DASHBOARD_API_TOKEN")
+        
+        miner_data = MinerData(
+            miner_uid=miner_uid,
+            total_storage_size=total_storage_size,
+            operations=operations,
+            token=dashboard_api_token,
+        )
+        
+        # create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 0], 1, 1
         
         bt.logging.debug("Passed all these 4 synapses successfully.")
         bt.logging.info(f"current total number of synapse cycle for uid: {miner_uid} is {cur_count_synapse}.")
@@ -146,6 +169,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
                 bt.logging.error("vector_id or pageid is not the Integer.")
             pageids_info[pageid] = vector_id
         
+        s_f = "failure"
         if create_request_zero_score:
             total_size = text_length_to_storage_size(total_len)
             validator_db_manager.create_operation(
@@ -160,6 +184,15 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
                 pageids_info,
                 total_size,
             )
+            s_f = "success"
+        
+        create_op = Operation(
+            request_type = "create",
+            S_F = s_f,
+            score = create_request_zero_score,
+            timestamp=datetime.now().isoformat()
+        )        
+            
     else:
         raise Exception("Error occurs in generating CreateRequest.")
             
