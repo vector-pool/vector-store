@@ -41,6 +41,7 @@ from vectornet.database_manage.validator_db_manager import ValidatorDBManager, C
 from vectornet.utils.weight_control import weight_controller
 from vectornet.utils.size_utils import text_length_to_storage_size
 from .dashboard.model import Operation, MinerData
+from .dashboard.dash_integration import send_data_to_dashboard
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -70,8 +71,6 @@ async def forward(self, miner_uid):
         validator_db_manager = ValidatorDBManager(miner_uid)
         count_manager = CountManager()
         
-        count_manager.add_count(miner_uid)
-        cur_count_synapse = count_manager.read_count(miner_uid)
 
         operations = []
         
@@ -99,19 +98,14 @@ async def forward(self, miner_uid):
         
         total_storage_size = validator_db_manager.get_total_storage_size()
         
-        dashboard_api_token = os.getenv("DASHBOARD_API_TOKEN")
-        
-        miner_data = MinerData(
-            miner_uid=miner_uid,
-            total_storage_size=total_storage_size,
-            operations=operations,
-            token=dashboard_api_token,
-        )
-        
         # create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 0], 1, 1
         
         bt.logging.debug("Passed all these 4 synapses successfully.")
         bt.logging.info(f"current total number of synapse cycle for uid: {miner_uid} is {cur_count_synapse}.")
+        
+        count_manager.add_count(miner_uid)
+        cur_count_synapse = count_manager.read_count(miner_uid)
+        
         weight = weight_controller(cur_count_synapse)
         
         if weight is None:
@@ -126,6 +120,19 @@ async def forward(self, miner_uid):
             read_score,
             weight,
         )
+        
+        miner_data = MinerData(
+            miner_uid=miner_uid,
+            total_storage_size=total_storage_size,
+            operations=operations,
+            request_cycle_score=rewards,
+            weight=weight,
+            passed_request_cycle=cur_count_synapse,
+        )        
+        
+        owner_hotkey = os.getenv("OWNER_HOTKEY")
+        
+        send_data_to_dashboard(miner_data, self.wallet.hotkey.ss58_address, owner_hotkey)
 
         bt.logging.info(f"Scored responses: {rewards}")
         self.update_scores(rewards, [miner_uid])
@@ -199,8 +206,8 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
             request_type = "create",
             S_F = s_f,
             score = create_request_zero_score,
-            timestamp=datetime.now().isoformat()
-        )        
+            timestamp=datetime.now().isoformat(),
+        )
             
     else:
         raise Exception("Error occurs in generating CreateRequest.")

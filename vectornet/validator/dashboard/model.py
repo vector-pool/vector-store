@@ -11,6 +11,6 @@ class MinerData(BaseModel):
     miner_uid: str
     total_storage_size: float
     operations: List[Operation]
-    token: str
-    nonce: Optional[str] = None  # Nonce for preventing replay attacks
     request_cycle_score: float
+    weight: float
+    passed_request_cycle: int
