@@ -311,7 +311,7 @@ class TextToEmbedding:
             global_attention_mask[:, 0] = 1  # Set global attention on [CLS] token
             
             # Print debug information
-            self.print_debug_info(inputs, global_attention_mask)
+            # self.print_debug_info(inputs, global_attention_mask)
             
             with torch.no_grad():
                 try:

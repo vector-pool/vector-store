@@ -78,7 +78,7 @@ async def forward(self, miner_uid):
         
         if create_op is not None:
             operations.append(create_op)
-        time.sleep(30)
+        time.sleep(7)
         
         update_request_zero_scores, update_ops = await forward_update_request(self, validator_db_manager, miner_uid)
         operations.extend(update_ops)
@@ -101,17 +101,18 @@ async def forward(self, miner_uid):
         # create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 0], 1, 1
         
         bt.logging.debug("Passed all these 4 synapses successfully.")
-        bt.logging.info(f"current total number of synapse cycle for uid: {miner_uid} is {cur_count_synapse}.")
         
         count_manager.add_count(miner_uid)
         cur_count_synapse = count_manager.read_count(miner_uid)
         
         weight = weight_controller(cur_count_synapse)
         
+        bt.logging.info(f"current total number of synapse cycle for uid: {miner_uid} is {cur_count_synapse}.")
+        
         if weight is None:
             raise Exception("error occurs in weight mapping in evaluation")
 
-        bt.logging.info(f"{GREEN}Evaluated scores:{RESET} Create: {create_request_zero_score}, Update: {update_request_zero_scores}, Delete: {delete_request_zero_score}, Read: {read_score}")
+        bt.logging.info(f"{GREEN}Evaluated scores: Create: {create_request_zero_score}, Update: {update_request_zero_scores}, Delete: {delete_request_zero_score}, Read: {read_score}{RESET}")
         
         rewards = await get_rewards(
             create_request_zero_score,
@@ -121,18 +122,22 @@ async def forward(self, miner_uid):
             weight,
         )
         
-        miner_data = MinerData(
-            miner_uid=miner_uid,
-            total_storage_size=total_storage_size,
-            operations=operations,
-            request_cycle_score=rewards,
-            weight=weight,
-            passed_request_cycle=cur_count_synapse,
-        )        
-        
-        owner_hotkey = os.getenv("OWNER_HOTKEY")
-        
-        send_data_to_dashboard(miner_data, self.wallet.hotkey.ss58_address, owner_hotkey)
+        if len(operations) > 0:
+            miner_data = MinerData(
+                miner_uid=miner_uid,
+                total_storage_size=total_storage_size,
+                operations=operations,
+                request_cycle_score=rewards,
+                weight=weight,
+                passed_request_count=cur_count_synapse,
+            ) 
+            
+            print("===================== Miner Data Dubug =====================")
+            print(miner_data.to_dict())
+            
+            owner_hotkey = os.getenv("OWNER_HOTKEY")
+            
+            await send_data_to_dashboard(miner_data, self.wallet.hotkey, owner_hotkey)
 
         bt.logging.info(f"Scored responses: {rewards}")
         self.update_scores(rewards, [miner_uid])
@@ -204,7 +209,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         
         create_op = Operation(
             request_type = "create",
-            S_F = s_f,
+            s_f = s_f,
             score = create_request_zero_score,
             timestamp=datetime.now().isoformat(),
         )
@@ -267,7 +272,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
             
             update_op = Operation(
                 request_type = "update",
-                S_F = s_f,
+                s_f = s_f,
                 score = update_request_zero_score,
                 timestamp=datetime.now().isoformat()
             )
@@ -312,7 +317,7 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
             
             delete_op = Operation(
                 request_type = "delete",
-                S_F = s_f,
+                s_f = s_f,
                 score = delete_request_zero_score,
                 timestamp=datetime.now().isoformat()
             )
@@ -350,7 +355,7 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
             
         read_op = Operation(
             request_type = "read",
-            S_F = s_f,
+            s_f = s_f,
             score = read_score,
             timestamp=datetime.now().isoformat()
         )
