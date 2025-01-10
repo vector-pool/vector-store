@@ -90,4 +90,4 @@ async def sync_articles():
     
 if __name__ =="__main__":
     asyncio.run(sync_articles())
-    # asyncio.run(get_wiki_content_for_page(23284357))
+    # asyncio.run(get_wiki_content_for_page(23284357))  

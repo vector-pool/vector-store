@@ -54,8 +54,8 @@ async def forward(self, miner_uid):
 
     """
     
-    # miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-    # miner_uid = miner_uids[0] # the default sample_size is one
+    miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+    miner_uid = miner_uids[0] # the default sample_size is one
     
     print(RED + "This start of forward!" + RESET)
     print(GREEN + "This start of forward!" + RESET)
