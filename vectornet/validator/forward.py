@@ -56,7 +56,6 @@ async def forward(self, miner_uid):
     # miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
     # miner_uid = miner_uids[0] # the default sample_size is one
     
-    bt.logging.info(RED + "Starting Forward" + RESET)
     bt.logging.info(GREEN + "Starting Forward" + RESET)
     
     miner_uid = int(miner_uid)

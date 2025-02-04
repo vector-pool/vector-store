@@ -1,9 +1,6 @@
 import time
 import typing
 import bittensor as bt
-
-import vectornet
-
 from vectornet.base.miner import BaseMinerNeuron
 from vectornet.protocol import(
     CreateSynapse,
@@ -173,20 +170,6 @@ class Miner(BaseMinerNeuron):
     async def forward(
         self,
     ):
-        """
-        Processes the incoming 'Dummy' synapse by performing a predefined operation on the input data.
-        This method should be replaced with actual logic relevant to the miner's purpose.
-
-        Args:
-            synapse (vectornet.protocol.Dummy): The synapse object containing the 'dummy_input' data.
-
-        Returns:
-            vectornet.protocol.Dummy: The synapse object with the 'dummy_output' field set to twice the 'dummy_input' value.
-
-        The 'forward' function is a placeholder and should be overridden with logic that is appropriate for
-        the miner's intended operation. This method demonstrates a basic transformation of input data.
-        """
-        # TODO(developer): Replace with actual implementation logic.
         return self
 
     def check_version(self, version):
