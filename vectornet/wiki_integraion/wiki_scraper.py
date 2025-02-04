@@ -7,7 +7,7 @@ import bittensor as bt
 import yaml
 from typing import Optional, Any, Callable
 from functools import partial
-from vectornet.utils.config import len_limit
+
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
 
@@ -120,7 +120,7 @@ async def get_articles_in_category_with_max_size(category):
             })
         return results
 
-async def get_random_articles(count):
+async def get_random_articles(count, min_len):
     async def _make_request(session, params):
         async with session.get("https://en.wikipedia.org/w/api.php", params=params) as response:
             return await response.json()
@@ -142,11 +142,12 @@ async def get_random_articles(count):
                 for page in data['query']['random']:
                     content = await get_article_extracts(page['id'])
                     if content:    
-                        if len(content) > 3000:
+                        if len(content) >= min_len:
                             articles.append({
                                 'title': page['title'],
                                 'pageid': page['id'],
-                                'content': content
+                                'content': content,
+                                'length': len(content)
                             })
                             if len(articles) >= count:
                                 should_break = True
@@ -155,19 +156,12 @@ async def get_random_articles(count):
                 break
     return articles
 
-async def wikipedia_scraper(k: int, category: str):
+async def wikipedia_scraper(k: int, min_len: int, category: str):
     if category == "random":
-        return await get_random_articles(k)
+        return await get_random_articles(k, min_len)
     else :
         bt.logging.error("category in current subnet structure should be random, not the certain one.")
 
 async def get_wiki_article_content_with_pageid(pageid):
     content = await get_article_extracts(pageid)
-    return content[:len_limit]
-
-if __name__ == "__main__":
-    articles = asyncio.run(wikipedia_scraper(5))
-    with open('result_wiki.txt', 'w', encoding='utf-8') as f:
-        for article in articles:
-            f.write(f"{article}\n\n, {len(article['content'])}\n")  # Write each result as a dictionary
-    print(articles)
+    return content

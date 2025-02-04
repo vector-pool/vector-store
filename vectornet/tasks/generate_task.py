@@ -4,23 +4,19 @@ import bittensor as bt
 from traceback import print_exception
 import openai
 import os
-import asyncio
-
-from vectornet.utils.config import len_limit
 from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
+from dotenv import load_dotenv
+from vectornet.utils.version import get_version
+from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
+from vectornet.database_manage.validator_db_manager import ValidatorDBManager
 from vectornet.protocol import(
     CreateSynapse,
     ReadSynapse,
     UpdateSynapse,
     DeleteSynapse,
 )
-from vectornet.utils.version import get_version
-from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
-from vectornet.database_manage.validator_db_manager import ValidatorDBManager
-from dotenv import load_dotenv
 
 load_dotenv()
-
 
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
@@ -29,7 +25,7 @@ wiki_categories = config['wiki_categories']
 organization_names = config['organization_names']
 user_names = config['user_names']
 
-async def generate_create_request(validator_db_manager, article_size = 10) -> CreateSynapse:
+async def generate_create_request(validator_db_manager, article_size, min_len, max_len) -> CreateSynapse:
     
     user_name, organization_name, namespace_name = None, None, None
     while True:
@@ -42,10 +38,12 @@ async def generate_create_request(validator_db_manager, article_size = 10) -> Cr
             break
 
     category = "random"
-    articles = await wikipedia_scraper(article_size, category)
+    articles = await wikipedia_scraper(article_size, min_len, category)
     contents = []
+    total_len = 0
     for article in articles:
-        contents.append(article['content'][:len_limit])
+        contents.append(article['content'][:max_len])
+        total_len += article['length'] if article['length'] <= max_len else max_len
     version = get_version()
     query = CreateSynapse(
         version = version,
@@ -55,10 +53,10 @@ async def generate_create_request(validator_db_manager, article_size = 10) -> Cr
         namespace_name = namespace_name,
         index_data = contents,
     )
+    print(total_len)
+    return category, articles, query, total_len
     
-    return category, articles, query
-    
-async def generate_read_request(validator_db_manager):
+async def generate_read_request(validator_db_manager, max_len):
 
     result = validator_db_manager.get_random_unit_ids()
     bt.logging.debug(f"Get the random unit ids from database: {result}.")
@@ -73,8 +71,15 @@ async def generate_read_request(validator_db_manager):
     content = await get_wiki_article_content_with_pageid(pageid)
     
     if content is None:
-        raise Exception("The wiki-scraper with pageid doesn't work when creating ReadRequest.")
-        
+        bt.logging.error("Wiki-scraping with single pageid is failed.")
+    
+    if len(content) > max_len: 
+        content = content[:max_len]
+    
+    if content is None:
+        bt.logging.erro("Error occurs during the generating query_content with LLM.")
+                
+    # print("CONTENT is", content)
         
     llm_client = openai.OpenAI(
         api_key = os.getenv("OPENAI_API_KEY"),
@@ -83,7 +88,10 @@ async def generate_read_request(validator_db_manager):
     
     query_content = generate_query_content(llm_client, content)
     
-    bt.logging.debug(f"The generated query form llm is this:    {query_content[30]}")
+    if query_content is None:
+        raise Exception("Error during generating query_content with LLM.")
+    
+    bt.logging.debug(f"The generated query form llm is this:    {query_content[:30]}")
     
     if query_content is None:
         bt.logging.error("The query_content is None for ReadRequest, Check again openai operation.")
@@ -102,18 +110,21 @@ async def generate_read_request(validator_db_manager):
     
     return query, content, user_id, organization_id, namespace_id, pageids_info
 
-async def generate_update_request(article_size, validator_db_manager):
+async def generate_update_request(validator_db_manager, article_size, min_len, max_len):
     
     result = validator_db_manager.get_random_unit_ids()
     bt.logging.debug(f"Get the random unit ids from database: {result}.")
+    
     if result is not None:
         user_id, organization_id, namespace_id, user_name, organization_name, namespace_name, category, pageids_info = result
     else:
-        return None, None, None, None, None, None
-    articles = await wikipedia_scraper(article_size, category)
+        return None, None, None, None, None, None, None
+    articles = await wikipedia_scraper(article_size, min_len, category)
     contents = []
+    total_len = 0
     for article in articles:
-        contents.append(article['content'][:len_limit])
+        contents.append(article['content'][:max_len])
+        total_len += article['length'] if article['length'] <= max_len else max_len
     
     version = get_version() 
     
@@ -129,8 +140,8 @@ async def generate_update_request(article_size, validator_db_manager):
         namespace_name = namespace_name,
         index_data = contents,
     )
-    
-    return user_id, organization_id, namespace_id, category, articles, query
+    print(total_len)
+    return user_id, organization_id, namespace_id, category, articles, query, total_len
     
 async def generate_delete_request(validator_db_manager):
     
@@ -190,4 +201,3 @@ def generate_query_content(llm_client, content):
 
 if __name__ == '__main__':
     pass
-    

@@ -1,46 +1,23 @@
-# The MIT License (MIT)
-# Copyright © 2023 Yuma Rao
-# TODO(developer): Set your name
-# Copyright © 2023 <your name>
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the “Software”), to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-# and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of
-# the Software.
-
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-# THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
-
-
 import copy
 import numpy as np
 import asyncio
 import argparse
 import threading
 import bittensor as bt
-
+import datetime
 from typing import List, Union
 from traceback import print_exception
-
 from vectornet.base.neuron import BaseNeuron
 from vectornet.base.utils.weight_utils import (
     process_weights_for_netuid,
     convert_weights_and_uids_for_emit,
-)  # TODO: Replace when bittensor switches to numpy
+)  
 from vectornet.mock import MockDendrite
 from vectornet.utils.config import add_validator_args
 from vectornet.database_manage.validator_db_manager import CountManager
-from vectornet.utils.uids import get_random_uids
-import datetime
-
 from vectornet.validator.wandb_manager import WandbManager
-        
+from vectornet.utils.uids import get_random_uids
+
 class BaseValidatorNeuron(BaseNeuron):
     """
     Base class for Bittensor validators. Your validator should inherit from this class.
@@ -64,30 +41,24 @@ class BaseValidatorNeuron(BaseNeuron):
         
         self.wandb_manager = WandbManager(validator=self)
         
-        # Dendrite lets us send messages to other nodes (axons) in the network.
         if self.config.mock:
             self.dendrite = MockDendrite(wallet=self.wallet)
         else:
             self.dendrite = bt.dendrite(wallet=self.wallet)
         bt.logging.info(f"Dendrite: {self.dendrite}")
 
-        # Set up initial scoring weights for validation
         bt.logging.info("Building validation weights.")
         self.scores = np.zeros(self.metagraph.n, dtype=np.float32)
 
-        # Init sync with the network. Updates the metagraph.
         self.sync()
 
-        # Serve axon to enable external connections.
         if not self.config.neuron.axon_off:
             self.serve_axon()
         else:
             bt.logging.warning("axon off, not serving ip to chain.")
 
-        # Create asyncio event loop to manage async tasks.
         self.loop = asyncio.get_event_loop()
 
-        # Instantiate runners
         self.should_exit: bool = False
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
@@ -101,7 +72,6 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.info("serving ip to chain...")
         try:
             self.axon = bt.axon(wallet=self.wallet, config=self.config, port = self.config.axon.port)
-            
 
             try:
                 self.subtensor.serve_axon(
@@ -123,7 +93,6 @@ class BaseValidatorNeuron(BaseNeuron):
 
     async def concurrent_forward(self):
         random_uids = get_random_uids(self, self.config.neuron.num_concurrent_forwards)
-        random_uids = [5]
         # coroutines = [
         #     self.forward()
         #     for _ in range(self.config.neuron.num_concurrent_forwards)
@@ -154,35 +123,28 @@ class BaseValidatorNeuron(BaseNeuron):
             Exception: For unforeseen errors during the miner's operation, which are logged for diagnosis.
         """
 
-        # Check that validator is registered on the network.
         self.sync()
 
         bt.logging.info(f"Validator starting at block: {self.block}")
 
-        # This loop maintains the validator's operations until intentionally stopped.
         try:
             while True:
                 bt.logging.info(f"step({self.step}) block({self.block})")
 
-                # Run multiple forwards concurrently.
                 self.loop.run_until_complete(self.concurrent_forward())
 
-                # Check if we should exit.
                 if self.should_exit:
                     break
 
-                # Sync metagraph and potentially set weights.
                 self.sync()
 
                 self.step += 1
 
-        # If someone intentionally stops the validator, it'll safely terminate operations.
         except KeyboardInterrupt:
             self.axon.stop()
             bt.logging.success("Validator killed by keyboard interrupt.")
             exit()
 
-        # In case of unforeseen errors, the validator will log the error and continue operations.
         except Exception as err:
             bt.logging.error(f"Error during validation: {str(err)}")
             bt.logging.debug(
@@ -193,7 +155,7 @@ class BaseValidatorNeuron(BaseNeuron):
         """
         Wrapper for synchronizing the state of the network for the given miner or validator.
         """
-        # Ensure miner or validator hotkey is still registered on the network.
+        bt.logging.info("SYNCING NEURONS...")
         self.check_registered()
 
         self.check_wandb_status()
@@ -204,7 +166,6 @@ class BaseValidatorNeuron(BaseNeuron):
         if self.should_set_weights():
             self.set_weights()
 
-        # Always save state.
         self.save_state()
 
     def check_wandb_status(self):

@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-db_user_name = os.getenv("POSTGRESQL_VALIDATOR_USER_NAME")
-password = os.getenv("VALI_DB_PASSWORD")
+db_user_name = os.getenv("POSTGRESQL_USER_NAME")
+password = os.getenv("POSTGRES_PASSWARD")
 db_port = os.getenv("DB_PORT")
 
 class ValidatorDBManager:
@@ -69,7 +69,8 @@ class ValidatorDBManager:
                 category VARCHAR(255) NOT NULL,
                 user_id INTEGER NOT NULL REFERENCES users(user_id),
                 organization_id INTEGER NOT NULL REFERENCES organizations(organization_id),
-                pageids_info JSONB NOT NULL  -- Changed from INTEGER[] to JSONB
+                pageids_info JSONB NOT NULL,
+                storage_size DOUBLE PRECISION NOT NULL
             )
             """
         )
@@ -132,14 +133,14 @@ class ValidatorDBManager:
                 self.conn.commit()
         return organization_id
     
-    def add_namespace(self, namespace_id: int, user_id: int, organization_id: int, name: str, category: str, pageids_info: dict) -> int:
+    def add_namespace(self, namespace_id: int, user_id: int, organization_id: int, name: str, category: str, pageids_info: dict, storage_size: int) -> int:
         """Add a new namespace, return namespace ID."""
         existing_namespace_id, existing_namespace_name = self.get_namespace(user_id, organization_id, namespace_id)
         if existing_namespace_id is None:
             with self.conn.cursor() as cur:
                 cur.execute(
-                    "INSERT INTO namespaces (namespace_id, user_id, organization_id, name, category, pageids_info) VALUES (%s, %s, %s, %s, %s, %s) RETURNING namespace_id",
-                    (namespace_id, user_id, organization_id, name, category, json.dumps(pageids_info))  # Convert dict to JSON string
+                    "INSERT INTO namespaces (namespace_id, user_id, organization_id, name, category, pageids_info, storage_size) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING namespace_id",
+                    (namespace_id, user_id, organization_id, name, category, json.dumps(pageids_info), storage_size)  
                 )
                 self.conn.commit()
                 return cur.fetchone()[0]  # Return the newly created namespace ID
@@ -214,6 +215,7 @@ class ValidatorDBManager:
             namespace_id: int,
             category: str,
             pageids_info: List[dict],
+            storage_size: int,
         ):
         """Handle create operations."""
         if request_type.lower() != 'create':
@@ -221,7 +223,7 @@ class ValidatorDBManager:
 
         self.add_user(user_id, user_name)
         self.add_organization(organization_id, user_id, organization_name)
-        self.add_namespace(namespace_id, user_id, organization_id, namespace_name, category, pageids_info)
+        self.add_namespace(namespace_id, user_id, organization_id, namespace_name, category, pageids_info, storage_size)
 
     def update_operation(
             self,
@@ -232,33 +234,33 @@ class ValidatorDBManager:
             namespace_id: int,
             category: str,
             pageids_info: dict,
+            storage_size: int,
         ) -> Optional[str]:
-        """Update the pageids_info for a specific namespace."""
+        """Update the pageids_info and storage_size for a specific namespace."""
         if request_type.lower() != 'update':
             raise ValueError("Invalid request type. Expected 'update'.")
 
         if perform == "ADD":
             with self.conn.cursor() as cur:
-                # Step 1: Fetch the existing pageids_info
-                cur.execute("SELECT pageids_info FROM namespaces WHERE namespace_id = %s;", (namespace_id,))
+                cur.execute("SELECT pageids_info, storage_size FROM namespaces WHERE namespace_id = %s;", (namespace_id,))
                 result = cur.fetchone()
-                
+
                 if result is None:
                     raise Exception(f"Namespace not found in update_operation: {namespace_id}")
-                
-                existing_pageids_info = result[0]  # Get the current pageids_info dictionary
-                
-                # Step 2: Update existing dictionary with new entries
-                existing_pageids_info.update(pageids_info)
 
-                # Step 3: Convert to JSON string and update the row in the database
+                existing_pageids_info = result[0]  
+                existing_storage_size = result[1]  
+
+                existing_pageids_info.update(pageids_info)
+                new_storage_size = existing_storage_size + storage_size
+
                 cur.execute(
-                    "UPDATE namespaces SET pageids_info = %s WHERE namespace_id = %s;",
-                    (json.dumps(existing_pageids_info), namespace_id)  # Convert dict to JSON string
+                    "UPDATE namespaces SET pageids_info = %s, storage_size = %s WHERE namespace_id = %s;",
+                    (json.dumps(existing_pageids_info), new_storage_size, namespace_id)
                 )
 
-                self.conn.commit()  # Commit the changes
-        
+                self.conn.commit()  
+
     def delete_operation(
             self,
             request_type: str,
@@ -281,6 +283,16 @@ class ValidatorDBManager:
             )
             
             self.conn.commit()  
+        
+    def get_total_storage_size(self) -> int:
+        """Fetch the total storage size across all rows in the namespaces table."""
+        
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT SUM(storage_size) FROM namespaces;")
+            result = cur.fetchone()
+            
+            return result[0] if result[0] is not None else 0  
+            
 
     def close_connection(self):
         """Close the database connection."""

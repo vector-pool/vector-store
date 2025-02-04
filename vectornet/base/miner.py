@@ -1,31 +1,10 @@
-# The MIT License (MIT)
-# Copyright © 2023 Yuma Rao
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the “Software”), to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-# and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of
-# the Software.
-
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-# THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
-
-import time
 import asyncio
 import threading
 import argparse
 import traceback
-
 import bittensor as bt
-
 from vectornet.base.neuron import BaseNeuron
 from vectornet.utils.config import add_miner_args
-
 from typing import Union, Tuple
 from vectornet.protocol import(
     CreateSynapse,
@@ -33,11 +12,11 @@ from vectornet.protocol import(
     UpdateSynapse,
     DeleteSynapse,
 )
+
 class BaseMinerNeuron(BaseNeuron):
     """
     Base class for Bittensor miners.
     """
-
     neuron_type: str = "MinerNeuron"
 
     @classmethod
@@ -48,7 +27,6 @@ class BaseMinerNeuron(BaseNeuron):
     def __init__(self, config=None):
         super().__init__(config=config)
 
-        # Warn if allowing incoming requests from anyone.
         if not self.config.blacklist.force_validator_permit:
             bt.logging.warning(
                 "You are allowing non-validators to send requests to your miner. This is a security risk."
@@ -57,14 +35,11 @@ class BaseMinerNeuron(BaseNeuron):
             bt.logging.warning(
                 "You are allowing non-registered entities to send requests to your miner. This is a security risk."
             )
-        # The axon handles request processing, allowing validators to send this miner requests.
         self.axon = bt.axon(
             wallet=self.wallet,
-            # config=self.config() if callable(self.config) else self.config,
             port=self.config.axon.port,
         )
 
-        # Attach determiners which functions are called when servicing a request.
         bt.logging.info(f"Attaching forward function to miner axon.")
         self.axon.attach(
             forward_fn=self.forward_create_request,
@@ -86,7 +61,6 @@ class BaseMinerNeuron(BaseNeuron):
     
         bt.logging.info(f"Axon created: {self.axon}")
 
-        # Instantiate runners
         self.should_exit: bool = False
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
@@ -127,18 +101,13 @@ class BaseMinerNeuron(BaseNeuron):
             Exception: For unforeseen errors during the miner's operation, which are logged for diagnosis.
         """
 
-        # Check that miner is registered on the network.
-        
         self.sync()
 
-        # Serve passes the axon information to the network + netuid we are hosting on.
-        # This will auto-update if the axon port of external ip have changed.
         bt.logging.info(
             f"Serving miner axon {self.axon} on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}"
         )
         self.axon.serve(netuid=self.config.netuid, subtensor=self.subtensor)
 
-        # Start  starts the miner's axon, making it active on the network.
         self.axon.start()
 
         bt.logging.info(f"Miner starting at block: {self.block}")
@@ -165,14 +134,11 @@ class BaseMinerNeuron(BaseNeuron):
         try:
             self.sync()
         
-
-        # If someone intentionally stops the miner, it'll safely terminate operations.
         except KeyboardInterrupt:
             self.axon.stop()
             bt.logging.success("Miner killed by keyboard interrupt.")
             exit()
 
-        # In case of unforeseen errors, the miner will log the error and continue operations.
         except Exception as e:
             bt.logging.error(traceback.format_exc())
 

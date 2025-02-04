@@ -6,7 +6,7 @@
 
 </div>
 
-### Validator and Miner Installation
+## Validator and Miner Installation
 
 Please see [Validator and Miner Setup](docs/setup_guide.md)
 
@@ -16,7 +16,7 @@ Please see [Validator and Miner Setup](docs/setup_guide.md)
 
 ## Abstract
 
-This subnet is dedicated to providing a reliable and decentralized vector storage solution, specifically designed to enhance AI training and development within the Bittensor ecosystem.
+VectorStore aims to democratize vector database technology by providing a decentralized, cost-free solution that leverages the power of the Bittensor ecosystem. Through network competition and incentivized mining, we ensure continuous enhancement of embedding quality and retrieval efficiency, setting new standards for vector representation and search performance. Our mission is to empower developers, researchers, and enterprises with an efficient, secure, and scalable vector storage solution that evolves through network effects and competitive dynamics
 
 ## Objectives & Contributions
 
@@ -28,14 +28,7 @@ Validators will rigorously assess miners' performance by evaluating the quality 
 
 ## Units
 
-### User
-This is the largest unit of storage, similar to an organization in Pinecone, encompassing multiple organizations.
-
-### Organization
-This is the mid-level unit of storage, comprising several namespaces.
-
-### Namespace
-This is the smallest unit of storage, capable of containing hundreds or thousands of vectors, each representing an embedding of text.
+VectorStore implements a hierarchical storage structure with three distinct levels: Users, Organizations, and Namespaces. This structure ensures efficient data organization and management while maintaining clear access controls and operational boundaries.
 
 ## How This Subnet Works
 ### Validator
@@ -57,8 +50,6 @@ Miners receive CRUD queries from validators, and as they remain in the system lo
 ***Paladin*** : count < 2500 (weight = 0.9)
 
 ***Lord*** : count ≥ 4000 (weight = 1.0) 🌱
-
-These settings will be modified during the testing phase.
 
 ***Rewarding***
 

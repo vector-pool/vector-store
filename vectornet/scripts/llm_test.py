@@ -1,29 +1,12 @@
 import openai
 import os
-import yaml
-import random
-import bittensor as bt
 from traceback import print_exception
 import openai
 import os
-import asyncio
-
-from vectornet.utils.config import len_limit
-from vectornet.wiki_integraion.wiki_scraper import wikipedia_scraper
-from vectornet.protocol import(
-    CreateSynapse,
-    ReadSynapse,
-    UpdateSynapse,
-    DeleteSynapse,
-)
-from vectornet.utils.version import get_version
-from vectornet.wiki_integraion.wiki_scraper import get_wiki_article_content_with_pageid
-from vectornet.database_manage.validator_db_manager import ValidatorDBManager
 from dotenv import load_dotenv
 
 load_dotenv()
 api_key=os.environ["OPENAI_API_KEY"]
-print(api_key)
 
 llm_client = openai.OpenAI(
     api_key = api_key,
@@ -40,8 +23,6 @@ def generate_query_content(llm_client, content):
     prompt += (
         """Generate a summary of the original content using approximately 700-900 characters. Provide only the generated summary in plain text, without any additional context, explanation, or formatting. single and double quotes or new lines."""
     )
-
-    print(f"Prompt: {prompt}")
 
     try:
         output = llm_client.chat.completions.create(

@@ -5,7 +5,6 @@ from logging.handlers import RotatingFileHandler
 EVENTS_LEVEL_NUM = 38
 DEFAULT_LOG_BACKUP_COUNT = 10
 
-
 def setup_events_logger(full_path, events_retention_size):
     logging.addLevelName(EVENTS_LEVEL_NUM, "EVENT")
 

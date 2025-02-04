@@ -1,29 +1,8 @@
-# The MIT License (MIT)
-# Copyright © 2023 Yuma Rao
-# Copyright © 2023 Opentensor Foundation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the “Software”), to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-# and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of
-# the Software.
-
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-# THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
-
 import os
 import subprocess
 import argparse
 import bittensor as bt
 from .logging import setup_events_logger
-
-len_limit = int(1e4)
-
 
 def is_cuda_available():
     try:
@@ -244,9 +223,30 @@ def add_validator_args(cls, parser):
     parser.add_argument(
         "--wandb.entity",
         type=str,
-        help="The name of the project where you are sending the new run.",
+        help="The name of the entity where you are sending the new run.",
         default="cs-eros111-sift-science",
     )
+    
+    parser.add_argument(
+        "--neuron.task_size",
+        type=int,
+        help="The quantity of articles for each create and update request.",
+        default=3,
+    )    
+    
+    parser.add_argument(
+        "--neuron.max_len",
+        type=int,
+        help="The maximum length of wikipedia article when you are sending the ReadRequest and UpdateRequest.",
+        default=10000,
+    )    
+    
+    parser.add_argument(
+        "--neuron.min_len",
+        type=int,
+        help="The minimum length of wikipedia article when you are scraping.",
+        default=3000,
+    )    
 
 
 def config(cls):

@@ -1,10 +1,7 @@
 import aiohttp
 import asyncio
 from datetime import datetime
-import re
-import logging
 import bittensor as bt
-import yaml
 import httpx
 from typing import Tuple
 async def get_wiki_content_for_page(pageid: int) -> Tuple[str, str]:
@@ -80,8 +77,3 @@ async def sync_articles():
     with open('result_wiki.txt', 'w', encoding='utf-8') as f:
 
         f.write(f"{articles}\n")  # Write each result as a dictionary
-
-    
-if __name__ =="__main__":
-    asyncio.run(sync_articles())
-    # asyncio.run(get_wiki_content_for_page(23284357))
