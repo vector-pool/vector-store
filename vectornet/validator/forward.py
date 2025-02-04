@@ -55,47 +55,49 @@ async def forward(self, miner_uid):
     
     # miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
     # miner_uid = miner_uids[0] # the default sample_size is one
-    
-    bt.logging.info(GREEN + "Starting Forward" + RESET)
-    
-    miner_uid = int(miner_uid)
-    validator_db_manager = ValidatorDBManager(miner_uid)
-    count_manager = CountManager()
-    
-    count_manager.add_count(miner_uid)
-    cur_count_synapse = count_manager.read_count(miner_uid)
+    try: 
+        bt.logging.info(GREEN + "Starting Forward" + RESET)
+        
+        miner_uid = int(miner_uid)
+        validator_db_manager = ValidatorDBManager(miner_uid)
+        count_manager = CountManager()
+        
+        count_manager.add_count(miner_uid)
+        cur_count_synapse = count_manager.read_count(miner_uid)
 
-    create_request_zero_score = await forward_create_request(self, validator_db_manager, miner_uid)
-    time.sleep(30)
-    update_request_zero_scores = await forward_update_request(self, validator_db_manager, miner_uid)
-    time.sleep(30)
-    delete_request_zero_score = await forward_delete_request(self, validator_db_manager, miner_uid)
-    time.sleep(20)
-    read_score = await forward_read_request(self, validator_db_manager, miner_uid)
-    time.sleep(40)
-    
-    # create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 0], 1, 1
-    
-    bt.logging.debug("Passed all these 4 synapses successfully.")
-    bt.logging.info(f"current total number of synapse cycle for uid: {miner_uid} is {cur_count_synapse}.")
-    weight = weight_controller(cur_count_synapse)
-    
-    if weight is None:
-        raise Exception("error occurs in weight mapping in evaluation")
+        create_request_zero_score = await forward_create_request(self, validator_db_manager, miner_uid)
+        time.sleep(30)
+        update_request_zero_scores = await forward_update_request(self, validator_db_manager, miner_uid)
+        time.sleep(30)
+        delete_request_zero_score = await forward_delete_request(self, validator_db_manager, miner_uid)
+        time.sleep(20)
+        read_score = await forward_read_request(self, validator_db_manager, miner_uid)
+        time.sleep(40)
+        
+        # create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 0], 1, 1
+        
+        bt.logging.debug("Passed all these 4 synapses successfully.")
+        bt.logging.info(f"current total number of synapse cycle for uid: {miner_uid} is {cur_count_synapse}.")
+        weight = weight_controller(cur_count_synapse)
+        
+        if weight is None:
+            raise Exception("error occurs in weight mapping in evaluation")
 
-    bt.logging.info(f"{GREEN}Evaluated scores:{RESET} Create: {create_request_zero_score}, Update: {update_request_zero_scores}, Delete: {delete_request_zero_score}, Read: {read_score}")
-    
-    rewards = await get_rewards(
-        create_request_zero_score,
-        update_request_zero_scores,
-        delete_request_zero_score,
-        read_score,
-        weight,
-    )
+        bt.logging.info(f"{GREEN}Evaluated scores:{RESET} Create: {create_request_zero_score}, Update: {update_request_zero_scores}, Delete: {delete_request_zero_score}, Read: {read_score}")
+        
+        rewards = await get_rewards(
+            create_request_zero_score,
+            update_request_zero_scores,
+            delete_request_zero_score,
+            read_score,
+            weight,
+        )
 
-    bt.logging.info(f"Scored responses: {rewards}")
-    self.update_scores(rewards, [miner_uid])
-    time.sleep(20)    
+        bt.logging.info(f"Scored responses: {rewards}")
+        self.update_scores(rewards, [miner_uid])
+        time.sleep(20)    
+    
+
 
 async def forward_create_request(self, validator_db_manager, miner_uid):
     category, articles, create_request = await generate_create_request(
@@ -105,7 +107,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
 
     pageids = [article['pageid'] for article in articles]
     
-    bt.logging.info(f"{RED}Sent Create request{RESET}")
+    bt.logging.info(f"{GREEN}Sent Create request{RESET}")
     
     responses = await self.dendrite(
         axons = [self.metagraph.axons[miner_uid]],
