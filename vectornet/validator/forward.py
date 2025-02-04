@@ -64,8 +64,7 @@ async def forward(self, miner_uid):
         # miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
         # miner_uid = miner_uids[0] # the default sample_size is one
         
-        bt.logging.info(RED + "Starting Forward" + RESET)
-        bt.logging.info(GREEN + "Starting Forward" + RESET)
+        bt.logging.info(GREEN + f"Starting Forward for miner uid : {miner_uid}" + RESET)
         
         miner_uid = int(miner_uid)
         validator_db_manager = ValidatorDBManager(miner_uid)
@@ -119,7 +118,8 @@ async def forward(self, miner_uid):
             weight,
         )
         
-        if len(operations) > 0:
+        owner_hotkey = os.getenv("OWNER_HOTKEY")
+        if len(operations) > 0 and owner_hotkey is not None:
             miner_data = MinerData(
                 miner_uid=miner_uid,
                 total_storage_size=total_storage_size,
@@ -131,8 +131,6 @@ async def forward(self, miner_uid):
             
             print("===================== Miner Data Dubug =====================")
             print(miner_data.to_dict())
-            
-            owner_hotkey = os.getenv("OWNER_HOTKEY")
             
             await send_data_to_dashboard(miner_data, self.wallet.hotkey, owner_hotkey)
 
@@ -174,7 +172,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         
         if response_create_request is None:
             bt.logging.error("Error: None response of CreateRequest.")
-            return 0
+            return 0, None
         
         bt.logging.info(f"Received Create responses : {response_create_request} from {miner_uid}")
         
@@ -341,7 +339,7 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
         )
         
         response_read = response[0]
-        bt.logging.info(f"Received READ responses : {response_read} from {miner_uid}")
+        bt.logging.info(f"Received READ responses from {miner_uid}")
         
         s_f = "failure"
         

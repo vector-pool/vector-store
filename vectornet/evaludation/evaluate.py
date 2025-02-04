@@ -10,32 +10,32 @@ import asyncio
 def evaluate_create_request(response, validator_db_manager, query, pageids):
     
     if response is None:
-        bt.logging.error("The response is missing a value.")
+        bt.logging.debug("The response is missing a value.")
         return 0
     if len(response) != 4:
-        bt.logging.error("The response does not have the expected length of 4; it contains either too few or too many integers.")
+        bt.logging.debug("The response does not have the expected length of 4; it contains either too few or too many integers.")
         return 0
     if not response[3]:
-        bt.logging.error("The validator_id list is empty in the response, which could lead to the validator sending empty index_data.")
+        bt.logging.debug("The validator_id list is empty in the response, which could lead to the validator sending empty index_data.")
     
     user_id, organization_id, namespace_id, vector_ids = get_ids_from_response(response)
     db_user_id, db_user_name, db_organization_id, db_organization_name, db_namespace_id, db_namespace_name = validator_db_manager.get_db_data(user_id, organization_id, namespace_id)
     
     if db_user_id:
         if db_user_name != query.user_name:
-            bt.logging.error("The user_name of query and user_name of response are different.")
+            bt.logging.debug("The user_name of query and user_name of response are different.")
             return 0
     
     if db_organization_id:
         if db_organization_name != query.organization_name:
-            bt.logging.error("The organization_name of query and organization_name of response are different.")
+            bt.logging.debug("The organization_name of query and organization_name of response are different.")
             return 0
     
     if db_namespace_id is not None:
         return 0
     
     if len(pageids) != len(vector_ids):
-        bt.logging.error("The length of pageids does not match the length of vector_ids.")
+        bt.logging.debug("The length of pageids does not match the length of vector_ids.")
         return 0
     
     return 1
@@ -43,11 +43,11 @@ def evaluate_create_request(response, validator_db_manager, query, pageids):
 def evaluate_update_request(query, response, query_user_id, query_organization_id, query_namespace_id, pageids):
     
     if response is None:
-        bt.logging.error("None response of UpdateRequest")
+        bt.logging.debug("None response of UpdateRequest")
         return 0
     
     if len(response) != 4:
-        bt.logging.error("The response does not have the expected length of 4; it contains either too few or too many integers.")
+        bt.logging.debug("The response does not have the expected length of 4; it contains either too few or too many integers.")
         return 0
     
     response_user_id, response_organization_id, response_namespace_id, vector_ids = get_ids_from_response(response)
@@ -56,11 +56,11 @@ def evaluate_update_request(query, response, query_user_id, query_organization_i
         response_organization_id != query_organization_id or
         response_namespace_id != query_namespace_id
     ):
-        bt.logging.error("The id pairs are not the same in the update request response.")
+        bt.logging.debug("The id pairs are not the same in the update request response.")
         return 0
     
     if len(pageids) != len(vector_ids):
-        bt.logging.error("The length of pageids does not match the length of vector_ids.")
+        bt.logging.debug("The length of pageids does not match the length of vector_ids.")
         return 0
     
     return 1
@@ -68,11 +68,11 @@ def evaluate_update_request(query, response, query_user_id, query_organization_i
 def evaluate_delete_request(query, response, query_user_id, query_organization_id, query_namespace_id,):
     
     if response is None:
-        bt.logging.error("None response of DeleteRequest.")
+        bt.logging.debug("None response of DeleteRequest.")
         return 0
     
     if len(response) != 3:
-        bt.logging.error("The delete request response does not have the expected length of 3.")
+        bt.logging.debug("The delete request response does not have the expected length of 3.")
         return 0
     
     response_user_id, response_organization_id, response_namespace_id = response
@@ -82,7 +82,7 @@ def evaluate_delete_request(query, response, query_user_id, query_organization_i
         query_organization_id != response_organization_id or
         query_namespace_id != response_namespace_id
     ):
-        bt.logging.error("The delete request ids do not match the expected values.")
+        bt.logging.debug("The delete request ids do not match the expected values.")
         return 0
     
     return 1
@@ -92,11 +92,11 @@ def evaluate_read_request(query_user_id, query_organization_id, query_namespace_
     score = 0
     
     if response is None:
-        bt.logging.error("None response of ReadRequest.")
+        bt.logging.debug("None response of ReadRequest.")
         return 0
     
     if len(response) != 5:
-        bt.logging.error("The response from the read request does not have the expected length of 5.")
+        bt.logging.debug("The response from the read request does not have the expected length of 5.")
         return 0
     
     response_user_id, response_organization_id, response_namespace_id, response_vector_id, response_content = response
@@ -104,7 +104,7 @@ def evaluate_read_request(query_user_id, query_organization_id, query_namespace_
     pageid = vectorid_to_pageid.get(response_vector_id)
     
     if pageid is None:
-        bt.logging.error("No corresponding pageid found for the response vector_id.")
+        bt.logging.debug("No corresponding pageid found for the response vector_id.")
         return 0
     else:
         content = asyncio.run(get_wiki_article_content_with_pageid(pageid))
@@ -117,7 +117,7 @@ def evaluate_read_request(query_user_id, query_organization_id, query_namespace_
         response_organization_id != query_organization_id or
         response_namespace_id != query_namespace_id
     ):
-        bt.logging.error("The response identifiers do not match the query identifiers.")
+        bt.logging.debug("The response identifiers do not match the query identifiers.")
         return 0
     
     if response_content == original_content:
