@@ -150,7 +150,7 @@ async def generate_delete_request(validator_db_manager):
     if result is not None:
         user_id, organization_id, namespace_id, user_name, organization_name, namespace_name, category, pageids_info = result
     else:
-        return None
+        return None, None, None, None
     
     version = get_version()
     
