@@ -5,9 +5,9 @@ services:
     image: postgres:14
     container_name: postgres14
     environment:
-      POSTGRES_USER: ${POSTGRESQL_VALIDATOR_USER_NAME}
-      POSTGRES_PASSWORD: ${VALI_DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${POSTGRESQL_USER_NAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
     ports:
       - "${DB_PORT}:5432"
     volumes:
