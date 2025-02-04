@@ -6,7 +6,7 @@
 
 </div>
 
-### Validator and Miner Installation
+## Validator and Miner Installation
 
 Please see [Validator and Miner Setup](docs/setup_guide.md)
 
@@ -16,7 +16,7 @@ Please see [Validator and Miner Setup](docs/setup_guide.md)
 
 ## Abstract
 
-This subnet is dedicated to providing a reliable and decentralized vector storage solution, specifically designed to enhance AI training and development within the Bittensor ecosystem.
+VectorStore aims to democratize vector database technology by providing a decentralized, cost-free solution that leverages the power of the Bittensor ecosystem. Through network competition and incentivized mining, we ensure continuous enhancement of embedding quality and retrieval efficiency, setting new standards for vector representation and search performance. Our mission is to empower developers, researchers, and enterprises with an efficient, secure, and scalable vector storage solution that evolves through network effects and competitive dynamics
 
 ## Objectives & Contributions
 
@@ -28,14 +28,7 @@ Validators will rigorously assess miners' performance by evaluating the quality 
 
 ## Units
 
-### User
-This is the largest unit of storage, similar to an organization in Pinecone, encompassing multiple organizations.
-
-### Organization
-This is the mid-level unit of storage, comprising several namespaces.
-
-### Namespace
-This is the smallest unit of storage, capable of containing hundreds or thousands of vectors, each representing an embedding of text.
+VectorStore implements a hierarchical storage structure with three distinct levels: Users, Organizations, and Namespaces. This structure ensures efficient data organization and management while maintaining clear access controls and operational boundaries.
 
 ## How This Subnet Works
 ### Validator
@@ -48,17 +41,15 @@ Miners receive CRUD queries from validators. They are responsible for embedding 
 
 Miners receive CRUD queries from validators, and as they remain in the system longer, maintaining performance becomes challenging due to the continuous increase in data size. To address this, miners are categorized into five groups based on the number of synapse circles they have processed, with older miners receiving higher weights.
 
-***Squire*** : count < 100 (weight = 0.6)
+***Squire*** : count < 500 (weight = 0.6)
 
-***Knight*** : count < 150 (weight = 0.7)
+***Knight*** : count < 1000 (weight = 0.7)
 
-***Champion*** : count < 250 (weight = 0.8)
+***Champion*** : count < 1500 (weight = 0.8)
 
-***Paladin*** : count < 400 (weight = 0.9)
+***Paladin*** : count < 2500 (weight = 0.9)
 
-***Lord*** : count ≥ 400 (weight = 1.0) 🌱
-
-These settings will be modified during the testing phase.
+***Lord*** : count ≥ 4000 (weight = 1.0) 🌱
 
 ***Rewarding***
 
