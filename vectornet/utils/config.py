@@ -172,7 +172,7 @@ def add_validator_args(cls, parser):
         "--neuron.num_concurrent_forwards",
         type=int,
         help="The number of concurrent forwards running at any time.",
-        default=1,
+        default=2,
     )
 
     parser.add_argument(
@@ -245,7 +245,7 @@ def add_validator_args(cls, parser):
         "--neuron.min_len",
         type=int,
         help="The minimum length of wikipedia article when you are scraping.",
-        default=3000,
+        default=1000,
     )    
 
 

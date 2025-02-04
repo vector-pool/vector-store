@@ -64,8 +64,7 @@ async def forward(self, miner_uid):
         # miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
         # miner_uid = miner_uids[0] # the default sample_size is one
         
-        bt.logging.info(RED + "Starting Forward" + RESET)
-        bt.logging.info(GREEN + "Starting Forward" + RESET)
+        bt.logging.info(GREEN + f"Starting Forward for miner uid : {miner_uid}" + RESET)
         
         miner_uid = int(miner_uid)
         validator_db_manager = ValidatorDBManager(miner_uid)
@@ -78,27 +77,24 @@ async def forward(self, miner_uid):
         
         if create_op is not None:
             operations.append(create_op)
-        time.sleep(7)
+        time.sleep(10)
         
         update_request_zero_scores, update_ops = await forward_update_request(self, validator_db_manager, miner_uid)
         operations.extend(update_ops)
-        time.sleep(30)
+        time.sleep(20)
         
         delete_request_zero_score, delete_op = await forward_delete_request(self, validator_db_manager, miner_uid)
         
         if delete_op is not None:
             operations.append(delete_op)
-        time.sleep(20)
+        time.sleep(10)
         
         read_score, read_op = await forward_read_request(self, validator_db_manager, miner_uid)
             
         if read_op is not None:
             operations.append(read_op)
-        time.sleep(40)
         
         total_storage_size = validator_db_manager.get_total_storage_size()
-        
-        # create_request_zero_score, update_request_zero_scores, delete_request_zero_score, read_score = 1, [1, 1, 0], 1, 1
         
         bt.logging.debug("Passed all these 4 synapses successfully.")
         
@@ -122,7 +118,8 @@ async def forward(self, miner_uid):
             weight,
         )
         
-        if len(operations) > 0:
+        owner_hotkey = os.getenv("OWNER_HOTKEY")
+        if len(operations) > 0 and owner_hotkey is not None:
             miner_data = MinerData(
                 miner_uid=miner_uid,
                 total_storage_size=total_storage_size,
@@ -135,13 +132,11 @@ async def forward(self, miner_uid):
             print("===================== Miner Data Dubug =====================")
             print(miner_data.to_dict())
             
-            owner_hotkey = os.getenv("OWNER_HOTKEY")
-            
             await send_data_to_dashboard(miner_data, self.wallet.hotkey, owner_hotkey)
 
         bt.logging.info(f"Scored responses: {rewards}")
         self.update_scores(rewards, [miner_uid])
-        time.sleep(20)    
+        time.sleep(40)    
     except Exception as e:
         bt.logging.error(f"Error occurs during forward: {e}")        
 
@@ -167,7 +162,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
             axons = [self.metagraph.axons[miner_uid]],
             synapse = create_request,
             deserialize = True,
-            timeout = 20,
+            timeout = 10,
         )
         
         if len(responses) != 1:
@@ -177,7 +172,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         
         if response_create_request is None:
             bt.logging.error("Error: None response of CreateRequest.")
-            return 0
+            return 0, None
         
         bt.logging.info(f"Received Create responses : {response_create_request} from {miner_uid}")
         
@@ -244,7 +239,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
                 axons = [self.metagraph.axons[miner_uid]],
                 synapse = update_request,
                 deserialize = True,
-                timeout = 40,
+                timeout = 20,
             )
             response_update_request = response[0]
             bt.logging.info(f"\n\nReceived Update responses : {response_update_request} from {miner_uid}\n\n")
@@ -303,7 +298,7 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
                 axons = [self.metagraph.axons[miner_uid]],
                 synapse = delete_request,
                 deserialize = True,
-                timeout = 10,
+                timeout = 5,
             )
             response_delete_request = response[0]
             bt.logging.debug(f"Received Delete responses: {response_delete_request} from {miner_uid}") 
@@ -340,11 +335,11 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
             axons = [self.metagraph.axons[miner_uid]],
             synapse = read_request,
             deserialize = True,
-            timeout = 30,
+            timeout = 5,
         )
         
         response_read = response[0]
-        bt.logging.info(f"Received READ responses : {response_read} from {miner_uid}")
+        bt.logging.info(f"Received READ responses from {miner_uid}")
         
         s_f = "failure"
         

@@ -45,7 +45,7 @@ async def generate_header(hotkey: Keypair, body: bytes, signed_for: Optional[str
 
 async def send_data_to_dashboard(miner_data: MinerData, hotkey: Keypair, receiver_hotkey_ss58: str):
     body = json.dumps(miner_data.to_dict()).encode('utf-8')
-    print(body)
+    # print(body)
     headers = await generate_header(hotkey, body, signed_for=receiver_hotkey_ss58)
     
     url = "http://" + os.getenv("DASHBOARD_SERVER_ADDRESS") + os.getenv("ENDPOINT")
