@@ -2,52 +2,52 @@ organization_names:
   - Apple
   - Microsoft
   - Amazon
-  # - Google
-  # - Facebook
-  # - Alibaba
-  # - Tencent
-  # - Berkshire Hathaway
-  # - Visa
-  # - Johnson & Johnson
-  # - Samsung
-  # - Walmart
-  # - Nestle
-  # - Procter & Gamble
-  # - Roche
-  # - NVIDIA
-  # - TSMC
-  # - LVMH
-  # - Mastercard
-  # - Intel
-  # - Verizon
-  # - Coca-Cola
-  # - Pfizer
-  # - Toyota
-  # - AT&T
-  # - Netflix
-  # - PepsiCo
-  # - Cisco
-  # - Nike
-  # - Oracle
-  # - IBM
-  # - Unilever
-  # - Adobe
-  # - Salesforce
-  # - PayPal
-  # - AbbVie
-  # - ExxonMobil
-  # - Chevron
-  # - Novartis
-  # - Walt Disney
-  # - Merck
-  # - McDonald's
-  # - L'Oréal
-  # - Costco
-  # - Boeing
-  # - Siemens
-  # - Honeywell
-  # - Qualcomm
-  # - SAP
+  - Google
+  - Facebook
+  - Alibaba
+  - Tencent
+  - Berkshire Hathaway
+  - Visa
+  - Johnson & Johnson
+  - Samsung
+  - Walmart
+  - Nestle
+  - Procter & Gamble
+  - Roche
+  - NVIDIA
+  - TSMC
+  - LVMH
+  - Mastercard
+  - Intel
+  - Verizon
+  - Coca-Cola
+  - Pfizer
+  - Toyota
+  - AT&T
+  - Netflix
+  - PepsiCo
+  - Cisco
+  - Nike
+  - Oracle
+  - IBM
+  - Unilever
+  - Adobe
+  - Salesforce
+  - PayPal
+  - AbbVie
+  - ExxonMobil
+  - Chevron
+  - Novartis
+  - Walt Disney
+  - Merck
+  - McDonald's
+  - L'Oréal
+  - Costco
+  - Boeing
+  - Siemens
+  - Honeywell
+  - Qualcomm
+  - SAP
   # - AMD
   # - Square
   # - Shopify
@@ -265,43 +265,43 @@ organization_names:
 user_names:
   - Ace
   - Amos
-  # - Ash
-  # - Axel
-  # - Bandit
-  # - Beau
-  # - Billy
-  # - Blaze
-  # - Bo
-  # - Boomer
-  # - Boone
-  # - Brady
-  # - Brett
-  # - Brock
-  # - Brooks
-  # - Buck
-  # - Buster
-  # - Cade
-  # - Cale
-  # - Cal
-  # - Cash
-  # - Chance
-  # - Charlie
-  # - Chase
-  # - Cheyenne
-  # - Clay
-  # - Clint
-  # - Clyde
-  # - Cody
-  # - Colt
-  # - Cooper
-  # - Dallas
-  # - Dalton
-  # - Dane
-  # - Dax
-  # - Dean
-  # - Decker
-  # - Denver
-  # - Dex
+  - Ash
+  - Axel
+  - Bandit
+  - Beau
+  - Billy
+  - Blaze
+  - Bo
+  - Boomer
+  - Boone
+  - Brady
+  - Brett
+  - Brock
+  - Brooks
+  - Buck
+  - Buster
+  - Cade
+  - Cale
+  - Cal
+  - Cash
+  - Chance
+  - Charlie
+  - Chase
+  - Cheyenne
+  - Clay
+  - Clint
+  - Clyde
+  - Cody
+  - Colt
+  - Cooper
+  - Dallas
+  - Dalton
+  - Dane
+  - Dax
+  - Dean
+  - Decker
+  - Denver
+  - Dex
   # - Dixon
   # - Duke
   # - Dusty
@@ -413,14 +413,14 @@ user_names:
 wiki_categories:
   - Almanacs
   - Atlases
-#   - Biographical dictionaries
-#   - Dictionaries
-#   - Encyclopedias
-#   - Glossaries
-#   - Handbooks and manuals
-#   - Lists
-#   - Medical manuals
-#   - Reference book stubs
+  - Biographical dictionaries
+  - Dictionaries
+  - Encyclopedias
+  - Glossaries
+  - Handbooks and manuals
+  - Lists
+  - Medical manuals
+  - Reference book stubs
 #   - Reference works in the public domain
 #   - Style guides
 #   - Trivia books
