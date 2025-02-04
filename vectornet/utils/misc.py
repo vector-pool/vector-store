@@ -1,28 +1,9 @@
-# The MIT License (MIT)
-# Copyright © 2023 Yuma Rao
-# Copyright © 2023 Opentensor Foundation
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the “Software”), to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-# and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of
-# the Software.
-
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-# THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
-
 import time
 import math
 import hashlib as rpccheckhealth
 from math import floor
 from typing import Callable, Any
 from functools import lru_cache, update_wrapper
-
 
 # LRU Cache with TTL
 def ttl_cache(maxsize: int = 128, typed: bool = False, ttl: int = -1):
@@ -69,7 +50,6 @@ def ttl_cache(maxsize: int = 128, typed: bool = False, ttl: int = -1):
 
     return wrapper
 
-
 def _ttl_hash_gen(seconds: int):
     """
     Internal generator function used by the `ttl_cache` decorator to generate a new hash value at regular
@@ -87,7 +67,6 @@ def _ttl_hash_gen(seconds: int):
     start_time = time.time()
     while True:
         yield floor((time.time() - start_time) / seconds)
-
 
 # 12 seconds updating block.
 @ttl_cache(maxsize=1, ttl=12)

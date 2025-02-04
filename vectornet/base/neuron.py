@@ -1,33 +1,10 @@
-# The MIT License (MIT)
-# Copyright © 2023 Yuma Rao
-
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the “Software”), to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-# and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of
-# the Software.
-
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-# THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
-
 import copy
-import typing
-
 import bittensor as bt
-
 from abc import ABC, abstractmethod
-
-# Sync calls set weights and also resyncs the metagraph.
 from vectornet.utils.config import check_config, add_args, config
 from vectornet.utils.misc import ttl_get_block
 from vectornet import __spec_version__ as spec_version
 from vectornet.mock import MockSubtensor, MockMetagraph
-
 
 class BaseNeuron(ABC):
     """
@@ -65,20 +42,14 @@ class BaseNeuron(ABC):
         self.config.merge(base_config)
         self.check_config(self.config)
 
-        # Set up logging with the provided configuration.
         bt.logging.set_config(config=self.config.logging)
 
-        # If a gpu is required, set the device to cuda:N (e.g. cuda:0)
         self.device = self.config.neuron.device
 
-        # Log the configuration for reference.
         bt.logging.info(self.config)
 
-        # Build Bittensor objects
-        # These are core Bittensor classes to interact with the network.
         bt.logging.info("Setting up bittensor objects.")
 
-        # The wallet holds the cryptographic key pairs for the miner.
         if self.config.mock:
             self.wallet = bt.MockWallet(config=self.config)
             self.subtensor = MockSubtensor(
@@ -120,7 +91,6 @@ class BaseNeuron(ABC):
         """
         Wrapper for synchronizing the state of the network for the given miner or validator.
         """
-        # Ensure miner or validator hotkey is still registered on the network.
         self.check_registered()
 
         if self.should_sync_metagraph():
@@ -129,8 +99,7 @@ class BaseNeuron(ABC):
         if self.should_set_weights():
             self.set_weights()
 
-        # Always save state.
-        self.save_state()
+        # self.save_state()
 
     def check_registered(self):
         # --- Check for registration.
@@ -161,12 +130,11 @@ class BaseNeuron(ABC):
         if self.config.neuron.disable_set_weights:
             return False
 
-        # Define appropriate logic for when set weights.
         return (
             (self.block - self.metagraph.last_update[self.uid])
             > self.config.neuron.epoch_length
             and self.neuron_type != "MinerNeuron"
-        )  # don't set weights if you're a miner
+        )  
 
     def save_state(self):
         bt.logging.warning(

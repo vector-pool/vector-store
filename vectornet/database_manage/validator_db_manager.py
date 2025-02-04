@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-db_user_name = os.getenv("POSTGRESQL_VALIDATOR_USER_NAME")
-password = os.getenv("VALI_DB_PASSWORD")
+db_user_name = os.getenv("POSTGRESQL_USER_NAME")
+password = os.getenv("POSTGRES_PASSWARD")
 db_port = os.getenv("DB_PORT")
 
 class ValidatorDBManager:

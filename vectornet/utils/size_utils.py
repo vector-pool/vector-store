@@ -1,3 +1,5 @@
+# This script assists in converting text length to the storage size in Python bytes per character.
+
 def text_length_to_storage_size(length):
     """
     Convert text length to storage size in GB.
@@ -17,7 +19,6 @@ def text_length_to_storage_size(length):
 
     return gb_size
 
-# Example usage
 if __name__ == "__main__":
     text_length = int(input("Enter the text length (number of characters): "))
     

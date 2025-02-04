@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 api_key=os.environ["OPENAI_API_KEY"]
-print(api_key)
 
 llm_client = openai.OpenAI(
     api_key = api_key,
@@ -24,8 +23,6 @@ def generate_query_content(llm_client, content):
     prompt += (
         """Generate a summary of the original content using approximately 700-900 characters. Provide only the generated summary in plain text, without any additional context, explanation, or formatting. single and double quotes or new lines."""
     )
-
-    print(f"Prompt: {prompt}")
 
     try:
         output = llm_client.chat.completions.create(

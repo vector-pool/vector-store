@@ -1,233 +1,9 @@
-# from transformers import LongformerTokenizer, LongformerModel
-# import torch
-# import transformers
-# import bittensor as bt
-
-# transformers.logging.set_verbosity_error()
-
-# tokenizer = LongformerTokenizer.from_pretrained("allenai/longformer-base-4096")
-# model = LongformerModel.from_pretrained("allenai/longformer-base-4096").to('cuda')
-# bt.logging.debug("Successfully initialized embeddig model")
-
-# class TextToEmbedding:
-#     def __init__(self):
-#         self.max_token_size = 4098  # Maximum token size for the model
-#         self.tokenizer = tokenizer
-#         self.model = model
-    
-#     def embed(self, texts):
-#         embedded_data = []
-#         embeddings = []
-#         original_data = []
-
-#         # Tokenize all texts at once
-#         inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=self.max_token_size).to('cuda')
-        
-#         bt.logging.debug("All texts tokenized")
-#         outputs = self.model(**inputs)
-#         bt.logging.debug("Model output received")
-        
-#         embedding = outputs.last_hidden_state  # Shape: (batch_size, sequence_length, hidden_size)
-#         pooled_embedding = self.mean_pooling(embedding, inputs['attention_mask'])
-#         pooled_embedding_list = pooled_embedding.tolist()
-        
-#         bt.logging.debug("Embedding done")
-#         embedded_data.extend(texts)  # Add all texts
-#         embeddings.extend(pooled_embedding_list)  # Add all embeddings
-#         original_data.extend(texts)  # Add all original texts
-
-#         return embedded_data, embeddings, original_data
-
-#     def mean_pooling(self, embedding, attention_mask):
-#         token_embeddings = embedding  # (batch_size, sequence_length, hidden_size)
-#         attention_mask = attention_mask.unsqueeze(-1)  # (batch_size, sequence_length, 1)
-
-#         summed_embeddings = torch.sum(token_embeddings * attention_mask, 1)  # (batch_size, hidden_size)
-#         summed_mask = torch.sum(attention_mask, 1)  # (batch_size, 1)
-
-#         # Avoid division by zero
-#         pooled_embedding = summed_embeddings / summed_mask.clamp(min=1e-9)
-        
-#         return pooled_embedding  # (batch_size, hidden_size)
-
-# if __name__ == "__main__":
-#     embedder = TextToEmbedding()
-
-#     content = ["hello, how are you?", "This is another sentence for testing.", "Adding more text to see the performance."]
-#     embedding = embedder.embed(content)
-#     print(embedding)
-
-
-
-
-
-
-
-
-
-
-
-
-# from transformers import LongformerTokenizer, LongformerModel
-# import torch
-# import transformers
-# import bittensor as bt
-# import os
-
-# # Set CUDA debugging environment variables
-# os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
-
-# # Suppress transformer warnings
-# transformers.logging.set_verbosity_error()
-
-# # Check CUDA availability
-# if not torch.cuda.is_available():
-#     raise RuntimeError("CUDA is not available. Please check your GPU setup.")
-
-# # Clear CUDA cache
-# torch.cuda.empty_cache()
-
-# try:
-#     # Initialize model and tokenizer globally
-#     tokenizer = LongformerTokenizer.from_pretrained("allenai/longformer-base-4096")
-#     model = LongformerModel.from_pretrained("allenai/longformer-base-4096").to('cuda')
-#     model.eval()  # Set model to evaluation mode
-#     bt.logging.debug(f"Successfully initialized embedding model on {torch.cuda.get_device_name(0)}")
-# except Exception as e:
-#     bt.logging.error(f"Error initializing model: {str(e)}")
-#     raise
-
-# class TextToEmbedding:
-#     def __init__(self):
-#         self.max_token_size = 4098  # Maximum token size for the model
-#         self.tokenizer = tokenizer
-#         self.model = model
-    
-#     def embed(self, texts):
-#         try:
-#             # Clear CUDA cache before processing
-#             torch.cuda.empty_cache()
-            
-#             # Input validation
-#             if not texts:
-#                 raise ValueError("Input texts cannot be empty")
-#             if isinstance(texts, str):
-#                 texts = [texts]
-            
-#             embedded_data = []
-#             embeddings = []
-#             original_data = []
-
-#             # Tokenize all texts at once with error handling
-#             try:
-#                 inputs = self.tokenizer(
-#                     texts,
-#                     return_tensors="pt",
-#                     padding=True,
-#                     truncation=True,
-#                     max_length=self.max_token_size,
-#                     return_attention_mask=True
-#                 ).to('cuda')
-#                 bt.logging.debug("All texts tokenized")
-#             except Exception as e:
-#                 bt.logging.error(f"Tokenization error: {str(e)}")
-#                 raise
-
-#             # Model inference with error handling
-#             try:
-#                 with torch.no_grad():  # Disable gradient calculation for inference
-#                     outputs = self.model(**inputs)
-#                 bt.logging.debug("Model output received")
-#             except RuntimeError as e:
-#                 if "out of memory" in str(e):
-#                     torch.cuda.empty_cache()
-#                     bt.logging.error("GPU out of memory error. Cleared cache.")
-#                 raise
-#             except Exception as e:
-#                 bt.logging.error(f"Model inference error: {str(e)}")
-#                 raise
-
-#             # Process embeddings
-#             try:
-#                 embedding = outputs.last_hidden_state
-#                 pooled_embedding = self.mean_pooling(embedding, inputs['attention_mask'])
-#                 # Move to CPU before converting to list to prevent CUDA errors
-#                 pooled_embedding = pooled_embedding.cpu()
-#                 pooled_embedding_list = pooled_embedding.tolist()
-#                 bt.logging.debug("Embedding done")
-#             except Exception as e:
-#                 bt.logging.error(f"Embedding processing error: {str(e)}")
-#                 raise
-
-#             embedded_data.extend(texts)
-#             embeddings.extend(pooled_embedding_list)
-#             original_data.extend(texts)
-
-#             return embedded_data, embeddings, original_data
-        
-#         except Exception as e:
-#             bt.logging.error(f"Error in embed method: {str(e)}")
-#             raise
-
-#     def mean_pooling(self, embedding, attention_mask):
-#         try:
-#             token_embeddings = embedding
-#             attention_mask = attention_mask.unsqueeze(-1)
-
-#             summed_embeddings = torch.sum(token_embeddings * attention_mask, 1)
-#             summed_mask = torch.sum(attention_mask, 1)
-
-#             # Avoid division by zero with more explicit error handling
-#             if torch.any(summed_mask == 0):
-#                 bt.logging.warning("Zero mask values detected in mean pooling")
-            
-#             pooled_embedding = summed_embeddings / summed_mask.clamp(min=1e-9)
-            
-#             return pooled_embedding
-
-#         except Exception as e:
-#             bt.logging.error(f"Error in mean_pooling: {str(e)}")
-#             raise
-
-# if __name__ == "__main__":
-#     try:
-#         embedder = TextToEmbedding()
-
-#         # Test with a single short text first
-#         bt.logging.debug("Testing with single text...")
-#         single_test = embedder.embed(["hello, testing."])
-#         bt.logging.debug("Single text test successful")
-
-#         # Test with multiple texts
-#         content = [
-#             "hello, how are you?",
-#             "This is another sentence for testing.",
-#             "Adding more text to see the performance."
-#         ]
-#         bt.logging.debug("Processing multiple texts...")
-#         embedding = embedder.embed(content)
-#         bt.logging.debug("Multiple texts processing successful")
-#         print(embedding)
-
-#     except Exception as e:
-#         bt.logging.error(f"Main execution error: {str(e)}")
-#         raise
-
-
-
-
-
 import os
-# Set these environment variables before importing torch
-os.environ['TORCH_USE_CUDA_DSA'] = '1'  # Enable device-side assertions
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
-
 from transformers import LongformerTokenizer, LongformerModel
 import torch
 import transformers
 import bittensor as bt
 
-# Print debug information
 print(f"PyTorch version: {torch.__version__}")
 print(f"CUDA available: {torch.cuda.is_available()}")
 if torch.cuda.is_available():
@@ -236,8 +12,10 @@ if torch.cuda.is_available():
     print(f"Initial CUDA memory allocated: {torch.cuda.memory_allocated()/1024**2:.2f}MB")
     print(f"Initial CUDA memory cached: {torch.cuda.memory_reserved()/1024**2:.2f}MB")
 
-# Suppress transformer warnings
 transformers.logging.set_verbosity_error()
+
+os.environ['TORCH_USE_CUDA_DSA'] = '1'  # Enable device-side assertions
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 def initialize_model():
     try:
@@ -281,7 +59,7 @@ class TextToEmbedding:
 
     def embed(self, texts):
         try:
-            # Input validation
+            # Input validation data
             if not texts:
                 raise ValueError("Input texts cannot be empty")
             if isinstance(texts, str):
@@ -310,8 +88,6 @@ class TextToEmbedding:
             global_attention_mask = torch.zeros_like(inputs['input_ids'])
             global_attention_mask[:, 0] = 1  # Set global attention on [CLS] token
             
-            # Print debug information
-            # self.print_debug_info(inputs, global_attention_mask)
             
             with torch.no_grad():
                 try:

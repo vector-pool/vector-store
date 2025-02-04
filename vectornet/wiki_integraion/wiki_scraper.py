@@ -165,10 +165,3 @@ async def wikipedia_scraper(k: int, min_len: int, category: str):
 async def get_wiki_article_content_with_pageid(pageid):
     content = await get_article_extracts(pageid)
     return content
-
-if __name__ == "__main__":
-    articles = asyncio.run(wikipedia_scraper(5))
-    with open('result_wiki.txt', 'w', encoding='utf-8') as f:
-        for article in articles:
-            f.write(f"{article}\n\n, {len(article['content'])}\n")  # Write each result as a dictionary
-    print(articles)
