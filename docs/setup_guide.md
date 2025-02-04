@@ -106,7 +106,18 @@ Both the miner and validator require PostgreSQL for data storage. You can instal
    docker --version
    ```
 
-2. Run PostgreSQL with Docker Compose:
+2. Install docker-compose:
+   ```bash
+   sudo apt install -y docker-compose
+   sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+   sudo chmod +x /usr/local/bin/docker-compose
+   ```
+   verify installation
+   ```bash
+   docker-compose --version
+   ```
+
+3. Run PostgreSQL with Docker Compose:
    ```bash
    docker-compose -f scripts/postgres-docker-compose.yml up -d
    ```
@@ -121,7 +132,7 @@ Both the miner and vaidator require set up superuser at PostgreSQL Database
 
 1. Connect to PostgreSQL:
    ```bash
-   psql -U postgres
+   sudo -u postgres psql
    ```
 
 2. Create a superuser role:
