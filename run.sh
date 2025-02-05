@@ -3,7 +3,7 @@
 # Initialize variables
 script="neurons/validator.py"
 autoRunLoc=$(readlink -f "$0")
-proc_name="vectornet_v_autoupdator"
+proc_name="vectornet_validator"
 args=()
 version_location="./vectornet/__init__.py"
 version="__version__"
