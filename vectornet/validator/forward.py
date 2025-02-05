@@ -138,7 +138,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         if total_len < self.config.neuron.task_size * self.config.neuron.min_len:
             bt.logging.error(f"There is an issue to generating task, because the total_len({total_len}) is smaller than task_size * min_len.")
      
-        bt.logging.info(f"{RED}Sent Create request{RESET}")
+        bt.logging.info(f"{RED}Sent Create request to miner uid: {miner_uid}{RESET}")
         
         responses = await self.dendrite(
             axons = [self.metagraph.axons[miner_uid]],
@@ -216,7 +216,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
                 bt.logging.error(f"There is an issue to generating task, because the total_len({total_len}) is smaller than task_size * min_len.")
      
             
-            bt.logging.info(f"{RED}Sent Update request{RESET}")
+            bt.logging.info(f"{RED}Sent Update request to miner uid: {miner_uid}{RESET}")
             response = await self.dendrite(
                 axons = [self.metagraph.axons[miner_uid]],
                 synapse = update_request,
@@ -274,7 +274,7 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
         user_id, organization_id, namespace_id, delete_request = await generate_delete_request(validator_db_manager)
         
         if delete_request is not None:
-            bt.logging.info(f"{RED}Sent Delete request{RESET}")
+            bt.logging.info(f"{RED}Sent Delete request to miner uid: {miner_uid}{RESET}")
             
             response = await self.dendrite(
                 axons = [self.metagraph.axons[miner_uid]],
@@ -311,7 +311,7 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
     read_score = 0
     read_op = None
     if read_request is not None:
-        bt.logging.info(f"{RED}Sent Read request{RESET}")
+        bt.logging.info(f"{RED}Sent Read request to miner uid: {miner_uid}{RESET}")
         
         response = await self.dendrite(
             axons = [self.metagraph.axons[miner_uid]],
