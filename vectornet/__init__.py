@@ -3,7 +3,7 @@ from . import base
 from . import api
 from .subnet_links import SUBNET_LINKS
 
-__version__ = "1.0.0"
+__version__ = "1.0.2"
 version_split = __version__.split(".")
 __spec_version__ = (
     (100 * int(version_split[0]))

@@ -76,7 +76,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
+app.config.js
 # Spyder project settings
 .spyderproject
 .spyproject

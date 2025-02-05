@@ -70,7 +70,7 @@ source venv/bin/activate
 Install the project and its dependencies using `pip`:
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ---
@@ -124,7 +124,7 @@ Both the miner and validator require PostgreSQL for data storage. You can instal
 
 #### Option 2: Install PostgreSQL Directly
 
-If your machine does not support Docker (e.g., RunPod), install PostgreSQL manually and create a superuser role:
+If your machine does not support Docker (e.g., RunPod), install PostgreSQL manually
 
 ### 7. Create SuperUser
 
@@ -198,7 +198,7 @@ WANDB_API_KEY="your_wandb_api_key"
 ### 2. Run Validator on Mainnet
 
 ```bash
-pm2 start --name validator --interpreter python3 neurons/miner.py -- \
+pm2 start run.sh --name vectornet_v_autoupdater -- \
   --subtensor.network finney \
   --netuid 14 \
   --wallet.name <YOUR_WALLET_NAME> \
@@ -214,6 +214,8 @@ To save logs, append the following options:
 ```
 
 In this case, `logs/logs_vali` is the directory where logs will be saved.
+
+#### This command runs both the validator and the auto-updater.
 
 ---
 
