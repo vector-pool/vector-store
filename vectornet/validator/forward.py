@@ -153,7 +153,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
         response_create_request = responses[0]
         
         if response_create_request is None:
-            bt.logging.debug("Error: None response of CreateRequest.")
+            bt.logging.debug("None response of CreateRequest.")
             return 0, None
         
         bt.logging.info(f"Received Create responses : {response_create_request} from {miner_uid}")
