@@ -38,15 +38,15 @@ async def get_rewards(
     Returns:
         np.ndarray: The calculated miner reward as a NumPy array.
     """
-    create_multiplier = 0.5 if create_score == 0 else 1.0
-    delete_multiplier = 0.5 if delete_score == 0 else 1.0
+    create_multiplier = 0.7 if create_score == 0 else 1.0
+    delete_multiplier = 0.7 if delete_score == 0 else 1.0
     update_multiplier = 1.0
 
     for score in update_scores:
         if score == 0:
-            update_multiplier *= 0.5
+            update_multiplier *= 0.7
 
-    adjusted_read_score = read_score ** 5
+    adjusted_read_score = read_score ** 3
 
     total_score = (
         create_multiplier * delete_multiplier * update_multiplier * adjusted_read_score
