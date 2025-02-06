@@ -87,7 +87,7 @@ def evaluate_delete_request(query, response, query_user_id, query_organization_i
     
     return 1
     
-def evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response, original_content):
+def evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response, original_content, max_len):
     zero_score = 1
     score = 0
     
@@ -106,19 +106,20 @@ def evaluate_read_request(query_user_id, query_organization_id, query_namespace_
     if pageid is None:
         bt.logging.debug("No corresponding pageid found for the response vector_id.")
         return 0
-    else:
-        content = asyncio.run(get_wiki_article_content_with_pageid(pageid))
-        if response_content != content:
-            bt.logging.debug(f"The original content and response content are different, pageid = {pageid}, the read_request_score is zero.")
-            return 0
-    
+
+    content = asyncio.run(get_wiki_article_content_with_pageid(pageid))
+
+    if response_content != content[:min(len(content), max_len)]:
+        bt.logging.debug(f"The original content and response content are different, pageid = {pageid}, the read_request_score is zero.")
+        return 0
+
     if (
         response_user_id != query_user_id or
         response_organization_id != query_organization_id or
         response_namespace_id != query_namespace_id
     ):
-        bt.logging.debug("The response identifiers do not match the query identifiers.")
-        return 0
+        bt.logging.debug("User, organization, or namespace mismatch, setting score to zero.")
+        return 0  
     
     if response_content == original_content:
         bt.logging.info("The response is perfect, The original and response content are exactly the same. Giving score one.")
