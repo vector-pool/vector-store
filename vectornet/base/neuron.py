@@ -99,6 +99,9 @@ class BaseNeuron(ABC):
         if self.should_set_weights():
             self.set_weights()
 
+        if self.step == 0:
+            return
+
         # self.save_state()
 
     def check_registered(self):
