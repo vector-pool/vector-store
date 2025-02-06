@@ -80,7 +80,18 @@ async def forward(self, miner_uid):
         
         bt.logging.debug("Passed all these 4 synapses successfully.")
         
-        count_manager.add_count(miner_uid)
+        add_count_available = 1
+        
+        if (
+            create_request_zero_score < 1 or
+            any(score < 1 for score in update_request_zero_scores) or
+            read_score < 0.965
+        ):
+            add_count_available = 0
+        
+        if add_count_available:
+            count_manager.add_count(miner_uid)
+    
         cur_count_synapse = count_manager.read_count(miner_uid)
         
         weight = weight_controller(cur_count_synapse)

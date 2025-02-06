@@ -43,13 +43,13 @@ Miners receive CRUD queries from validators, and as they remain in the system lo
 
 ***Squire*** : count < 500 (weight = 0.6)
 
-***Knight*** : count < 1000 (weight = 0.7)
+***Knight*** : count < 2000 (weight = 0.7)
 
-***Champion*** : count < 1500 (weight = 0.8)
+***Champion*** : count < 4000 (weight = 0.8)
 
-***Paladin*** : count < 2500 (weight = 0.9)
+***Paladin*** : count < 6000 (weight = 0.9)
 
-***Lord*** : count ≥ 4000 (weight = 1.0) 🌱
+***Lord*** : count ≥ 6000 (weight = 1.0) 🌱
 
 ***Rewarding***
 

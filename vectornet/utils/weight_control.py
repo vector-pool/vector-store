@@ -15,11 +15,11 @@ def weight_controller(count: int) -> float:
     """
 
     count_to_weight: Dict[str, float] = {
-        "very_young": 0.6,
-        "young": 0.7,
-        "mature": 0.8,
-        "old": 0.9,
-        "very_old": 1.0,
+        "squire": 0.6,
+        "knight": 0.7,
+        "champion": 0.8,
+        "paladin": 0.9,
+        "lord": 1.0,
     }
     
     miner_age = get_age_from_count(count)
@@ -37,14 +37,14 @@ def get_age_from_count(count: int) -> str:
     Returns:
         str: The age category corresponding to the count.
     """
-    if count < 20:
-        return "very_young"
-    elif count < 40:
-        return "young"
-    elif count < 60:
-        return "mature"
-    elif count < 80:
-        return "old"
+    if count < 500:
+        return "squire"
+    elif count < 2000:
+        return "knight"
+    elif count < 4000:
+        return "champion"
+    elif count < 6000:
+        return "paladin"
     else:
-        return "very_old"
+        return "lord"
 
