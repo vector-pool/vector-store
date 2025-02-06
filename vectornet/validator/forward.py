@@ -325,7 +325,7 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
         
         s_f = "failure"
         
-        read_score = evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response_read, content)
+        read_score = evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response_read, content, self.config.neuron.max_len)
         
         if read_score:
             s_f = "success"
