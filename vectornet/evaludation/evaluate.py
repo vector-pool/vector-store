@@ -87,7 +87,7 @@ def evaluate_delete_request(query, response, query_user_id, query_organization_i
     
     return 1
     
-def evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response, original_content):
+def evaluate_read_request(query_user_id, query_organization_id, query_namespace_id, pageids_info, response, original_content, max_len):
     zero_score = 1
     score = 0
     
@@ -108,7 +108,7 @@ def evaluate_read_request(query_user_id, query_organization_id, query_namespace_
         return 0
     else:
         content = asyncio.run(get_wiki_article_content_with_pageid(pageid))
-        if response_content != content:
+        if response_content != content[:max_len]:
             bt.logging.debug(f"The original content and response content are different, pageid = {pageid}, the read_request_score is zero.")
             return 0
     
