@@ -46,15 +46,16 @@ async def get_rewards(
     ]
     
     if create_request_zero_score == 0:
-        initial_create_score = 0.3
+        initial_create_score = 0.5
         
     if delete_request_zero_score == 0:
-        initial_delete_score = 0.3
+        initial_delete_score = initial_delete_score * 0.5
     
     # if any(score == 0 for score in update_request_zero_scores):
     #     initial_update_score = 0.5
     for score in update_request_zero_scores:
         if score == 0:
             initial_update_score = initial_update_score * 0.3
+    read_score = read_score ** 5
     miner_reward = reward(initial_create_score * initial_delete_score * initial_update_score * read_score, weight)
     return np.array(miner_reward)
