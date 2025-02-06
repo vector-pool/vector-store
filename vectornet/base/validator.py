@@ -167,6 +167,9 @@ class BaseValidatorNeuron(BaseNeuron):
         if self.should_set_weights():
             self.set_weights()
 
+        if self.step == 0:
+            return
+
         self.save_state()
 
     def check_wandb_status(self):
@@ -390,5 +393,8 @@ class BaseValidatorNeuron(BaseNeuron):
         # Load the state of the validator from file.
         state = np.load(self.config.neuron.full_path + "/state.npz")
         self.step = state["step"]
+        print(self.step)
         self.scores = state["scores"]
+        print(self.scores)
         self.hotkeys = state["hotkeys"]
+        print(self.hotkeys[:3])

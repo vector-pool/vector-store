@@ -197,6 +197,18 @@ WANDB_API_KEY="your_wandb_api_key"
 
 ### 2. Run Validator on Mainnet
 
+- Ensure that the jq package is installed on your system by following these steps:
+
+```bash
+sudo apt-get update
+sudo apt-get install jq
+jq --version #verify
+```
+
+---
+
+- Running validator
+
 ```bash
 pm2 start run.sh --name vectornet_v_autoupdater -- \
   --subtensor.network finney \
@@ -207,7 +219,7 @@ pm2 start run.sh --name vectornet_v_autoupdater -- \
   --axon.port <PORT> 
 ```
 
-To save logs, append the following options:
+- To save logs, append the following options:
 
 ```bash
 --logging.record_log --logging.logging_dir logs/logs_vali

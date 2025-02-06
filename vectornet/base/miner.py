@@ -298,7 +298,7 @@ class BaseMinerNeuron(BaseNeuron):
     
     def save_state(self):
         """Saves the state of the validator to a file."""
-        bt.logging.info("Saving validator state.")
+        pass
 
         # Save the state of the validator to file.
 
