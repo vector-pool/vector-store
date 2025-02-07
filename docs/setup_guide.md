@@ -239,7 +239,7 @@ If you need to drop the database in PostgreSQL, follow these steps:
 
 1. Connect to PostgreSQL:
    ```bash
-   psql -U postgres
+   sudo -u postgres psql
    ```
 
 2. Check active connections:
@@ -259,6 +259,12 @@ If you need to drop the database in PostgreSQL, follow these steps:
 4. Drop the database:
    ```sql
    DROP DATABASE <database_name>;
+   ```
+
+5. Drop all databases
+   drop all databases running this script:
+   ```bash
+   python scripts/init_db.py
    ```
 
 ---
