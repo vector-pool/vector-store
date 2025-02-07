@@ -59,17 +59,14 @@ async def forward(self, miner_uid):
         
         if create_op is not None:
             operations.append(create_op)
-        time.sleep(5)
         
         update_request_zero_scores, update_ops = await forward_update_request(self, validator_db_manager, miner_uid)
         operations.extend(update_ops)
-        time.sleep(5)
         
         delete_request_zero_score, delete_op = await forward_delete_request(self, validator_db_manager, miner_uid)
         
         if delete_op is not None:
             operations.append(delete_op)
-        time.sleep(5)
         
         read_score, read_op = await forward_read_request(self, validator_db_manager, miner_uid)
             
@@ -129,7 +126,6 @@ async def forward(self, miner_uid):
 
         bt.logging.info(f"Scored responses: {rewards}")
         self.update_scores(rewards, [miner_uid])
-        time.sleep(5)
     except Exception as e:
         bt.logging.error(f"Error occurs during forward: {e}")        
 
@@ -155,7 +151,7 @@ async def forward_create_request(self, validator_db_manager, miner_uid):
             axons = [self.metagraph.axons[miner_uid]],
             synapse = create_request,
             deserialize = True,
-            timeout = 10,
+            timeout = 3,
         )
         
         if len(responses) != 1:
@@ -232,7 +228,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
                 axons = [self.metagraph.axons[miner_uid]],
                 synapse = update_request,
                 deserialize = True,
-                timeout = 20,
+                timeout = 5,
             )
             response_update_request = response[0]
             bt.logging.info(f"\n\nReceived Update responses : {response_update_request} from {miner_uid}\n\n")
@@ -291,7 +287,7 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
                 axons = [self.metagraph.axons[miner_uid]],
                 synapse = delete_request,
                 deserialize = True,
-                timeout = 5,
+                timeout = 2,
             )
             response_delete_request = response[0]
             bt.logging.debug(f"Received Delete responses: {response_delete_request} from {miner_uid}") 
