@@ -5,6 +5,7 @@ import argparse
 import threading
 import bittensor as bt
 import datetime
+import time
 from typing import List, Union
 from traceback import print_exception
 from vectornet.base.neuron import BaseNeuron
@@ -101,7 +102,12 @@ class BaseValidatorNeuron(BaseNeuron):
         coroutines = [
             self.forward(uid) for uid in random_uids
         ]
-        await asyncio.gather(*coroutines)
+        results = await asyncio.gather(*coroutines)
+
+        if len(results) != len(random_uids):
+            bt.logging.error("Error occurs during concurrent forward method")
+
+        return results
 
     def run(self):
         """
@@ -131,19 +137,41 @@ class BaseValidatorNeuron(BaseNeuron):
             while True:
                 bt.logging.info(f"step({self.step}) block({self.block})")
 
+                start_time = time.time()
+
                 available_uids = get_random_uids(self)
-                
+
+                all_uids = []
+                all_scores = []
+
                 step = self.config.neuron.num_concurrent_forwards
                 
                 for i in range(0, len(available_uids), step):
                 
                     pair = available_uids[i:i+step]
                 
-                    self.loop.run_until_complete(self.concurrent_forward(pair))
+                    results = self.loop.run_until_complete(self.concurrent_forward(pair))
+
+                    uids, scores = zip(*results)
+                    all_uids.extend(uids)
+                    all_scores.extend(scores)
+
+                rewards = np.array(all_scores)
+
+
+                end_time = time.time()
+                elapsed_time = end_time - start_time
+                bt.logging.info(f"Elapsed time for this loop: {elapsed_time:.2f} seconds")
+                
+                bt.logging.debug("Updating Scores for one batch...")
+                self.update_scores(rewards, all_uids)
+                
+                if len(all_uids) != len(available_uids):
+                    bt.logging.error("Error occurs during corutine in run method")
                 
                 if self.should_exit:
                     break
-
+                
                 self.sync()
 
                 self.step += 1

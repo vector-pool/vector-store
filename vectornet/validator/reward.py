@@ -11,9 +11,9 @@ def reward(score: float, weight: float) -> float:
     Returns:
         float: The calculated miner reward.
     """
-    low_reward = (0.8 * (score ** 7) + 
-                  0.1 * (score ** 5) + 
-                  0.1 * (score ** 3))
+    low_reward = (0.8 * (score ** 5) + 
+                  0.1 * (score ** 3) + 
+                  0.1 * (score ** 1))
     
     miner_reward = weight * low_reward
     
@@ -26,7 +26,8 @@ async def get_rewards(
     read_score: float,
     weight: float,
 ) -> np.ndarray:
-    """Calculate rewards based on request scores and weight.
+    """
+    Calculate rewards based on request scores and weight.
 
     Args:
         create_score (float): Score for create requests.
@@ -38,19 +39,33 @@ async def get_rewards(
     Returns:
         np.ndarray: The calculated miner reward as a NumPy array.
     """
-    create_multiplier = 0.7 if create_score == 0 else 1.0
-    delete_multiplier = 0.7 if delete_score == 0 else 1.0
+    # Validate inputs
+    if not isinstance(update_scores, list):
+        raise ValueError("update_scores must be a list of floats.")
+    if any(score < 0 for score in [create_score, delete_score, read_score, weight]):
+        raise ValueError("Scores and weight must be non-negative.")
+
+    create_multiplier = 0.9 if create_score == 0 else 1.0
+    delete_multiplier = 0.9 if delete_score == 0 else 1.0
+    read_multiplier = 0.5 if read_score == 0 else read_score
     update_multiplier = 1.0
+
+    live = 1 if create_score > 0 and read_score > 0 else 0
 
     for score in update_scores:
         if score == 0:
-            update_multiplier *= 0.7
-
-    adjusted_read_score = read_score ** 3
+            update_multiplier *= 0.9
+        else:
+            live = 1
 
     total_score = (
-        create_multiplier * delete_multiplier * update_multiplier * adjusted_read_score
+        create_multiplier * delete_multiplier * update_multiplier * read_multiplier
     )
+
+    if live == 0:
+        return 0
+
     miner_reward = reward(total_score, weight)
 
-    return np.array(miner_reward)
+    return miner_reward
+
