@@ -136,7 +136,6 @@ async def get_random_articles(count, min_len):
                 "rnlimit": count,
                 "format": "json"
             }
-            
             data = await retry_async_request(_make_request, session, params)
             if 'query' in data and 'random' in data['query']:
                 for page in data['query']['random']:
