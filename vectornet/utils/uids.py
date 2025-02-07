@@ -49,7 +49,6 @@ def get_random_uids(self, k: int = None, exclude: List[int] = None) -> np.ndarra
             if uid_is_not_excluded:
                 candidate_uids.append(uid)
     
-    avail_uids = avail_uids[:4]
     random.shuffle(avail_uids)
     
     return np.array(avail_uids)
