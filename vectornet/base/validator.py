@@ -15,7 +15,6 @@ from vectornet.base.utils.weight_utils import (
 )  
 from vectornet.mock import MockDendrite
 from vectornet.utils.config import add_validator_args
-from vectornet.database_manage.validator_db_manager import CountManager
 from vectornet.validator.wandb_manager import WandbManager
 from vectornet.utils.uids import get_random_uids
 from vectornet.database_manage.validator_db_manager import ValidatorDBManager, CountManager
