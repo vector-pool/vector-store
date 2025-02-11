@@ -48,9 +48,7 @@ async def forward(self, miner_uid):
         bt.logging.info(GREEN + f"Starting Forward for miner uid : {miner_uid}" + RESET)
         
         miner_uid = int(miner_uid)
-        validator_db_manager = ValidatorDBManager(miner_uid)
-        count_manager = CountManager()
-        
+        validator_db_manager = ValidatorDBManager(miner_uid)        
 
         operations = []
         
@@ -88,9 +86,9 @@ async def forward(self, miner_uid):
             add_count_available = 0
         
         if add_count_available:
-            count_manager.add_count(miner_uid)
+            self.count_manager.add_count(miner_uid)
     
-        cur_count_synapse = count_manager.read_count(miner_uid)
+        cur_count_synapse = self.count_manager.read_count(miner_uid)
         
         weight = weight_controller(cur_count_synapse)
         

@@ -18,6 +18,7 @@ from vectornet.utils.config import add_validator_args
 from vectornet.database_manage.validator_db_manager import CountManager
 from vectornet.validator.wandb_manager import WandbManager
 from vectornet.utils.uids import get_random_uids
+from vectornet.database_manage.validator_db_manager import ValidatorDBManager, CountManager
 
 class BaseValidatorNeuron(BaseNeuron):
     """
@@ -50,7 +51,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
         bt.logging.info("Building validation weights.")
         self.scores = np.zeros(self.metagraph.n, dtype=np.float32)
-
+        self.count_manager = CountManager()
         self.sync()
 
         if not self.config.neuron.axon_off:
@@ -345,11 +346,20 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.info(
             "Metagraph updated, re-syncing hotkeys, dendrite pool and moving averages"
         )
+        
+        new_miners = []
         # Zero out all hotkeys that have been replaced.
         for uid, hotkey in enumerate(self.hotkeys):
             if hotkey != self.metagraph.hotkeys[uid]:
                 self.scores[uid] = 0  # hotkey has been replaced
-
+                new_miners.append(uid)
+        
+        for miner_uid in new_miners:
+            validator_db_manager = ValidatorDBManager(miner_uid)
+            validator_db_manager.init_database()
+            self.count_manager.init_count(uid)
+        
+        
         # Check to see if the metagraph has changed size.
         # If so, we need to add new hotkeys and moving averages.
         if len(self.hotkeys) < len(self.metagraph.hotkeys):
@@ -394,6 +404,16 @@ class BaseValidatorNeuron(BaseNeuron):
                 f"Shape mismatch: rewards array of shape {rewards.shape} "
                 f"cannot be broadcast to uids array of shape {uids_array.shape}"
             )
+
+        uids_list = self.metagraph.uids.tolist()
+        # Calculate how many elements to add
+        count_to_add = len(uids_list) - len(self.scores)
+
+        # Extend base_scores if needed
+        if count_to_add > 0:
+            additional_zeros = np.zeros(count_to_add, dtype=np.float32)
+            # Concatenate the two arrays
+            self.scores = np.concatenate((self.scores, additional_zeros))
 
         # Compute forward pass rewards, assumes uids are mutually exclusive.
         # shape: [ metagraph.n ]
