@@ -49,107 +49,108 @@ organization_names:
   # - Qualcomm
   # - SAP
 
-  - AMD
-  - Square
-  - Shopify
-  - Slack
-  - Zoom
-  - Lyft
-  - Uber
-  - Airbnb
-  - SpaceX
-  - Tesla
-  - Twitter
-  - LinkedIn
-  - Dropbox
-  - Pinterest
-  - Snapchat
-  - Stripe
-  - Reddit
-  - TikTok
-  - ServiceNow
-  - Atlassian
-  - HubSpot
-  - Twilio
-  - Splunk
-  - Datadog
-  - Palantir
-  - CrowdStrike
-  - DocuSign
-  - Zscaler
-  - Okta
-  - RingCentral
-  - Wix
-  - Squarespace
-  - WeWork
-  - Activision Blizzard
-  - Electronic Arts
-  - Take-Two Interactive
-  - Roku
-  - Sony
-  - Panasonic
-  - LG
-  - Philips
-  - Sharp
-  - Canon
-  - Nikon
-  - Fujifilm
-  - Xerox
-  - 3M
-  - General Electric
-  - Northrop Grumman
-  - Lockheed Martin
-
-  # - Raytheon
-  # - BAE Systems
-  # - Thales Group
-  # - Rolls-Royce
-  # - Caterpillar
-  # - Deere & Company
-  # - General Motors
-  # - Ford
-  # - Honda
-  # - Volkswagen
-  # - Hyundai
-  # - Kia
-  # - BMW
-  # - Mercedes-Benz
-  # - Audi
-  # - Ferrari
-  # - Lamborghini
-  # - Porsche
-  # - Subaru
-  # - Dell
-  # - HP
-  # - Lenovo
-  # - Asus
-  # - Acer
-  # - MSI
-  # - Razer
-  # - Alienware
-  # - Logitech
-  # - Corsair
-  # - Kingston
-  # - Seagate
-  # - Western Digital
-  # - NetApp
-  # - VMware
-  # - Red Hat
-  # - Citrix
-  # - Palo Alto Networks
-  # - Fortinet
-  # - CrowdStrike
+  # - AMD
+  # - Square
+  # - Shopify
+  # - Slack
+  # - Zoom
+  # - Lyft
+  # - Uber
+  # - Airbnb
+  # - SpaceX
+  # - Tesla
+  # - Twitter
+  # - LinkedIn
+  # - Dropbox
+  # - Pinterest
+  # - Snapchat
+  # - Stripe
+  # - Reddit
+  # - TikTok
+  # - ServiceNow
+  # - Atlassian
+  # - HubSpot
+  # - Twilio
   # - Splunk
-  # - F5 Networks
-  # - A10 Networks
+  # - Datadog
+  # - Palantir
+  # - CrowdStrike
+  # - DocuSign
   # - Zscaler
-  # - Cloudflare
-  # - DigitalOcean
-  # - Heroku
-  # - MongoDB
-  # - Elastic
-  # - HashiCorp
-  # - Snowflake
+  # - Okta
+  # - RingCentral
+  # - Wix
+  # - Squarespace
+  # - WeWork
+  # - Activision Blizzard
+  # - Electronic Arts
+  # - Take-Two Interactive
+  # - Roku
+  # - Sony
+  # - Panasonic
+  # - LG
+  # - Philips
+  # - Sharp
+  # - Canon
+  # - Nikon
+  # - Fujifilm
+  # - Xerox
+  # - 3M
+  # - General Electric
+  # - Northrop Grumman
+  # - Lockheed Martin
+
+  - Raytheon
+  - BAE Systems
+  - Thales Group
+  - Rolls-Royce
+  - Caterpillar
+  - Deere & Company
+  - General Motors
+  - Ford
+  - Honda
+  - Volkswagen
+  - Hyundai
+  - Kia
+  - BMW
+  - Mercedes-Benz
+  - Audi
+  - Ferrari
+  - Lamborghini
+  - Porsche
+  - Subaru
+  - Dell
+  - HP
+  - Lenovo
+  - Asus
+  - Acer
+  - MSI
+  - Razer
+  - Alienware
+  - Logitech
+  - Corsair
+  - Kingston
+  - Seagate
+  - Western Digital
+  - NetApp
+  - VMware
+  - Red Hat
+  - Citrix
+  - Palo Alto Networks
+  - Fortinet
+  - CrowdStrike
+  - Splunk
+  - F5 Networks
+  - A10 Networks
+  - Zscaler
+  - Cloudflare
+  - DigitalOcean
+  - Heroku
+  - MongoDB
+  - Elastic
+  - HashiCorp
+  - Snowflake
+
   # - Databricks
   # - Alteryx
   # - Tableau
@@ -305,67 +306,67 @@ user_names:
   # - Denver
   # - Dex
 
-  - Dixon
-  - Duke
-  - Dusty
-  - Earl
-  - Eli
-  - Finn
-  - Flint
-  - Flynn
-  - Ford
-  - Gage
-  - Garrett
-  - Gauge
-  - Gentry
-  - Gideon
-  - Grady
-  - Graham
-  - Grant
-  - Gray
-  - Griff
-  - Grit
-  - Gus
-  - Hank
-  - Harley
-  - Harris
-  - Hayes
-  - Holt
-  - Houston
-  - Huck
-  - Hudson
-  - Hux
+  # - Dixon
+  # - Duke
+  # - Dusty
+  # - Earl
+  # - Eli
+  # - Finn
+  # - Flint
+  # - Flynn
+  # - Ford
+  # - Gage
+  # - Garrett
+  # - Gauge
+  # - Gentry
+  # - Gideon
+  # - Grady
+  # - Graham
+  # - Grant
+  # - Gray
+  # - Griff
+  # - Grit
+  # - Gus
+  # - Hank
+  # - Harley
+  # - Harris
+  # - Hayes
+  # - Holt
+  # - Houston
+  # - Huck
+  # - Hudson
+  # - Hux
   
-  # - Ike
-  # - Jace
-  # - Jack
-  # - Jax
-  # - Jed
-  # - Jedidiah
-  # - Jesse
-  # - Jett
-  # - Judd
-  # - Jude
-  # - Kane
-  # - Kip
-  # - Knox
-  # - Kody
-  # - Lane
-  # - Lawson
-  # - Layne
-  # - Levi
-  # - Lyle
-  # - Mack
-  # - Maverick
-  # - Max
-  # - Monty
-  # - Nash
-  # - Nate
-  # - Oakley
-  # - Otis
-  # - Parker
-  # - Pete
-  # - Porter
+  - Ike
+  - Jace
+  - Jack
+  - Jax
+  - Jed
+  - Jedidiah
+  - Jesse
+  - Jett
+  - Judd
+  - Jude
+  - Kane
+  - Kip
+  - Knox
+  - Kody
+  - Lane
+  - Lawson
+  - Layne
+  - Levi
+  - Lyle
+  - Mack
+  - Maverick
+  - Max
+  - Monty
+  - Nash
+  - Nate
+  - Oakley
+  - Otis
+  - Parker
+  - Pete
+  - Porter
   # - Quinn
   # - Ranger
   # - Reba
@@ -415,26 +416,27 @@ user_names:
   # - Zeke
 
 wiki_categories:
-  - Almanacs
-  - Atlases
-  - Biographical dictionaries
-  - Dictionaries
-  - Encyclopedias
-  - Glossaries
-  - Handbooks and manuals
-  - Lists
-  - Medical manuals
-  - Reference book stubs
-#   - Reference works in the public domain
-#   - Style guides
-#   - Trivia books
-#   - Web sites
-#   - Classics
-#   - Critical theory
-#   - Cultural anthropology
-#   - Clothing
-#   - Folklore
-#   - Food and drink culture
+  # - Almanacs
+  # - Atlases
+  # - Biographical dictionaries
+  # - Dictionaries
+  # - Encyclopedias
+  # - Glossaries
+  # - Handbooks and manuals
+  # - Lists
+  # - Medical manuals
+  # - Reference book stubs
+
+  - Reference works in the public domain
+  - Style guides
+  - Trivia books
+  - Web sites
+  - Classics
+  - Critical theory
+  - Cultural anthropology
+  - Clothing
+  - Folklore
+  - Food and drink culture
 #   - Food and drink
 #   - Language
 #   - Literature

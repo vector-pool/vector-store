@@ -48,9 +48,7 @@ async def forward(self, miner_uid):
         bt.logging.info(GREEN + f"Starting Forward for miner uid : {miner_uid}" + RESET)
         
         miner_uid = int(miner_uid)
-        validator_db_manager = ValidatorDBManager(miner_uid)
-        count_manager = CountManager()
-        
+        validator_db_manager = ValidatorDBManager(miner_uid)        
 
         operations = []
         
@@ -88,9 +86,9 @@ async def forward(self, miner_uid):
             add_count_available = 0
         
         if add_count_available:
-            count_manager.add_count(miner_uid)
+            self.count_manager.add_count(miner_uid)
     
-        cur_count_synapse = count_manager.read_count(miner_uid)
+        cur_count_synapse = self.count_manager.read_count(miner_uid)
         
         weight = weight_controller(cur_count_synapse)
         
@@ -268,7 +266,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
             update_ops.append(update_op)        
             
         else:
-            bt.logging.debug("There is no saved data in miner side, Skipping UpdateRequest, Giving zero score.")
+            bt.logging.debug("There is no saved data on miner side, Skipping UpdateRequest, Giving zero score.")
             return [0, 0, 0], update_ops
     return update_request_zero_scores, update_ops
     
@@ -310,7 +308,7 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
             )
             
         else:
-            bt.logging.debug("There is no saved data in miner side, Skipping DeleteRequest, Giving zero score.")
+            bt.logging.debug("There is no saved data on miner side, Skipping DeleteRequest, Giving zero score.")
             delete_request_zero_score = 0
     return delete_request_zero_score, delete_op
      
@@ -348,7 +346,7 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
         )
         
     else:
-        bt.logging.debug("There is no saved data in miner side, Skipping ReadRequest, Giving zero score.")
+        bt.logging.debug("There is no saved data on miner side, Skipping ReadRequest, Giving zero score.")
         
     return read_score, read_op
     

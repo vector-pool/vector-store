@@ -75,9 +75,6 @@ async def generate_read_request(validator_db_manager, max_len):
     
     if len(content) > max_len: 
         content = content[:max_len]
-    
-    if content is None:
-        bt.logging.erro("Error occurs during the generating query_content with LLM.")
                 
     # print("CONTENT is", content)
         
@@ -89,13 +86,11 @@ async def generate_read_request(validator_db_manager, max_len):
     query_content = generate_query_content(llm_client, content)
     
     if query_content is None:
-        raise Exception("Error during generating query_content with LLM.")
+        bt.logging.error("Error during generating query_content with LLM. Please check openai configuration.")
+        query_content = content
     
-    bt.logging.debug(f"The generated query form llm is this:    {query_content[:30]}")
-    
-    if query_content is None:
-        bt.logging.error("The query_content is None for ReadRequest, Check again openai operation.")
-    
+    bt.logging.debug(f"The generated query with LLM: {query_content[:30]}")
+
     version = get_version()
     
     query = ReadSynapse(
