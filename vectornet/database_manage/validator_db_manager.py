@@ -79,6 +79,22 @@ class ValidatorDBManager:
                 cur.execute(command)
             self.conn.commit()
 
+    def init_database(self):
+        """Drop all tables from the database."""
+        with self.conn.cursor() as cur:
+            # Fetch all table names from the current database
+            cur.execute("""
+                SELECT tablename 
+                FROM pg_tables 
+                WHERE schemaname = 'public';
+            """)
+            tables = cur.fetchall()
+
+            for table in tables:
+                cur.execute(sql.SQL("DROP TABLE IF EXISTS {} CASCADE").format(sql.Identifier(table[0])))
+
+            self.conn.commit()
+
     def get_user(self, user_id: int) -> Tuple[Optional[int], Optional[str]]:
         """Retrieve user ID and name by user_id."""
         with self.conn.cursor() as cur:
