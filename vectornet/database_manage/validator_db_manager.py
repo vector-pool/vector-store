@@ -385,6 +385,13 @@ class CountManager:
             result = cur.fetchone()
             return result[0] if result else None
 
+    def init_count(self, uid):
+        with self.conn.cursor() as cur:
+            cur.execute('''
+                UPDATE count_synapse SET count = 0 WHERE miner_uid = %s
+            ''', (uid,))
+            self.conn.commit()
+
     def close(self):
         """Close the database connection."""
         if self.conn:
