@@ -397,5 +397,3 @@ class CountManager:
         if self.conn:
             self.conn.close()
 
-
-    

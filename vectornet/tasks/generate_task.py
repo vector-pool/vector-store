@@ -87,9 +87,9 @@ async def generate_read_request(validator_db_manager, max_len):
     
     if query_content is None:
         bt.logging.error("Error during generating query_content with LLM. Please check openai configuration.")
-        return content
+        query_content = content
     
-    bt.logging.debug(f"The generated query form llm is this:    {query_content[:30]}")
+    bt.logging.debug(f"The generated query form llm is this: {query_content[:30]}")
 
     version = get_version()
     
