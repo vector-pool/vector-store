@@ -426,10 +426,12 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.info("Loading validator state.")
 
         # Load the state of the validator from file.
-        state = np.load(self.config.neuron.full_path + "/state.npz")
-        self.step = state["step"]
-        print(self.step)
-        self.scores = state["scores"]
-        print(self.scores)
-        self.hotkeys = state["hotkeys"]
-        print(self.hotkeys[:3])
+        try:
+            state = np.load(self.config.neuron.full_path + "/state.npz")
+            bt.logging.info(f"Loading validator state.{state['scores']}")
+            self.step = state["step"]
+            for i in range(len(state["scores"])):
+                self.base_scores[i] = float(state["scores"][i])
+            self.hotkeys = state["hotkeys"]
+        except Exception as e:
+            print("Couldn't find save file!")
