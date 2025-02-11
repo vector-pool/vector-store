@@ -142,6 +142,10 @@ class BaseValidatorNeuron(BaseNeuron):
 
                 available_uids = get_random_uids(self)
 
+                bt.logging.info(f"Processing uids in one batch: length: {len(available_uids)},  {available_uids}")
+
+                available_uids = available_uids[:4]
+                
                 all_uids = []
                 all_scores = []
 

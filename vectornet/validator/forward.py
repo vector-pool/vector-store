@@ -266,7 +266,7 @@ async def forward_update_request(self, validator_db_manager, miner_uid):
             update_ops.append(update_op)        
             
         else:
-            bt.logging.debug("There is no saved data in miner side, Skipping UpdateRequest, Giving zero score.")
+            bt.logging.debug("There is no saved data on miner side, Skipping UpdateRequest, Giving zero score.")
             return [0, 0, 0], update_ops
     return update_request_zero_scores, update_ops
     
@@ -308,7 +308,7 @@ async def forward_delete_request(self, validator_db_manager, miner_uid):
             )
             
         else:
-            bt.logging.debug("There is no saved data in miner side, Skipping DeleteRequest, Giving zero score.")
+            bt.logging.debug("There is no saved data on miner side, Skipping DeleteRequest, Giving zero score.")
             delete_request_zero_score = 0
     return delete_request_zero_score, delete_op
      
@@ -346,7 +346,7 @@ async def forward_read_request(self, validator_db_manager, miner_uid):
         )
         
     else:
-        bt.logging.debug("There is no saved data in miner side, Skipping ReadRequest, Giving zero score.")
+        bt.logging.debug("There is no saved data on miner side, Skipping ReadRequest, Giving zero score.")
         
     return read_score, read_op
     
