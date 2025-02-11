@@ -144,8 +144,6 @@ class BaseValidatorNeuron(BaseNeuron):
 
                 bt.logging.info(f"Processing uids in one batch: length: {len(available_uids)},  {available_uids}")
 
-                available_uids = available_uids[:4]
-                
                 all_uids = []
                 all_scores = []
 
@@ -458,7 +456,7 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.info(f"Loading validator state.{state['scores']}")
             self.step = state["step"]
             for i in range(len(state["scores"])):
-                self.base_scores[i] = float(state["scores"][i])
+                self.scores[i] = float(state["scores"][i])
             self.hotkeys = state["hotkeys"]
         except Exception as e:
             print("Couldn't find save file!")
