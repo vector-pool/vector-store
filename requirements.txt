@@ -1,4 +1,4 @@
-bittensor==8.5.2
+bittensor==9.0.0
 wandb
 python-dotenv
 psycopg2-binary
