@@ -75,7 +75,16 @@ async def generate_read_request(validator_db_manager, max_len):
     
     if len(content) > max_len: 
         content = content[:max_len]
-                
+
+    content_len = len(content)  # Total length of content
+    chunk_size = content_len // 5  # 1/5th of content length
+
+    # Choose a random start position ensuring chunk stays within range
+    start = random.randint(0, content_len - chunk_size)
+
+    # Extract the chunk
+    chunk = content[start:start + chunk_size]
+
     # print("CONTENT is", content)
         
     llm_client = openai.OpenAI(
@@ -83,7 +92,7 @@ async def generate_read_request(validator_db_manager, max_len):
         max_retries = 3,
     )
     
-    query_content = generate_query_content(llm_client, content)
+    query_content = generate_query_content(llm_client, chunk)
     
     if query_content is None:
         bt.logging.error("Error during generating query_content with LLM. Please check openai configuration.")
